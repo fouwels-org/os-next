@@ -48,12 +48,6 @@ This uses the the docker client to copy from the runnning toolchain container vo
 
     docker cp <containerId>:/file/path/within/container /host/path/target
         
-Alternatively, is to start another container, called the filebrowser, which provides as web interface to the docker volume where the ISO file has been build. To start the filebrowser use the following in a docker-compose file and run
-
-    docker-compose up -d:
-
-Point your webbrowser to localhost:8888 and authenticate with the credentials username: admin, password: admin. This approach binds the same docker volume build_data and exposes the files and directories via the web interface to allow a web browser to download the iso image.
-
 ## To clean up
 
 When the compilation has been completed the all the data is stored in a docker volume called build_data. In order to clean all the data, source and build data produced during the ISO build, the simplest way is to delete the docker volume after having exited the toolchain container. 
