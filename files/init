@@ -1,0 +1,93 @@
+#!/bin/sh
+
+# shellcheck disable=SC1091
+. /etc/rc.conf
+
+export PATH="/bin:/usr/bin:/sbin:/usr/sbin"
+
+# Mount dev,proc,sys
+mount -t devtmpfs none /dev
+mount -t proc none /proc
+mount -t sysfs none /sys
+mkdir /dev/pts
+mount -t devpts none /dev/pts
+
+# mount cgroup
+(
+mount -t tmpfs -o uid=0,gid=0,mode=0755 cgroup /sys/fs/cgroup
+cd /sys/fs/cgroup || exit 1
+
+awk '!/^#/ { if ($4 == 1) print $1 }' /proc/cgroups | while IFS= read -r sys; do
+  mkdir -p "$sys"
+  if ! mountpoint -q "$sys"; then
+    if ! mount -n -t cgroup -o "$sys" cgroup "$sys"; then
+      rmdir "$sys" || true
+    fi
+  fi
+done
+)
+
+modprobe e1000
+modprobe e1000e
+modprobe btrfs
+modprobe hid-generic
+modprobe input-leds
+modprobe igb
+
+# Start rngd (TRNG)
+#if [ -f /dev/hwrng ]; then
+printf "Starting the Random Entropy Service"
+rngd -f -r /dev/hwrng -p /var/run/rngd.pid > /var/log/rngd.log 2>&1 &
+#fi
+
+# Configure host name
+HOSTNAME="${HOSTNAME:-localhost}"
+echo "hostname: $HOSTNAME"
+hostname "$HOSTNAME"
+
+# Configure networking
+ip link set lo up
+ip link set eth0 up
+
+# Run cloudinit (if available)
+#/usr/bin/cloudinit > /var/log/cloudinit.log &
+
+# Start udhcpc (DHCP)
+udhcpc -f -p /var/run/udhcpc.pid > /var/log/udhcpc.log 2>&1 &
+
+# Start dropbear (SSHD) - DISABLED FOR PRODUCTION
+dropbear -B -R > /var/log/dropbear.log 2>&1
+
+# Start dockerd (Containers)
+DOCKER_DATA="$(blkid | grep 'LABEL="DOCKER_DATA"' | awk -F ':' '{ print $1 }')"
+if [ "$DOCKER_DATA" ]; then
+  mkdir -p /var/lib/docker
+  mount "$DOCKER_DATA" /var/lib/docker
+fi
+DOCKER_RAMDISK=true dockerd -p /var/run/docker.pid > /var/log/docker.log 2>&1 &
+
+# Waiting for the network to be ready until the startup process continues
+while ! ping -c 1 -n -w 1 google.com &> /dev/null 
+do 
+    printf "%c" "." 
+done 
+
+printf "\nDocker - Starting Portainer"
+
+# Start up Portainer as default. Note : Portainer requirest the Admin password to be set within 5 min of startup
+# otherwise the container will shutdown for "security reasons"
+docker volume create portainer_data
+docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+
+# shell
+while true; do
+  setsid cttyhack /bin/sh &
+  clear
+  printf "\nBoot took %s seconds" "$(cut -d' ' -f1 /proc/uptime)"  
+  echo ""
+  echo "IP Configuration"
+  ip address show | grep eth0
+  echo ""
+  echo "connect your browser to http://IP:9000, where IP is the IP listed for network interface  eth0"
+  wait
+done
