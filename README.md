@@ -1,4 +1,4 @@
-# OS Nano Build (EniCORE)
+# OS Mjolnir Build (Thor's Hammer)
 
 OSNano is a minimalist linux operating system designed to run Docker containers. The operating system build a linux ISO from source. It will download the source dependencies and build these. 
 
