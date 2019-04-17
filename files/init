@@ -49,6 +49,15 @@ hostname "$HOSTNAME"
 ip link set lo up
 ip link set eth0 up
 
+ip addr add 192.168.50.10/24 dev eth1 
+ip link set eth1 up
+
+ip addr add 192.168.200.200/24 dev eth2
+ip link set eth2 up
+
+ip addr add 192.168.10.90/24 dev eth3          
+ip link set eth3 up
+
 # Run cloudinit (if available)
 #/usr/bin/cloudinit > /var/log/cloudinit.log &
 
