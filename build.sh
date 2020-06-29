@@ -2,14 +2,14 @@
 
 set -ex
 
-KERNEL_VERSION=4.20.12
-MUSL_VERSION=1.1.21
-BUSYBOX_VERSION=1.30.1
-DROPBEAR_VERSION=2019.78
+KERNEL_VERSION=5.4.49
+MUSL_VERSION=1.2.0
+BUSYBOX_VERSION=1.31.1
+DROPBEAR_VERSION=2020.80
 RNGTOOLS_VERSION=5
 SYSLINUX_VERSION=6.03
-IPTABLES_VERSION=1.8.2
-DOCKER_VERSION=18.09.2
+IPTABLES_VERSION=1.8.5
+DOCKER_VERSION=19.03.9
 KMOD=26
 
 NUM_JOBS="$(grep ^processor /proc/cpuinfo | wc -l)"
@@ -52,7 +52,7 @@ download_systemd_boot() {
 download_kernel() {
   cd /build/src
   wget -q -O kernel.tar.xz \
-    http://kernel.org/pub/linux/kernel/v4.x/linux-$KERNEL_VERSION.tar.xz
+    http://kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
   tar -xf kernel.tar.xz
 }
 
