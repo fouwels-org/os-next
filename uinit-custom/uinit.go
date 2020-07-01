@@ -18,8 +18,8 @@ var (
 		"mount -t ext4 /dev/sda2 /var/lib/docker",
 		"/bbin/date",
 		"/bbin/dhclient -ipv4 -ipv6=false eth0",
+	//	"/usr/bin/dockerd &",
 		"/bbin/ip a",
-		"dockerd",
 		"/bbin/elvish",
 		"/bbin/shutdown halt",
 	}

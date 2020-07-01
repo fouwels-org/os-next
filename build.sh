@@ -64,6 +64,7 @@ create_rootfs() {
   mkdir -p proc
   mkdir -p run
   mkdir -p sys
+  mkdir -p sbin
   mkdir -p var/lib/docker
   mkdir -p var/log
   mkdir -p var/run
@@ -156,9 +157,25 @@ build_custom_init(){
   )
 }
 
+build_kmod() {
+  (
+  cd kmod-$KMOD
+  ./configure --prefix=/usr --bindir=/bin --sysconfdir=/etc --with-rootlibdir=/lib
+  make EXTRA_CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE"
+  make DESTDIR=$rootfs install
+  cd /build/rootfs
+  for target in depmod insmod lsmod modinfo modprobe rmmod; do
+    ln -sfv ../bin/kmod sbin/$target
+  done
+
+  )
+}
+
+
 download_packages(){
   cd /build/src
   download_musl
+  download_kmod
   download_iptables
   download_kernel
   download_docker
@@ -169,7 +186,7 @@ build_packages(){
   cd /build/src
   build_musl
   build_iptables
-
+  build_kmod
 }
 
 clean(){
