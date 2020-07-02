@@ -128,7 +128,7 @@ build_rootfs() {
   rm -rf usr/man usr/share/man
   rm -rf usr/lib/pkgconfig
   rm -rf usr/include
-  u-root -uinitcmd="/uinit" -build=bb -format=cpio -o /build/initrmfs.cpio -files $rootfs:/ core boot ../uinit-custom/uinit.go
+  u-root -initcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $rootfs:/ core boot
 
   )
 }
@@ -146,7 +146,7 @@ build_kernel() {
   make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
   make INSTALL_MOD_PATH=$rootfs modules_install
   # create the initrmfs
-  u-root -uinitcmd="/uinit" -build=bb -format=cpio -o /build/initrmfs.cpio -files $rootfs:/ core boot ../../uinit-custom/uinit.go
+  u-root -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $rootfs:/ core boot 
 
   make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
 
@@ -158,8 +158,8 @@ build_kernel() {
 build_custom_init(){
   (
   cd /build/uinit-custom
-  go build uinit.go
-  cp uinit $rootfs/uinit
+  go build 
+  cp uinit-custom $rootfs/uinit-custom
   )
 }
 
