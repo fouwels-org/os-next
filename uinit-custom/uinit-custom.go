@@ -19,8 +19,6 @@ import (
 	"github.com/u-root/u-root/pkg/ulog"
 )
 
-
-
 // Copyright 2012-2017 the u-root Authors. All rights reserved
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -98,6 +96,8 @@ func main() {
 		libinit.Command("/bin/uinit", ctty, uinitArgs),
 		libinit.Command("/buildbin/uinit", ctty, uinitArgs),
 
+		//libinit.Command("/bbin/dhclient -ipv4 -ipv6=false eth0", ctty),
+
 		libinit.Command("/bin/defaultsh", ctty),
 		libinit.Command("/bin/sh", ctty),
 	}
@@ -116,4 +116,3 @@ func main() {
 	log.Printf("Exiting...")
 
 }
-
