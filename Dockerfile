@@ -6,12 +6,8 @@ RUN apk -U add rsync git
 RUN apk -U add argp-standalone
 RUN apk -U add xz-dev libmnl-dev libnftnl-dev libnfnetlink-dev
 
-RUN go get github.com/u-root/u-root
-
-WORKDIR /build
 COPY . /build
+RUN mv /build/build.sh /build.sh
+RUN chmod +x /build.sh
 
-RUN chmod +x build.sh
-
-#ENTRYPOINT ["./build.sh"]
-#CMD [""]
+ENTRYPOINT ["/build.sh"]
