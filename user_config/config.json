@@ -1,0 +1,24 @@
+{
+    "header": {
+        "site": "reference",
+        "comment": ""
+    },
+    "modules": [
+        "igb",
+        "btrfs",
+        "usbnet",
+        "qmi_wwan"
+    ],
+    "networking": {
+        "networks": [
+            {
+                "device": "eth0",
+                "dhcp": true,
+                "ipv6": false,
+                "address": "",
+                "defaultGateway": "",
+                "subnetMask": ""
+            }
+        ]
+    }
+}
