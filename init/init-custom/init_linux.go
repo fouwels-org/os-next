@@ -16,7 +16,7 @@ import (
 	"github.com/u-root/u-root/pkg/kmodule"
 )
 
-// installModules installs kernel modules (.ko files) from /lib/modules.
+// installModules installs kernel modules (.ko files) from /lib/modules/.
 // Useful for modules that need to be loaded for boot (ie a network
 // driver needed for netboot)
 func installModules() {

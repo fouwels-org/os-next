@@ -2,7 +2,7 @@
 
 set -ex
 
-KERNEL_VERSION=5.2.14
+KERNEL_VERSION=5.7.7
 MUSL_VERSION=1.2.0
 IPTABLES_VERSION=1.8.5
 DOCKER_VERSION=19.03.9
@@ -128,8 +128,7 @@ build_rootfs() {
   rm -rf usr/man usr/share/man
   rm -rf usr/lib/pkgconfig
   rm -rf usr/include
-  u-root -initcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $rootfs:/ core boot
-
+  u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $rootfs:/ core boot
   )
 }
 
@@ -146,7 +145,17 @@ build_kernel() {
   make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
   make INSTALL_MOD_PATH=$rootfs modules_install
   # create the initrmfs
-  u-root -initcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $rootfs:/ core boot 
+  
+  #cp `find /build/rootfs/ -name e1000e.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name e1000.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name btrfs.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name hid-generic.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name input-leds.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name igb.ko` $rootfs/lib/modules 
+
+  #rm -rf /build/rootfs/lib/modules/4.20.12-mjolnir
+
+  u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $rootfs:/ core boot 
 
   make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
 
@@ -157,9 +166,14 @@ build_kernel() {
 
 build_custom_init(){
   (
-  cd /build/uinit-custom
+  cd /build/init/init-custom
+  go build 
+  cp init-custom $rootfs/init-custom
+
+  cd /build/init/uinit-custom
   go build 
   cp uinit-custom $rootfs/uinit-custom
+
   )
 }
 
