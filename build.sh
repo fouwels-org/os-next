@@ -2,7 +2,7 @@
 
 set -ex
 
-KERNEL_VERSION=5.7.7
+KERNEL_VERSION=5.2.14
 MUSL_VERSION=1.2.0
 IPTABLES_VERSION=1.8.5
 DOCKER_VERSION=19.03.9
@@ -11,10 +11,10 @@ KMOD=26
 NUM_JOBS="$(grep ^processor /proc/cpuinfo | wc -l)"
 
 BUILD_DIR=/build
-ROOTFS_DIR=/rootfs
-SRC_DIR=/src
+ROOTFS_DIR=$BUILD_DIR/rootfs
+SRC_DIR=$BUILD_DIR/src
 
-OUT_DIR=/out
+OUT_DIR=$BUILD_DIR/out
 
 debug() {
   echo "Dropping into a shell for debugging ..."
@@ -167,9 +167,9 @@ build_kmod() {
     make DESTDIR=$ROOTFS_DIR install
 
     cd $ROOTFS_DIR
-    #for target in depmod insmod lsmod modinfo modprobe rmmod; do
-    #  ln -sfv bin/kmod sbin/$target
-    #done
+    for target in depmod insmod lsmod modinfo modprobe rmmod; do
+      ln -sfv ../bin/kmod sbin/$target
+    done
 
   )
 }
@@ -198,12 +198,11 @@ prepare_build() {
   mkdir -p $SRC_DIR
 
   # Clean up old out
-  mkdir -p $OUT_DIR
   rm -rf $OUT_DIR/*
 
   # Clean up old rootfs
-  mkdir -p $ROOTFS_DIR
-  rm -rf $ROOTFS_DIR/*
+  #mkdir -p $ROOTFS_DIR
+  #rm -rf $ROOTFS_DIR/*
 }
 
 build_all() {

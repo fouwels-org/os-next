@@ -8,7 +8,7 @@ services:
       context: "./"
     volumes:
       - src:/src
-      - ./out:/out
+      - ./out:/build/out
 
 volumes:
   src:
