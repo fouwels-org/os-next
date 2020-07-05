@@ -6,8 +6,12 @@
     "modules": [
         "igb",
         "btrfs",
-        "usbnet",
-        "qmi_wwan"
+        "xhci_pci",
+        "xhci_hcd",
+        "usbhid",
+        "hid_generic",
+        "usbserial",
+        "hid"
     ],
     "networking": {
         "networks": [
