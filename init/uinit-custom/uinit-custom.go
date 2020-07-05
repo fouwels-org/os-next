@@ -1,45 +1,61 @@
-// Copyright 2012-2017 the u-root Authors. All rights reserved
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-// This is a basic init script.
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
-	"os/exec"
-	"strings"
+	"uinit-custom/config"
+	"uinit-custom/stages"
 )
 
-var (
-	commands = []string{
-		"modprobe igb",      // K300 Ethernet Driver
-		"modprobe btrfs",    // File system needed by Docker
-		"modprobe usbnet",   // Not sure if this is needed
-		"modprobe qmi_wwan", // Not sure what this is for
-		"/bbin/date",
-		"/bbin/dhclient -ipv6=false eth0",
-		"/bbin/ip a",
-	}
-)
+var _configPath = "/boot/config.json"
+var _secretsPath = "/boot/secrets.json"
 
 func main() {
-	for _, line := range commands {
-		log.Printf("Executing Command: %v", line)
-		cmdSplit := strings.Split(line, " ")
-		if len(cmdSplit) == 0 {
-			continue
-		}
-
-		cmd := exec.Command(cmdSplit[0], cmdSplit[1:]...)
-		cmd.Stdin = os.Stdin
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
-		if err := cmd.Run(); err != nil {
-			log.Print(err)
-		}
-
+	err := run()
+	if err != nil {
+		logf("%v", err)
+	} else {
+		logf("Exit without error - this is unexpected")
 	}
-	log.Print("Uinit Done!")
+
+	os.Exit(-1)
+}
+
+func run() error {
+
+	logf("Loading config")
+	c, err := config.LoadConfig(_configPath)
+	if err != nil {
+		return fmt.Errorf("Failed to load config from %v: %v", _configPath, err)
+	}
+	s, err := config.LoadSecrets(_secretsPath)
+	if err != nil {
+		return fmt.Errorf("Failed to load secrets from %v: %v", _secretsPath, err)
+	}
+
+	stageList := []stages.IStage{
+		stages.Modules{},
+		stages.Networking{},
+	}
+
+	logf("Executing stages")
+
+	for _, st := range stageList {
+
+		logf("[%v] starting", st)
+
+		err := st.Run(c, s)
+		if err != nil {
+			return fmt.Errorf("[%v] failed: %v", st, err)
+		}
+		logf("[%v] succeeded", st)
+	}
+
+	return nil
+}
+
+func logf(format string, v ...interface{}) {
+	message := fmt.Sprintf(format, v...)
+	log.Printf("%v", message)
 }

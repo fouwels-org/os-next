@@ -1,0 +1,28 @@
+{
+    "header": {
+        "site": "reference",
+        "comment": ""
+    },
+    "modules": [
+        "igb",
+        "btrfs",
+        "xhci_pci",
+        "xhci_hcd",
+        "usbhid",
+        "hid_generic",
+        "usbserial",
+        "hid"
+    ],
+    "networking": {
+        "networks": [
+            {
+                "device": "eth0",
+                "dhcp": true,
+                "ipv6": false,
+                "address": "",
+                "defaultGateway": "",
+                "subnetMask": ""
+            }
+        ]
+    }
+}

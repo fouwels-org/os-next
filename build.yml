@@ -1,0 +1,14 @@
+version: "2"
+services:
+  mjolnir:
+    image: registry2.lagoni.co.uk/lagoni-engineering/mjolnir:dev
+    container_name: mjolnir
+    build:
+      dockerfile: Dockerfile
+      context: "./"
+    volumes:
+      - src:/src
+      - ./out:/build/out
+
+volumes:
+  src:
