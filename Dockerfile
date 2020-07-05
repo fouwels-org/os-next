@@ -12,4 +12,4 @@ RUN chmod +x /build.sh
 RUN mv /build/kernel-test.sh /kernel-test.sh
 RUN chmod +x /kernel-test.sh
 
-#ENTRYPOINT ["/build.sh"]
+ENTRYPOINT ["/build.sh"]
