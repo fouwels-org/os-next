@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       context: "./"
     volumes:
-      - src:/src
+      - src:/build/src
       - ./out:/build/out
 
 volumes:

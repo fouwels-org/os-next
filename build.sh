@@ -22,14 +22,16 @@ debug() {
   /bin/sh
 }
 
-download_wg() {
+download_wg() { 
   cd $SRC_DIR
-  git clone -b $WG https://git.zx2c4.com/wireguard-tools wireguard-tools-$WG
+  if [! -f " wireguard-tools-$WG" ]; then
+    git clone -b $WG https://git.zx2c4.com/wireguard-tools wireguard-tools-$WG
+  fi
 }
 
 download_kmod() {
   cd $SRC_DIR
-  if [ ! -f "kmod.tar.xz" ]; then
+  if [! -f "kmod.tar.xz" ]; then
     wget -q -O kmod.tar.xz \
       https://mirrors.edge.kernel.org/pub/linux/utils/kernel/kmod/kmod-$KMOD.tar.xz
     tar -xf kmod.tar.xz
@@ -38,7 +40,7 @@ download_kmod() {
 
 download_kernel() {
   cd $SRC_DIR
-  if [ ! -f "kernel.tar.xz" ]; then
+  if [! -f "kernel.tar.xz" ]; then
     wget -q -O kernel.tar.xz \
       http://kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
     tar -xf kernel.tar.xz
@@ -47,7 +49,7 @@ download_kernel() {
 
 download_musl() {
   cd $SRC_DIR
-  if [ ! -f "musl.tar.gz" ]; then
+  if [! -f "musl.tar.gz" ]; then
     wget -q -O musl.tar.gz \
       http://www.musl-libc.org/releases/musl-$MUSL_VERSION.tar.gz
     tar -xf musl.tar.gz
@@ -64,7 +66,7 @@ download_iptables() {
 }
 
 download_docker() {
-  if [ ! -f "docker.tgz" ]; then
+  if [! -f "docker.tgz" ]; then
     cd $SRC_DIR
     wget -q -O docker.tgz \
       https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz

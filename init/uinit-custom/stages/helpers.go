@@ -1,34 +1,36 @@
 package stages
 
 import (
+	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 )
 
-func executeOne(command string) error {
+func executeOne(command string, stdin string) (string, error) {
 
 	cmdSplit := strings.Split(command, " ")
 	if len(cmdSplit) == 0 {
-		return fmt.Errorf("Empty command provided")
+		return "", fmt.Errorf("Empty command provided")
 	}
+
+	buffer := bytes.Buffer{}
+	buffer.Write([]byte(stdin))
 
 	cmd := exec.Command(cmdSplit[0], cmdSplit[1:]...)
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	err := cmd.Run()
+	cmd.Stdin = &buffer
+	out, err := cmd.CombinedOutput()
+
 	if err != nil {
-		return err
+		return string(out), fmt.Errorf("%v failed: %v: %w", command, string(out), err)
 	}
 
-	return nil
+	return string(out), nil
 }
 
 func execute(command []string) error {
 	for _, c := range command {
-		err := executeOne(c)
+		_, err := executeOne(c, "")
 		if err != nil {
 			return err
 		}

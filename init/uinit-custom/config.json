@@ -1,0 +1,43 @@
+{
+    "header": {
+        "site": "reference",
+        "comment": ""
+    },
+    "modules": [
+        "igb",
+        "btrfs",
+        "xhci_pci",
+        "xhci_hcd",
+        "usbhid",
+        "hid_generic",
+        "usbserial",
+        "hid"
+    ],
+    "networking": {
+        "networks": [
+            {
+                "device": "eth0",
+                "dhcp": true,
+                "ipv6": false,
+                "address": "",
+                "defaultGateway": "",
+                "subnetMask": ""
+            }
+        ],
+        "wireguard": [
+            {
+                "device": "wg0",
+                "address": "10.200.0.201/32",
+                "peers": [
+                    {
+                        "endpoint": "watchkeeper.lagoni.co.uk:51820",
+                        "publicKey": "EaUCyQSEYZ+XFHzs3Olj7ppSlGh0c2665St0kDGs9HE=",
+                        "allowedIps": [
+                            "10.200.0.0/24"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

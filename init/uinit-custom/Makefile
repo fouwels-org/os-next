@@ -19,6 +19,6 @@ down-v: Dockerfile
 	$(COMPOSE) -f $(BUILDFILE) down -v
 
 sftp:
-	sftp root@10.0.10.203:/boot/efi/EFI/ <<< $'put ./out/BOOTx64.EFI'
+	sftp root@10.0.10.203:/boot/efi/EFI/ <<< $'put ./out/uinit-custom'
 
 

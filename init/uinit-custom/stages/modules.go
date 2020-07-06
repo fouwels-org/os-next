@@ -7,11 +7,17 @@ import (
 
 //Modules implementes IStage
 type Modules struct {
+	finals []string
 }
 
 //String ..
 func (m Modules) String() string {
 	return "Modules"
+}
+
+//Finalise ..
+func (m Modules) Finalise() []string {
+	return m.finals
 }
 
 //Run ..

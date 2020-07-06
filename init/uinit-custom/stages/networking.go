@@ -7,11 +7,17 @@ import (
 
 //Networking implements IStage
 type Networking struct {
+	finals []string
 }
 
 //String ..
 func (n Networking) String() string {
 	return "Networking"
+}
+
+//Finalise ..
+func (n Networking) Finalise() []string {
+	return n.finals
 }
 
 //Run ..
@@ -30,8 +36,6 @@ func (n Networking) Run(c config.Config, s config.Secrets) error {
 			return fmt.Errorf("NOTIMPLEMENTED: Static Addressing")
 		}
 	}
-
-	commands = append(commands, "/bbin/ip a")
 
 	err := execute(commands)
 	if err != nil {
