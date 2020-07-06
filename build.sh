@@ -7,6 +7,7 @@ MUSL_VERSION=1.2.0
 IPTABLES_VERSION=1.8.5
 DOCKER_VERSION=19.03.9
 KMOD=26
+WG=v1.0.20200513
 
 NUM_JOBS="$(grep ^processor /proc/cpuinfo | wc -l)"
 
@@ -19,6 +20,11 @@ OUT_DIR=$BUILD_DIR/out
 debug() {
   echo "Dropping into a shell for debugging ..."
   /bin/sh
+}
+
+download_wg() {
+  cd $SRC_DIR
+  git clone -b $WG https://git.zx2c4.com/wireguard-tools wireguard-tools-$WG
 }
 
 download_kmod() {
@@ -64,6 +70,14 @@ download_docker() {
       https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz
     tar -xf docker.tgz
   fi
+}
+
+build_wg() {
+  (
+    cd $SRC_DIR/wireguard-tools-$WG/src
+    make -j $NUM_JOBS
+    make DESTDIR=$ROOTFS_DIR install
+  )
 }
 
 build_musl() {
@@ -176,6 +190,7 @@ build_kmod() {
 
 download_packages() {
   download_musl
+  download_wg
   download_kmod
   download_iptables
   download_kernel
@@ -185,6 +200,7 @@ download_packages() {
 
 build_packages() {
   build_musl
+  build_wg
   build_iptables
   build_kmod
 }
