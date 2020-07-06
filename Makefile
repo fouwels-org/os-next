@@ -2,7 +2,7 @@ COMPOSE=docker-compose
 BUILDFILE=build.yml
 DOCKER=docker
 
-.PHONY: build push up down up-d
+.PHONY: build push up down up-d sftp
 
 #Docker
 build: Dockerfile
@@ -17,5 +17,8 @@ down: Dockerfile
 	$(COMPOSE) -f $(BUILDFILE) down
 down-v: Dockerfile
 	$(COMPOSE) -f $(BUILDFILE) down -v
+
+sftp:
+	sftp root@10.0.10.203:/boot/efi/EFI/ <<< $'put ./out/BOOTx64.EFI'
 
 

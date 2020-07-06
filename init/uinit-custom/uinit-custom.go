@@ -35,8 +35,10 @@ func run() error {
 	}
 
 	stageList := []stages.IStage{
-		stages.Modules{},
-		stages.Networking{},
+		&stages.Modules{},
+		&stages.Networking{},
+		&stages.Wireguard{},
+		&stages.Console{},
 	}
 
 	logf("Executing stages")
@@ -50,6 +52,20 @@ func run() error {
 			return fmt.Errorf("[%v] failed: %v", st, err)
 		}
 		logf("[%v] succeeded", st)
+	}
+
+	logf("Stage information")
+
+	for _, st := range stageList {
+
+		finals := st.Finalise()
+		if len(finals) == 0 {
+			continue
+		}
+
+		for _, f := range finals {
+			logf("[%v] %v", st, f)
+		}
 	}
 
 	return nil

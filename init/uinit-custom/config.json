@@ -32,7 +32,9 @@
                     {
                         "endpoint": "watchkeeper.lagoni.co.uk:51820",
                         "publicKey": "EaUCyQSEYZ+XFHzs3Olj7ppSlGh0c2665St0kDGs9HE=",
-                        "addresses": "10.200.0.0/24"
+                        "allowedIps": [
+                            "10.200.0.0/24"
+                        ]
                     }
                 ]
             }

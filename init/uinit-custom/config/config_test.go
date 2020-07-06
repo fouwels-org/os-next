@@ -7,12 +7,12 @@ import (
 
 func TestLoads(t *testing.T) {
 
-	_, err := config.LoadConfig("../../../user_config/config.json")
+	_, err := config.LoadConfig("../config.json")
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
-	_, err = config.LoadSecrets("../../../user_config/secrets.json")
+	_, err = config.LoadSecrets("../secrets.json")
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

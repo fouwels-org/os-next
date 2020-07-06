@@ -22,7 +22,8 @@ type Config struct {
 
 //Networking ..
 type Networking struct {
-	Networks []NetworkingNetwork `validate:"required,dive"`
+	Networks  []NetworkingNetwork   `validate:"required,dive"`
+	Wireguard []NetworkingWireguard `validate:"required,dive"`
 }
 
 //NetworkingNetwork ..
@@ -33,6 +34,20 @@ type NetworkingNetwork struct {
 	Address        string `validate:"required_without=DHCP"`
 	DefaultGateway string `validate:"required_with=Address"`
 	SubnetMask     string `validate:"required_with=Address"`
+}
+
+//NetworkingWireguard ..
+type NetworkingWireguard struct {
+	Device  string                    `validate:"required"`
+	Address string                    `validate:"required"`
+	Peers   []NetworkingWireguardPeer `validate:"required"`
+}
+
+//NetworkingWireguardPeer ..
+type NetworkingWireguardPeer struct {
+	Endpoint   string   `validate:"required"`
+	PublicKey  string   `validate:"required"`
+	AllowedIPs []string `validate:"required"`
 }
 
 //Secrets ..
