@@ -81,13 +81,19 @@ func (con Console) parse(command string) string {
 			}
 		case "sn\n":
 			{
-				executeOne("ip a", "")
-				return ""
+				str, err := executeOne("ip a", "")
+				if err != nil {
+					return fmt.Sprintf("%v: %v", str, err)
+				}
+				return str
 			}
 		case "sw\n":
 			{
-				executeOne("wg show", "")
-				return ""
+				str, err := executeOne("wg show", "")
+				if err != nil {
+					return fmt.Sprintf("%v: %v", str, err)
+				}
+				return str
 			}
 		case "dc\n":
 			{

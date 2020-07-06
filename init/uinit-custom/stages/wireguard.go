@@ -6,9 +6,9 @@ import (
 	"time"
 	"uinit-custom/config"
 
-	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
-
+	"github.com/vishvananda/netlink"
 	"golang.zx2c4.com/wireguard/wgctrl"
+	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
 //Wireguard implements IStage
@@ -30,7 +30,7 @@ func (w Wireguard) Finalise() []string {
 //Run ..
 func (w *Wireguard) Run(c config.Config, s config.Secrets) error {
 
-	commands := []string{}
+	//commands := []string{}
 
 	// Create WG
 	wg, err := wgctrl.New()
@@ -39,14 +39,25 @@ func (w *Wireguard) Run(c config.Config, s config.Secrets) error {
 	}
 
 	for _, wr := range c.Networking.Wireguard {
-		// Create Network Devices
-		commands = append(commands, fmt.Sprintf("ip link add dev %v type wireguard", wr.Device))
-		commands = append(commands, fmt.Sprintf("ip address add dev %v %v", wr.Device, wr.Address))
 
-		err = execute(commands)
+		// Create Network Devices
+		//commands = append(commands, fmt.Sprintf("ip link add dev %v type wireguard", wr.Device))
+		//commands = append(commands, fmt.Sprintf("ip address add dev %v %v", wr.Device, wr.Address))
+
+		// Add WG device
+		la := netlink.NewLinkAttrs()
+		la.Name = "wg0"
+		mywg := &netlink.Wireguard{LinkAttrs: la}
+		err := netlink.LinkAdd(mywg)
 		if err != nil {
 			return err
 		}
+		// Add IP
+		addr, err := netlink.ParseAddr(wr.Address)
+		if err != nil {
+			return err
+		}
+		err = netlink.AddrAdd(mywg, addr)
 
 		// Create Keys
 		key, err := wgtypes.GeneratePrivateKey()

@@ -8,16 +8,19 @@ import (
 	"uinit-custom/stages"
 )
 
-var _configPath = "/boot/config.json"
-var _secretsPath = "/boot/secrets.json"
+var _configPath = "/etc/bootloader/config.json"
+var _secretsPath = "/etc/bootloader/secrets.json"
 
 func main() {
 	err := run()
 	if err != nil {
 		logf("%v", err)
 	} else {
-		logf("Exit without error - this is unexpected")
+		logf("Exit without error - this is unexpected!")
 	}
+
+	fmt.Printf("DEBUG: Press enter to drop to shell")
+	fmt.Scanln()
 
 	os.Exit(-1)
 }
@@ -38,7 +41,6 @@ func run() error {
 		&stages.Modules{},
 		&stages.Networking{},
 		&stages.Wireguard{},
-		&stages.Console{},
 	}
 
 	logf("Executing stages")
@@ -66,6 +68,13 @@ func run() error {
 		for _, f := range finals {
 			logf("[%v] %v", st, f)
 		}
+	}
+
+	logf("Starting console")
+	sc := stages.Console{}
+	err = sc.Run(c, s)
+	if err != nil {
+		return fmt.Errorf("[%v] failed: %v", sc, err)
 	}
 
 	return nil
