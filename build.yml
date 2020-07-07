@@ -8,7 +8,9 @@ services:
       context: "./"
     volumes:
       - src:/build/src
+      - cache:/root/.ccache
       - ./out:/build/out
 
 volumes:
   src:
+  cache:

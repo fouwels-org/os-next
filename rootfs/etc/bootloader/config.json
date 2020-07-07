@@ -13,6 +13,21 @@
         "usbserial",
         "hid"
     ],
+    "filesystem": {
+        "device": "/dev/sda",
+        "partitions": {
+            "efi": {
+                "device": "/dev/sda1",
+                "start": "0Mib",
+                "size": "500Mib"
+            },
+            "data": {
+                "device": "/dev/sda2",
+                "start": "500Mib",
+                "size": "20Gib"
+            }
+        }
+    },
     "networking": {
         "networks": [
             {
@@ -32,7 +47,9 @@
                     {
                         "endpoint": "watchkeeper.lagoni.co.uk:51820",
                         "publicKey": "EaUCyQSEYZ+XFHzs3Olj7ppSlGh0c2665St0kDGs9HE=",
-                        "addresses": "10.200.0.0/24"
+                        "allowedIPs": [
+                            "10.200.0.0/24"
+                        ]
                     }
                 ]
             }

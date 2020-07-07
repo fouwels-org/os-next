@@ -41,6 +41,7 @@ func run() error {
 		&stages.Modules{},
 		&stages.Networking{},
 		&stages.Wireguard{},
+		&stages.Docker{},
 	}
 
 	logf("Executing stages")
@@ -68,13 +69,6 @@ func run() error {
 		for _, f := range finals {
 			logf("[%v] %v", st, f)
 		}
-	}
-
-	logf("Starting console")
-	sc := stages.Console{}
-	err = sc.Run(c, s)
-	if err != nil {
-		return fmt.Errorf("[%v] failed: %v", sc, err)
 	}
 
 	return nil

@@ -4,7 +4,7 @@ RUN apk -U add wget bc build-base gawk xorriso elfutils-dev openssl openssl-dev 
 RUN apk -U add linux-headers perl
 RUN apk -U add rsync git
 RUN apk -U add argp-standalone
-RUN apk -U add xz-dev libmnl-dev libnftnl-dev libnfnetlink-dev gzip
+RUN apk -U add xz-dev libmnl-dev libnftnl-dev libnfnetlink-dev gzip ccache
 
 COPY . /build
 RUN mv /build/build.sh /build.sh

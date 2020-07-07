@@ -18,6 +18,7 @@ type Config struct {
 	Header     Header     `validate:"required"`
 	Modules    []string   `validate:"required"`
 	Networking Networking `validate:"required"`
+	FileSystem FileSystem `validate:"required"`
 }
 
 //Networking ..
@@ -40,7 +41,7 @@ type NetworkingNetwork struct {
 type NetworkingWireguard struct {
 	Device  string                    `validate:"required"`
 	Address string                    `validate:"required"`
-	Peers   []NetworkingWireguardPeer `validate:"required"`
+	Peers   []NetworkingWireguardPeer `validate:"required,dive"`
 }
 
 //NetworkingWireguardPeer ..
@@ -48,6 +49,25 @@ type NetworkingWireguardPeer struct {
 	Endpoint   string   `validate:"required"`
 	PublicKey  string   `validate:"required"`
 	AllowedIPs []string `validate:"required"`
+}
+
+//FileSystem ..
+type FileSystem struct {
+	Device     string               `validate:"required"`
+	Partitions FileSystemPartitions `validate:"required"`
+}
+
+//FileSystemPartitions ..
+type FileSystemPartitions struct {
+	EFI  FileSystemPartition `validate:"required"`
+	Data FileSystemPartition `validate:"required"`
+}
+
+//FileSystemPartition ..
+type FileSystemPartition struct {
+	Device string `validate:"required"`
+	Start  string `validate:"required"`
+	Size   string `validate:"required"`
 }
 
 //Secrets ..
