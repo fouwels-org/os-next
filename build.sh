@@ -139,7 +139,7 @@ build_kernel() {
     make oldconfig -j $NUM_JOBS
 
     # finally build the kernel
-    make CC="ccache gcc" CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
+    make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
     make INSTALL_MOD_PATH=$ROOTFS_DIR modules_install
     # create the initrmfs
 

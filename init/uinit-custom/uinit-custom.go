@@ -16,7 +16,7 @@ func main() {
 		logf("%v", err)
 	}
 
-	fmt.Printf("Press enter to drop to shell")
+	fmt.Printf("press enter to drop to shell")
 	fmt.Scanln()
 
 	os.Exit(-1)
@@ -24,10 +24,10 @@ func main() {
 
 func run() error {
 
-	logf("Loading config")
+	logf("loading config")
 	c, err := config.LoadConfig(_configPath)
 	if err != nil {
-		return fmt.Errorf("Failed to load config from %v: %v", _configPath, err)
+		return fmt.Errorf("failed to load config from %v: %v", _configPath, err)
 	}
 
 	stageList := []stages.IStage{
@@ -36,7 +36,7 @@ func run() error {
 		&stages.Docker{},
 	}
 
-	logf("Executing stages")
+	logf("executing stages")
 
 	for _, st := range stageList {
 
@@ -49,7 +49,7 @@ func run() error {
 		logf("[%v] succeeded", st)
 	}
 
-	logf("Stage information")
+	logf("stage information")
 
 	for _, st := range stageList {
 
@@ -68,5 +68,5 @@ func run() error {
 
 func logf(format string, v ...interface{}) {
 	message := fmt.Sprintf(format, v...)
-	log.Printf("uinit %v", message)
+	log.Printf("[uinit] %v", message)
 }
