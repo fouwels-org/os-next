@@ -25,7 +25,7 @@ func (d Docker) Finalise() []string {
 }
 
 //Run ..
-func (d Docker) Run(c config.Config, s config.Secrets) error {
+func (d Docker) Run(c config.Config) error {
 
 	// Start Docker
 

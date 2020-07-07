@@ -21,7 +21,7 @@ func (m Modules) Finalise() []string {
 }
 
 //Run ..
-func (m Modules) Run(c config.Config, s config.Secrets) error {
+func (m Modules) Run(c config.Config) error {
 
 	commands := []string{}
 

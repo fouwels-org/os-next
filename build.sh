@@ -22,12 +22,12 @@ debug() {
   /bin/sh
 }
 
-download_wg() { 
-  cd $SRC_DIR
-  if [ ! -f "wireguard-tools" ]; then
-    git clone -b $WG https://git.zx2c4.com/wireguard-tools wireguard-tools
-  fi
-}
+# download_wg() { 
+#   cd $SRC_DIR
+#   if [ ! -f "wireguard-tools" ]; then
+#     git clone -b $WG https://git.zx2c4.com/wireguard-tools wireguard-tools
+#   fi
+# }
 
 download_kmod() {
   cd $SRC_DIR
@@ -74,13 +74,13 @@ download_docker() {
   fi
 }
 
-build_wg() {
-  (
-    cd $SRC_DIR/wireguard-tools/src
-    make -j $NUM_JOBS
-    make DESTDIR=$ROOTFS_DIR install
-  )
-}
+# build_wg() {
+#   (
+#     cd $SRC_DIR/wireguard-tools/src
+#     make -j $NUM_JOBS
+#     make DESTDIR=$ROOTFS_DIR install
+#   )
+# }
 
 build_musl() {
   (
@@ -192,7 +192,6 @@ build_kmod() {
 
 download_packages() {
   download_musl
-  download_wg
   download_kmod
   download_iptables
   download_kernel
@@ -202,7 +201,6 @@ download_packages() {
 
 build_packages() {
   build_musl
-  build_wg
   build_iptables
   build_kmod
 }

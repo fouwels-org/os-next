@@ -32,15 +32,10 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("Failed to load config from %v: %v", _configPath, err)
 	}
-	s, err := config.LoadSecrets(_secretsPath)
-	if err != nil {
-		return fmt.Errorf("Failed to load secrets from %v: %v", _secretsPath, err)
-	}
 
 	stageList := []stages.IStage{
 		&stages.Modules{},
 		&stages.Networking{},
-		&stages.Wireguard{},
 		&stages.Docker{},
 	}
 
@@ -50,7 +45,7 @@ func run() error {
 
 		logf("[%v] starting", st)
 
-		err := st.Run(c, s)
+		err := st.Run(c)
 		if err != nil {
 			return fmt.Errorf("[%v] failed: %v", st, err)
 		}
@@ -76,5 +71,5 @@ func run() error {
 
 func logf(format string, v ...interface{}) {
 	message := fmt.Sprintf(format, v...)
-	log.Printf("%v", message)
+	log.Printf("uinit %v", message)
 }

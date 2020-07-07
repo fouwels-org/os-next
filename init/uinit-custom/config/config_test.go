@@ -11,9 +11,4 @@ func TestLoads(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-
-	_, err = config.LoadSecrets("../secrets.json")
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
 }

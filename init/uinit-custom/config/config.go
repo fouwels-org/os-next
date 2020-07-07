@@ -18,13 +18,11 @@ type Config struct {
 	Header     Header     `validate:"required"`
 	Modules    []string   `validate:"required"`
 	Networking Networking `validate:"required"`
-	FileSystem FileSystem `validate:"required"`
 }
 
 //Networking ..
 type Networking struct {
-	Networks  []NetworkingNetwork   `validate:"required,dive"`
-	Wireguard []NetworkingWireguard `validate:"required,dive"`
+	Networks []NetworkingNetwork `validate:"required,dive"`
 }
 
 //NetworkingNetwork ..
@@ -35,44 +33,6 @@ type NetworkingNetwork struct {
 	Address        string `validate:"required_without=DHCP"`
 	DefaultGateway string `validate:"required_with=Address"`
 	SubnetMask     string `validate:"required_with=Address"`
-}
-
-//NetworkingWireguard ..
-type NetworkingWireguard struct {
-	Device  string                    `validate:"required"`
-	Address string                    `validate:"required"`
-	Peers   []NetworkingWireguardPeer `validate:"required,dive"`
-}
-
-//NetworkingWireguardPeer ..
-type NetworkingWireguardPeer struct {
-	Endpoint   string   `validate:"required"`
-	PublicKey  string   `validate:"required"`
-	AllowedIPs []string `validate:"required"`
-}
-
-//FileSystem ..
-type FileSystem struct {
-	Device     string               `validate:"required"`
-	Partitions FileSystemPartitions `validate:"required"`
-}
-
-//FileSystemPartitions ..
-type FileSystemPartitions struct {
-	EFI  FileSystemPartition `validate:"required"`
-	Data FileSystemPartition `validate:"required"`
-}
-
-//FileSystemPartition ..
-type FileSystemPartition struct {
-	Device string `validate:"required"`
-	Start  string `validate:"required"`
-	Size   string `validate:"required"`
-}
-
-//Secrets ..
-type Secrets struct {
-	Header Header `validate:"required"`
 }
 
 //LoadConfig ..
@@ -101,30 +61,4 @@ func LoadConfig(path string) (Config, error) {
 	}
 
 	return c, nil
-}
-
-//LoadSecrets ..
-func LoadSecrets(path string) (Secrets, error) {
-
-	s := Secrets{}
-
-	f, err := os.Open(path)
-	if err != nil {
-		return Secrets{}, err
-	}
-	defer f.Close()
-
-	jd := json.NewDecoder(f)
-	err = jd.Decode(&s)
-	if err != nil {
-		return Secrets{}, err
-	}
-
-	validate := validator.New()
-
-	err = validate.Struct(s)
-	if err != nil {
-		return Secrets{}, err
-	}
-	return s, nil
 }

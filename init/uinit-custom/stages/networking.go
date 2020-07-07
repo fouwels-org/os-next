@@ -21,7 +21,7 @@ func (n Networking) Finalise() []string {
 }
 
 //Run ..
-func (n Networking) Run(c config.Config, s config.Secrets) error {
+func (n Networking) Run(c config.Config) error {
 
 	commands := []string{}
 
