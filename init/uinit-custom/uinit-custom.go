@@ -8,18 +8,15 @@ import (
 	"uinit-custom/stages"
 )
 
-var _configPath = "/etc/bootloader/config.json"
-var _secretsPath = "/etc/bootloader/secrets.json"
+var _configPath = "/etc/uinit/config.json"
 
 func main() {
 	err := run()
 	if err != nil {
 		logf("%v", err)
-	} else {
-		logf("Exit without error - this is unexpected!")
 	}
 
-	fmt.Printf("DEBUG: Press enter to drop to shell")
+	fmt.Printf("Press enter to drop to shell")
 	fmt.Scanln()
 
 	os.Exit(-1)
