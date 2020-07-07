@@ -1,11 +1,10 @@
 package stages
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+	"time"
 	"uinit-custom/config"
 )
 
@@ -31,38 +30,27 @@ func (d Docker) Run(c config.Config) error {
 
 	cmd := exec.Command("dockerd")
 	cmd.Env = os.Environ()
-	cmd.Stderr = os.Stderr
-
-	stdoutp, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	cmd.Env = append(cmd.Env, "DOCKER_RAMDISK")
+	cmd.Env = append(cmd.Env, "DOCKER_RAMDISK=true")
 	cmd.Start()
 
-	scanner := bufio.NewScanner(stdoutp)
-	line := ""
+	response := ""
+	for i := 0; i < 5; i++ {
 
-	for scanner.Scan() {
-		line = scanner.Text()
-		fmt.Printf("%v", line)
-		if strings.Contains(line, "API listen on /var/run/docker.sock") {
-
-			resp, err := executeOne("docker version", "")
-			if err != nil {
-				return fmt.Errorf("docker version: %v", err)
-			}
-			d.finals = append(d.finals, fmt.Sprintf("Docker version: %v", resp))
-
-			return nil
+		resp, err := executeOne("docker version", "")
+		if err != nil {
+			time.Sleep(1 * time.Second)
+			continue
 		}
-	}
-	err = scanner.Err()
-	if err != nil {
-		return fmt.Errorf("Error while scanning: %v", err)
+
+		response = resp
 	}
 
-	return fmt.Errorf("Docker exit before running status detected")
+	if response == "" {
+		return fmt.Errorf("Failed to get docker version, docker did not start correctly")
+	}
+
+	d.finals = append(d.finals, fmt.Sprintf("Docker version: %v", response))
+
+	return nil
 
 }
