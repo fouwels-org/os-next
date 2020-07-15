@@ -22,7 +22,7 @@ func executeOne(command string, stdin string) (string, error) {
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		return string(out), fmt.Errorf("%v failed: %v: %w", command, string(out), err)
+		return string(out), err
 	}
 
 	return string(out), nil
@@ -30,9 +30,9 @@ func executeOne(command string, stdin string) (string, error) {
 
 func execute(command []string) error {
 	for _, c := range command {
-		_, err := executeOne(c, "")
+		out, err := executeOne(c, "")
 		if err != nil {
-			return err
+			return fmt.Errorf("%v failed: %v %w", command, string(out), err)
 		}
 	}
 

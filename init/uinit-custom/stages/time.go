@@ -2,6 +2,7 @@ package stages
 
 import (
 	"fmt"
+	"log"
 	"uinit-custom/config"
 )
 
@@ -23,13 +24,15 @@ func (n Time) Finalise() []string {
 //Run ..
 func (n Time) Run(c config.Config) error {
 
-	commands := []string{}
-
-	commands = append(commands, fmt.Sprintf("/bbin/ntpdate"))
-
-	err := execute(commands)
+	_, err := executeOne(fmt.Sprintf("/bbin/ntpdate"), "")
 	if err != nil {
-		return err
+		log.Printf("Error updating NTP: %v", err)
 	}
+
+	_, err = executeOne(fmt.Sprintf("/bbin/hwclock -w"), "")
+	if err != nil {
+		log.Printf("Error setting HW Clock: %v", err)
+	}
+
 	return nil
 }
