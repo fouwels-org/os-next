@@ -2,7 +2,6 @@ package stages
 
 import (
 	"fmt"
-	"log"
 	"uinit-custom/config"
 )
 
@@ -40,7 +39,7 @@ func (n Networking) Run(c config.Config) error {
 
 	err := execute(commands)
 	if err != nil {
-		log.Printf("")
+		return err
 	}
 	return nil
 }
