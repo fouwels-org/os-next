@@ -33,6 +33,7 @@ func run() error {
 	stageList := []stages.IStage{
 		&stages.Modules{},
 		&stages.Networking{},
+		&stages.Time{},
 		&stages.Docker{},
 	}
 
