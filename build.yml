@@ -1,7 +1,7 @@
 version: "2"
 services:
   mjolnir:
-    image: registry2.lagoni.co.uk/lagoni-engineering/mjolnir:dev
+    image: 10.10.1.100:5000/mjolnir:dev
     container_name: mjolnir
     build:
       dockerfile: Dockerfile
