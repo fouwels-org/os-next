@@ -2,7 +2,8 @@
 
 set -ex
 
-KERNEL_VERSION=5.7.7
+KERNEL_VERSION=5.9
+KERNEL_RT=5.9-rt16
 MUSL_VERSION=1.2.0
 IPTABLES_VERSION=1.8.5
 DOCKER_VERSION=19.03.9
@@ -14,7 +15,6 @@ NUM_JOBS="$(grep ^processor /proc/cpuinfo | wc -l)"
 BUILD_DIR=/build
 ROOTFS_DIR=$BUILD_DIR/rootfs
 SRC_DIR=$BUILD_DIR/src
-
 OUT_DIR=$BUILD_DIR/out
 
 debug() {
@@ -41,9 +41,9 @@ download_kmod() {
 download_kernel() {
   cd $SRC_DIR
   if [ ! -f "kernel.tar.xz" ]; then
-    wget -q -O kernel.tar.xz \
-      http://kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
+    wget -q -O kernel.tar.xz http://kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
     tar -xf kernel.tar.xz
+    wget -q -O patch-$KERNEL_RT.patch.xz https://cdn.kernel.org/pub/linux/kernel/projects/rt/5.9/patch-$KERNEL_RT.patch.xz
   fi
 }
 
@@ -132,7 +132,9 @@ build_kernel() {
   (
     cd $SRC_DIR/linux-$KERNEL_VERSION
 
-    cp $BUILD_DIR/config .config
+    cp $BUILD_DIR/config-5.9-rt-optz .config
+
+    xzcat ../patch-$KERNEL_RT.patch.xz | patch -p1
 
     #make mrproper defconfig -j $NUM_JOBS
     # NOT NEEDED WITH IF THE KERNEL CONFIG IS CORRECRTLY CONFIGURED
