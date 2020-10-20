@@ -173,6 +173,8 @@ build_rootfs() {
   rm -rf usr/include
 
   u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
+
+  touch $SRC_DIR/flag_build_rootfs
 }
 
 patch_kernel() {
@@ -200,13 +202,11 @@ patch_kernel() {
   touch $SRC_DIR/flag_patched_kernel
 }
 
-build_kernel() {
-  PS4="[build_kernel] "
-
+build_modules() {
+  PS4="[build_modules] "
+  
   cd $SRC_DIR/linux-$KERNEL_VERSION
-
-  cp $BUILD_DIR/$KERNEL_CONFIG .config
-
+  cp -f $BUILD_DIR/$KERNEL_CONFIG .config
 
   #make mrproper defconfig -j $NUM_JOBS
   # NOT NEEDED WITH IF THE KERNEL CONFIG IS CORRECRTLY CONFIGURED
@@ -215,29 +215,16 @@ build_kernel() {
   # finally build the kernel
   make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
   make INSTALL_MOD_PATH=$ROOTFS_DIR modules_install
-  # create the initrmfs
 
-  #cp `find /build/rootfs/ -name e1000e.ko` $rootfs/lib/modules
-  #cp `find /build/rootfs/ -name e1000.ko` $rootfs/lib/modules
-  #cp `find /build/rootfs/ -name btrfs.ko` $rootfs/lib/modules
-  #cp `find /build/rootfs/ -name hid-generic.ko` $rootfs/lib/modules
-  #cp `find /build/rootfs/ -name input-leds.ko` $rootfs/lib/modules
-  #cp `find /build/rootfs/ -name igb.ko` $rootfs/lib/modules
-
-  #rm -rf /build/rootfs/lib/modules/4.20.12-mjolnir
-
-  u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
-
-  make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
-
-  #cp arch/x86_64/boot/bzImage $SRC_DIR/kernel.gz
-  cp arch/x86_64/boot/bzImage $OUT_DIR/BOOTx64.EFI
+  touch $SRC_DIR/flag_built_modules
 }
 
-rebuild_kernel() {
-  PS4="[rebuild_kernel] "
+build_kernel() {
+  PS4="[build_kernel] "
 
   cd $SRC_DIR/linux-$KERNEL_VERSION
+  cp -f $BUILD_DIR/$KERNEL_CONFIG .config
+
   u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
 
   make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
@@ -306,13 +293,6 @@ prepare_build() {
   #rm -rf $ROOTFS_DIR/*
 }
 
-rebuild_system(){
-  # build the Golang init command
-  build_custom_init
-
-  rebuild_kernel
-}
-
 build_all() {
 
   prepare_build
@@ -334,7 +314,13 @@ build_all() {
 
   # Creates the release file in the rootfs
   # makes the rootfs into an initramfs, which is build into the kernel (see kernel config)
-  build_rootfs #TODO: is this redundant now? - we're running the same thing in build_kernel directly after? -KF.
+  if [ ! -f $SRC_DIR/flag_built_rootfs ]; then
+    build_rootfs
+  fi
+
+  if [ ! -f $SRC_DIR/flag_built_modules ]; then
+    build_modules
+  fi
 
   # makes the kernel into EFI image (/img/BOOTx64.EFI) which can deployed directly on a target system on a VFAT EFI partition in the location /EFI/BOOT/BOOTx64.EFI
   build_kernel
@@ -360,15 +346,12 @@ build_packages)
   ;;
 build_kernel)
   set -ex
+  build_modules
   build_kernel
   ;;
 build_init)
   set -ex
   build_custom_init
-  ;;  
-rebuild)
-  set -ex
-  rebuild_system
   ;;
 *)
   set -ex
