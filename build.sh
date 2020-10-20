@@ -45,7 +45,6 @@ download_kernel() {
     wget -q -O kernel.tar.xz http://kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
     tar -xf kernel.tar.xz
     wget -q -O patch-$KERNEL_RT.patch.xz https://cdn.kernel.org/pub/linux/kernel/projects/rt/5.9/patch-$KERNEL_RT.patch.xz
-  
   fi
 }
 
