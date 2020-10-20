@@ -3,6 +3,7 @@ package stages
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os/exec"
 	"strings"
 )
@@ -37,4 +38,9 @@ func execute(command []string) error {
 	}
 
 	return nil
+}
+
+func logf(format string, v ...interface{}) {
+	message := fmt.Sprintf(format, v...)
+	log.Printf("[uinit] %v", message)
 }

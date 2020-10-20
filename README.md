@@ -1,57 +1,37 @@
-# OS Mjolnir Build (Thor's Hammer)
-
-OSNano is a minimalist linux operating system designed to run Docker containers. The operating system build a linux ISO from source. It will download the source dependencies and build these. 
-
-All is build from within a container using musl rather than libc. The Dockerfile included is used to create the toolchain image. 
+# IIoT OS Mjolnir Build (Thor's Hammer)
+This is a real-time IIoT OS made for Docker. All is build from within a container using musl rather than libc. The Dockerfile included is used to create the toolchain image. 
 
 It is a UEFI based boot system.
 
 ## Quick Start
 
+In the `build.sh` script use the KERNEL_CONFIG variable to set the kernel config to be used in the compilation 
+
 Clone the directory into a folder on your local machine
 
-    git clone https://gitlab.com/lagoni-dev/os-nano.git
-    cd os-nano
- Build the Toolchain 
-
-    docker build -t registry.lagoni.co.uk/os_build_env:latest .
+    `docker build -t registry.lagoni.co.uk/os_build_env:latest .`
 
 Run the toolchain on a host machine. This will give you access to the linux command line in the Alpine toolchain image. 
 
-    docker run -it --rm -v build_data:/build --privileged=true --name toolchain registry.lagoni.co.uk/os_build_env:latest /bin/ash
+    `docker run -it --rm -v build_data:/build -v $PWD/out:/build/out --privileged=true --name toolchain registry.lagoni.co.uk/os_build_env:latest /bin/ash`
+
+Compile go init from the host volume. 
+
+    docker run -it --rm -v build_data:/build -v $PWD/out:/build/out -v $PWD/init:/build/init --privileged=true --name toolchain registry.lagoni.co.uk/os_build_env:latest /bin/ash
 
 At this point you will be taken to the command line within the container. The build process will use the config-enicore as the config file for the .config of the kernel. If you want to configure your own kernel, then change the config-enicore. The kernel version supported is 4.20. 
   
 To start the build process run:
   
-    ./build.sh
+    /build.sh  - will build all
+    /build.sh build_init  - will only build the go init and uinit programs
+    /build.sh rebuild  - will only build the go init and uinit programs and the reassmble the EFI. It will not rebuild the kernel, but /build.sh must have been run for this to work
 
-When the build process completes there will be a UEFI ISO image, called enicore_uefi_0_0.iso, in the isoimage folder. 
-
-To confirm that the image has been created run the following command:
-
-    ls -lah /build/isoimage/enicore_uefi_0_0.iso 
-
-This command should show an iso image called 
-
-    enicore_uefi_0_0.iso (approx 60Mb in size)
-
-## Getting the ISO image
-
-To copy the UEFI ISO from the toolchain container to the host machine you first need to keep open a second terminal while the toolchain container remains running. 
-
-At the command line back at the host machine (2nd terminal window) run:
-
-    docker cp toolchain:/build/isoimage/enicore_uefi_0_0.iso ~/enicore_uefi_0_0.iso
-
-This uses the the docker client to copy from the runnning toolchain container volume. The command syntax is:
-
-    docker cp <containerId>:/file/path/within/container /host/path/target
+When the build process completes there will be a EFI image, called BOOTx64, in the out folder. 
         
 ## To clean up
 
 When the compilation has been completed the all the data is stored in a docker volume called build_data. In order to clean all the data, source and build data produced during the ISO build, the simplest way is to delete the docker volume after having exited the toolchain container. 
-
 
 To exit the toolchain container use the command from within the command line of the running container:
 
@@ -60,6 +40,30 @@ To exit the toolchain container use the command from within the command line of 
 Run the following command to remove the data.
 
     docker volume rm build_data
+
+## Deploying the EFI image
+
+The image is copied out of the container when the build is successfully completed and place in a subdirectory called `out` in current working director. The file is called BOOTx64.EFI
+
+To deploy this onto a physical hardware device, this hardware needs to support UEFI boot, which is a modern boot loader, which is suported in most new BIOS implementaitons. 
+
+To make this work, first format a drive (can be USB or HDD) with FAT32. Then create a directory structure on this device /EFI/BOOT and simply copy the BOOTx64.EFI into the folder. The BIOS will identify this path and boot.
+
+TODO - can this be done with a VM?
+
+## CHECKS
+
+`registry2.lagoni.co.uk/kernel-check:latest`
+
+## TIPS and TRICKS
+
+In the container you can find the linux source directory under /build/src/linux... 
+
+Use `menuconfig` to setup the kernel then copy the .config to /build/out 
+
+    `cp .config /build/out`
+
+This will copy the .config to the host machine.
 
 ## License
 APACHE 2.0

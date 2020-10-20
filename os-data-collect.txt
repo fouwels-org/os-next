@@ -1,0 +1,12 @@
+state report
+
+/sys/kernel/realtime (0 or 1) // should be 1 for PREEMPT realtime
+/sys/bus/cpu/devices/processor
+/sys/class/net
+
+free
+ps -e
+dmesg | grep sd
+lsmod
+hwclock
+pci

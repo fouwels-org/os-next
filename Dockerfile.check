@@ -1,0 +1,12 @@
+FROM ubuntu
+
+RUN apt-get update && apt-get install -y wget socat 
+
+RUN echo "zcat /proc/config.gz > kernel.config" > test.sh
+RUN echo "./check-config.sh kernel.config" >> test.sh
+RUN chmod +x test.sh
+
+RUN wget https://github.com/moby/moby/raw/master/contrib/check-config.sh
+RUN chmod +x check-config.sh
+
+#ENTRYPOINT ["/build.sh"]

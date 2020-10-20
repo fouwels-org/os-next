@@ -2,13 +2,16 @@
 
 set -ex
 
-KERNEL_VERSION=5.9
-KERNEL_RT=5.9-rt16
+KERNEL_CONFIG=config-5.9-rt
+
+KERNEL_VERSION=5.9  
+KERNEL_RT=5.9-rt16 
 MUSL_VERSION=1.2.0
 IPTABLES_VERSION=1.8.5
 DOCKER_VERSION=19.03.9
 KMOD=26
 WG=v1.0.20200513
+AUFS=aufs5-standalone
 
 NUM_JOBS="$(grep ^processor /proc/cpuinfo | wc -l)"
 
@@ -16,6 +19,7 @@ BUILD_DIR=/build
 ROOTFS_DIR=$BUILD_DIR/rootfs
 SRC_DIR=$BUILD_DIR/src
 OUT_DIR=$BUILD_DIR/out
+AUFS_SRC=$SRC_DIR/$AUFS
 
 debug() {
   echo "Dropping into a shell for debugging ..."
@@ -44,6 +48,7 @@ download_kernel() {
     wget -q -O kernel.tar.xz http://kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
     tar -xf kernel.tar.xz
     wget -q -O patch-$KERNEL_RT.patch.xz https://cdn.kernel.org/pub/linux/kernel/projects/rt/5.9/patch-$KERNEL_RT.patch.xz
+  
   fi
 }
 
@@ -73,6 +78,13 @@ download_docker() {
     tar -xf docker.tgz
   fi
 }
+
+#download_aufs() {
+#  cd $SRC_DIR
+#  git clone git://github.com/sfjro/aufs5-standalone.git $AUFS
+#  cd $AUFS
+#  git checkout origin/aufs5.6
+#}
 
 # build_wg() {
 #   (
@@ -112,6 +124,15 @@ build_iptables() {
 install_docker() {
   mkdir -p $ROOTFS_DIR/usr/bin/
   cp $SRC_DIR/docker/* $ROOTFS_DIR/usr/bin/
+
+  strip $ROOTFS_DIR/usr/bin/containerd 
+  strip $ROOTFS_DIR/usr/bin/containerd-shim 
+  strip $ROOTFS_DIR/usr/bin/ctr 
+  strip $ROOTFS_DIR/usr/bin/docker 
+  strip $ROOTFS_DIR/usr/bin/docker-init 
+  strip $ROOTFS_DIR/usr/bin/docker-proxy 
+  strip $ROOTFS_DIR/usr/bin/dockerd
+  strip $ROOTFS_DIR/usr/bin/runc
 }
 
 build_rootfs() {
@@ -128,13 +149,36 @@ build_rootfs() {
   )
 }
 
+patch_kernel() {
+    cd $SRC_DIR/linux-$KERNEL_VERSION
+    
+    # RT_PREEMPT and AUFS doesn't play nicely togther.
+
+    #echo "AUFS patching  " + $AUFS_SRC
+
+    #cat $AUFS_SRC/aufs5-base.patch | patch -Np1
+    #cat $AUFS_SRC/aufs5-kbuild.patch | patch -Np1
+    #cat $AUFS_SRC/aufs5-mmap.patch | patch -Np1
+    #cat $AUFS_SRC/aufs5-standalone.patch | patch -Np1
+
+    #rm -f $AUFS_SRC/include/uapi/linux/Kbuild
+
+    #cp -av $AUFS_SRC/Documentation Documentation/
+    #cp -av $AUFS_SRC/fs/* fs/
+    #cp -av $AUFS_SRC/include/* include/
+
+    xzcat ../patch-$KERNEL_RT.patch.xz | patch -p1
+
+}
+
+
+
 build_kernel() {
   (
     cd $SRC_DIR/linux-$KERNEL_VERSION
 
-    cp $BUILD_DIR/config-5.9-rt-optz .config
+    cp $BUILD_DIR/$KERNEL_CONFIG .config
 
-    xzcat ../patch-$KERNEL_RT.patch.xz | patch -p1
 
     #make mrproper defconfig -j $NUM_JOBS
     # NOT NEEDED WITH IF THE KERNEL CONFIG IS CORRECRTLY CONFIGURED
@@ -158,22 +202,33 @@ build_kernel() {
 
     make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
 
-    cp arch/x86_64/boot/bzImage $SRC_DIR/kernel.gz
+#    cp arch/x86_64/boot/bzImage $SRC_DIR/kernel.gz
     cp arch/x86_64/boot/bzImage $OUT_DIR/BOOTx64.EFI
   )
+}
+
+
+rebuild_kernel() {
+    cd $SRC_DIR/linux-$KERNEL_VERSION
+    u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
+
+    make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
+
+#    cp arch/x86_64/boot/bzImage $SRC_DIR/kernel.gz
+    cp arch/x86_64/boot/bzImage $OUT_DIR/BOOTx64.EFI
 }
 
 build_custom_init() {
   (
     cd $BUILD_DIR/init/init-custom
     go get github.com/u-root/u-root
-    go build
-    cp init-custom $ROOTFS_DIR/init-custom
-
+    go build -o $ROOTFS_DIR/init-custom
+    
     cd $BUILD_DIR/init/uinit-custom
-    go build
-    cp uinit-custom $ROOTFS_DIR/uinit-custom
+    go build -o $ROOTFS_DIR/uinit-custom
 
+    strip $ROOTFS_DIR/uinit-custom
+    strip $ROOTFS_DIR/init-custom
   )
 }
 
@@ -198,6 +253,7 @@ download_packages() {
   download_iptables
   download_kernel
   download_docker
+ # download_aufs
   install_docker
 }
 
@@ -223,11 +279,20 @@ prepare_build() {
   #rm -rf $ROOTFS_DIR/*
 }
 
+rebuild_system(){
+  # build the Golang init command
+  build_custom_init
+
+  rebuild_kernel
+}
+
 build_all() {
 
   prepare_build
 
   download_packages
+  patch_kernel
+
   build_packages
 
   # build the Golang init command
@@ -248,11 +313,20 @@ prepare)
 download)
   download_packages
   ;;
+patch)
+  patch_kernel
+  ;;
 build)
   build_packages
   ;;
 build_kernel)
   build_kernel
+  ;;
+build_init)
+  build_custom_init
+  ;;  
+rebuild)
+  rebuild_system
   ;;
 *)
   build_all

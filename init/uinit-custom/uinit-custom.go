@@ -35,6 +35,7 @@ func run() error {
 		&stages.Networking{},
 		&stages.Time{},
 		&stages.Docker{},
+		&stages.Housekeeping{},
 	}
 
 	logf("executing stages")
