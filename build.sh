@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -ex
+PS4="[main] "
 
 KERNEL_CONFIG=config-5.9-RT-testing
 
@@ -87,52 +88,63 @@ download_docker() {
 #}
 
 build_musl() {
-  (
     cd $SRC_DIR/musl-$MUSL_VERSION
     ./configure \
       --prefix=/usr
     make -j $NUM_JOBS
     make DESTDIR=$ROOTFS_DIR install
-  )
+}
+
+build_kmod() {
+  
+  cd $SRC_DIR/kmod-$KMOD
+  ./configure --prefix=/usr --bindir=/bin --sysconfdir=/etc --with-rootlibdir=/lib
+  make EXTRA_CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE"
+  make DESTDIR=$ROOTFS_DIR install
+
+  cd $ROOTFS_DIR
+  for target in depmod insmod lsmod modinfo modprobe rmmod; do
+    ln -sfv ../bin/kmod sbin/$target
+  done
 }
 
 build_nftables() {
-    cd $SRC_DIR/libnftnl && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
-    cd $SRC_DIR/libmnl && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
-    cd $SRC_DIR/nftables && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
-    cd $SRC_DIR/iptables && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
+  cd $SRC_DIR/libnftnl && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
+  cd $SRC_DIR/libmnl && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
+  cd $SRC_DIR/nftables && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
+  cd $SRC_DIR/iptables && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
 
-    # symlink iptables to iptables-nft (nft backed), instead of iptables-legacy (iptables backed)
-    # see: https://www.redhat.com/en/blog/using-iptables-nft-hybrid-linux-firewall
-    # this will allow docker to call legacy iptables, and write into the nft instead.
+  # symlink iptables to iptables-nft (nft backed), instead of iptables-legacy (iptables backed)
+  # see: https://www.redhat.com/en/blog/using-iptables-nft-hybrid-linux-firewall
+  # this will allow docker to call legacy iptables, and write into the nft instead.
 
-    PREFIX=/usr/local/sbin
+  PREFIX=/usr/local/sbin
 
-    rm $PREFIX/iptables
-    rm $PREFIX/iptables-save
-    rm $PREFIX/iptables-restore
-    rm $PREFIX/ip6tables
-    rm $PREFIX/ip6tables-save
-    rm $PREFIX/ip6tables-restore
-    rm $PREFIX/arptables
-    rm $PREFIX/arptables-save
-    rm $PREFIX/arptables-restore
-    rm $PREFIX/ebtables
-    rm $PREFIX/ebtables-save
-    rm $PREFIX/ebtables-restore
+  rm $PREFIX/iptables
+  rm $PREFIX/iptables-save
+  rm $PREFIX/iptables-restore
+  rm $PREFIX/ip6tables
+  rm $PREFIX/ip6tables-save
+  rm $PREFIX/ip6tables-restore
+  rm $PREFIX/arptables
+  rm $PREFIX/arptables-save
+  rm $PREFIX/arptables-restore
+  rm $PREFIX/ebtables
+  rm $PREFIX/ebtables-save
+  rm $PREFIX/ebtables-restore
 
-    ln -s $PREFIX/iptables-nft $PREFIX/iptables
-    ln -s $PREFIX/iptables-nft-save $PREFIX/iptables-save
-    ln -s $PREFIX/iptables-nft-restore $PREFIX/iptables-restore
-    ln -s $PREFIX/ip6tables-nft $PREFIX/ip6tables
-    ln -s $PREFIX/ip6tables-nft-save $PREFIX/ip6tables-save
-    ln -s $PREFIX/ip6tables-nft-restore $PREFIX/ip6tables-restore
-    ln -s $PREFIX/arptables-nft $PREFIX/arptables
-    ln -s $PREFIX/arptables-nft-save $PREFIX/arptables-save
-    ln -s $PREFIX/arptables-nft-restore $PREFIX/arptables-restore
-    ln -s $PREFIX/ebtables-nft $PREFIX/ebtables
-    ln -s $PREFIX/ebtables-nft-save $PREFIX/ebtables-save
-    ln -s $PREFIX/ebtables-nft-restore $PREFIX/ebtables-restore
+  ln -s $PREFIX/iptables-nft $PREFIX/iptables
+  ln -s $PREFIX/iptables-nft-save $PREFIX/iptables-save
+  ln -s $PREFIX/iptables-nft-restore $PREFIX/iptables-restore
+  ln -s $PREFIX/ip6tables-nft $PREFIX/ip6tables
+  ln -s $PREFIX/ip6tables-nft-save $PREFIX/ip6tables-save
+  ln -s $PREFIX/ip6tables-nft-restore $PREFIX/ip6tables-restore
+  ln -s $PREFIX/arptables-nft $PREFIX/arptables
+  ln -s $PREFIX/arptables-nft-save $PREFIX/arptables-save
+  ln -s $PREFIX/arptables-nft-restore $PREFIX/arptables-restore
+  ln -s $PREFIX/ebtables-nft $PREFIX/ebtables
+  ln -s $PREFIX/ebtables-nft-save $PREFIX/ebtables-save
+  ln -s $PREFIX/ebtables-nft-restore $PREFIX/ebtables-restore
 }
 
 install_docker() {
@@ -150,120 +162,107 @@ install_docker() {
 }
 
 build_rootfs() {
-  (
-    cd $ROOTFS_DIR
+  PS4="[build_rootfs] "
 
-    # Cleanup rootfs
-    find . -type f -name '.empty' -size 0c -delete
-    rm -rf usr/man usr/share/man
-    rm -rf usr/lib/pkgconfig
-    rm -rf usr/include
+  cd $ROOTFS_DIR
 
-    u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
-  )
+  # Cleanup rootfs
+  find . -type f -name '.empty' -size 0c -delete
+  rm -rf usr/man usr/share/man
+  rm -rf usr/lib/pkgconfig
+  rm -rf usr/include
+
+  u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
 }
 
 patch_kernel() {
-    cd $SRC_DIR/linux-$KERNEL_VERSION
-    
-    # RT_PREEMPT and AUFS doesn't play nicely togther.
+  PS4="[patch_kernel] "
 
-    #echo "AUFS patching  " + $AUFS_SRC
+  cd $SRC_DIR/linux-$KERNEL_VERSION
+  
+  # RT_PREEMPT and AUFS doesn't play nicely togther.
 
-    #cat $AUFS_SRC/aufs5-base.patch | patch -Np1
-    #cat $AUFS_SRC/aufs5-kbuild.patch | patch -Np1
-    #cat $AUFS_SRC/aufs5-mmap.patch | patch -Np1
-    #cat $AUFS_SRC/aufs5-standalone.patch | patch -Np1
+  #echo "AUFS patching  " + $AUFS_SRC
 
-    #rm -f $AUFS_SRC/include/uapi/linux/Kbuild
+  #cat $AUFS_SRC/aufs5-base.patch | patch -Np1
+  #cat $AUFS_SRC/aufs5-kbuild.patch | patch -Np1
+  #cat $AUFS_SRC/aufs5-mmap.patch | patch -Np1
+  #cat $AUFS_SRC/aufs5-standalone.patch | patch -Np1
 
-    #cp -av $AUFS_SRC/Documentation Documentation/
-    #cp -av $AUFS_SRC/fs/* fs/
-    #cp -av $AUFS_SRC/include/* include/
+  #rm -f $AUFS_SRC/include/uapi/linux/Kbuild
 
-    xzcat ../patch-$KERNEL_RT.patch.xz | patch -p1
+  #cp -av $AUFS_SRC/Documentation Documentation/
+  #cp -av $AUFS_SRC/fs/* fs/
+  #cp -av $AUFS_SRC/include/* include/
 
-    touch $SRC_DIR/flag_patched_kernel
+  xzcat ../patch-$KERNEL_RT.patch.xz | patch -p1
 
+  touch $SRC_DIR/flag_patched_kernel
 }
-
-
 
 build_kernel() {
-  (
-    cd $SRC_DIR/linux-$KERNEL_VERSION
+  PS4="[build_kernel] "
 
-    cp $BUILD_DIR/$KERNEL_CONFIG .config
+  cd $SRC_DIR/linux-$KERNEL_VERSION
+
+  cp $BUILD_DIR/$KERNEL_CONFIG .config
 
 
-    #make mrproper defconfig -j $NUM_JOBS
-    # NOT NEEDED WITH IF THE KERNEL CONFIG IS CORRECRTLY CONFIGURED
-    make oldconfig -j $NUM_JOBS
+  #make mrproper defconfig -j $NUM_JOBS
+  # NOT NEEDED WITH IF THE KERNEL CONFIG IS CORRECRTLY CONFIGURED
+  make oldconfig -j $NUM_JOBS
 
-    # finally build the kernel
-    make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
-    make INSTALL_MOD_PATH=$ROOTFS_DIR modules_install
-    # create the initrmfs
+  # finally build the kernel
+  make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
+  make INSTALL_MOD_PATH=$ROOTFS_DIR modules_install
+  # create the initrmfs
 
-    #cp `find /build/rootfs/ -name e1000e.ko` $rootfs/lib/modules
-    #cp `find /build/rootfs/ -name e1000.ko` $rootfs/lib/modules
-    #cp `find /build/rootfs/ -name btrfs.ko` $rootfs/lib/modules
-    #cp `find /build/rootfs/ -name hid-generic.ko` $rootfs/lib/modules
-    #cp `find /build/rootfs/ -name input-leds.ko` $rootfs/lib/modules
-    #cp `find /build/rootfs/ -name igb.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name e1000e.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name e1000.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name btrfs.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name hid-generic.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name input-leds.ko` $rootfs/lib/modules
+  #cp `find /build/rootfs/ -name igb.ko` $rootfs/lib/modules
 
-    #rm -rf /build/rootfs/lib/modules/4.20.12-mjolnir
+  #rm -rf /build/rootfs/lib/modules/4.20.12-mjolnir
 
-    u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
+  u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
 
-    make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
+  make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
 
-#    cp arch/x86_64/boot/bzImage $SRC_DIR/kernel.gz
-    cp arch/x86_64/boot/bzImage $OUT_DIR/BOOTx64.EFI
-  )
+  #cp arch/x86_64/boot/bzImage $SRC_DIR/kernel.gz
+  cp arch/x86_64/boot/bzImage $OUT_DIR/BOOTx64.EFI
 }
 
-
 rebuild_kernel() {
-    cd $SRC_DIR/linux-$KERNEL_VERSION
-    u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
+  PS4="[rebuild_kernel] "
 
-    make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
+  cd $SRC_DIR/linux-$KERNEL_VERSION
+  u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
 
-#    cp arch/x86_64/boot/bzImage $SRC_DIR/kernel.gz
-    cp arch/x86_64/boot/bzImage $OUT_DIR/BOOTx64.EFI
+  make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
+
+  #cp arch/x86_64/boot/bzImage $SRC_DIR/kernel.gz
+  cp arch/x86_64/boot/bzImage $OUT_DIR/BOOTx64.EFI
 }
 
 build_custom_init() {
-  (
-    cd $BUILD_DIR/init/init-custom
-    go get github.com/u-root/u-root
-    go build -o $ROOTFS_DIR/init-custom
-    
-    cd $BUILD_DIR/init/uinit-custom
-    go build -o $ROOTFS_DIR/uinit-custom
+  PS4="[build_custom_init] "
 
-    strip $ROOTFS_DIR/uinit-custom
-    strip $ROOTFS_DIR/init-custom
-  )
-}
+  cd $BUILD_DIR/init/init-custom
+  go get github.com/u-root/u-root
+  go build -o $ROOTFS_DIR/init-custom
+  
+  cd $BUILD_DIR/init/uinit-custom
+  go build -o $ROOTFS_DIR/uinit-custom
 
-build_kmod() {
-  (
-    cd $SRC_DIR/kmod-$KMOD
-    ./configure --prefix=/usr --bindir=/bin --sysconfdir=/etc --with-rootlibdir=/lib
-    make EXTRA_CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE"
-    make DESTDIR=$ROOTFS_DIR install
-
-    cd $ROOTFS_DIR
-    for target in depmod insmod lsmod modinfo modprobe rmmod; do
-      ln -sfv ../bin/kmod sbin/$target
-    done
-
-  )
+  strip $ROOTFS_DIR/uinit-custom
+  strip $ROOTFS_DIR/init-custom
 }
 
 download_packages() {
+  PS4="[download_packages] "
+
   download_musl
   download_kmod
   download_nftables
@@ -276,6 +275,8 @@ download_packages() {
 }
 
 build_packages() {
+  PS4="[build_packages] "
+
   build_musl
   build_kmod
   build_nftables
@@ -288,7 +289,7 @@ clean() {
 }
 
 prepare_build() {
-
+  PS4="[prepare_build] "
   # Create src dir
   if [ ! -d $SRC_DIR ]; then
     mkdir -p $SRC_DIR
@@ -342,35 +343,35 @@ build_all() {
 # set -e needs to be re-applied after every ), as the bracket creates a new scope.
 case "${1}" in
 prepare)
-  set -e
+  set -ex
   prepare_build
   ;;
 download)
-  set -e
+  set -ex
   download_packages
   ;;
 patch)
-  set -e
+  set -ex
   patch_kernel
   ;;
 build_packages)
-  set -e
+  set -ex
   build_packages
   ;;
 build_kernel)
-  set -e
+  set -ex
   build_kernel
   ;;
 build_init)
-  set -e
+  set -ex
   build_custom_init
   ;;  
 rebuild)
-  set -e
+  set -ex
   rebuild_system
   ;;
 *)
-  set -e
+  set -ex
   build_all
   ;;
 esac
