@@ -31,11 +31,12 @@ func run() error {
 	}
 
 	stageList := []stages.IStage{
+		&stages.Housekeeping{},
 		&stages.Modules{},
 		&stages.Networking{},
 		&stages.Time{},
 		&stages.Docker{},
-		&stages.Housekeeping{},
+		&stages.Systeminfo{},
 	}
 
 	logf("executing stages")
@@ -46,9 +47,10 @@ func run() error {
 
 		err := st.Run(c)
 		if err != nil {
-			return fmt.Errorf("[%v] failed: %v", st, err)
+			fmt.Errorf("[%v] failed: %v/n", st, err)
+		} else {
+			logf("[%v] succeeded", st)
 		}
-		logf("[%v] succeeded", st)
 	}
 
 	logf("stage information")

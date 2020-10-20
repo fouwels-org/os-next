@@ -1,8 +1,7 @@
 package stages
 
 import (
-	"bufio"
-	"os"
+	"fmt"
 	"uinit-custom/config"
 )
 
@@ -24,34 +23,21 @@ func (n Housekeeping) Finalise() []string {
 //Run ..
 func (n Housekeeping) Run(c config.Config) error {
 
-	err := writeLines("1")
+	err := writeLines("/sys/fs/cgroup/memory/memory.use_hierarchy", "1")
 	if err != nil {
+		logf("Error setting memory use_hierarchy:  " + err.Error())
+		return err
+	}
+
+	commands := []string{}
+	v := "/dev/sda2"
+	commands = append(commands, fmt.Sprintf("mount -t ext4 %v /var/lib/docker", v))
+
+	err = execute(commands)
+	if err != nil {
+		logf("Error setting memory use_hierarchy:  " + err.Error())
 		return err
 	}
 
 	return nil
-}
-
-func writeLines(line string) error {
-
-	// overwrite file if it exists
-	file, err := os.OpenFile("/sys/fs/cgroup/memory/memory.use_hierarchy", os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		logf("Error setting memory use_hierarchy:  " + err.Error())
-		return err
-	}
-
-	defer file.Close()
-
-	// new writer w/ default 4096 buffer size
-	w := bufio.NewWriter(file)
-
-	_, err = w.WriteString(line)
-	if err != nil {
-		logf("Error setting memory use_hierarchy:  " + err.Error())
-		return err
-	}
-
-	// flush outstanding data
-	return w.Flush()
 }

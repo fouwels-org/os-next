@@ -1,9 +1,11 @@
 package stages
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -43,4 +45,26 @@ func execute(command []string) error {
 func logf(format string, v ...interface{}) {
 	message := fmt.Sprintf(format, v...)
 	log.Printf("[uinit] %v", message)
+}
+
+func writeLines(path string, line string) error {
+
+	// overwrite file if it exists
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+
+	// new writer w/ default 4096 buffer size
+	w := bufio.NewWriter(file)
+
+	_, err = w.WriteString(line)
+	if err != nil {
+		return err
+	}
+
+	// flush outstanding data
+	return w.Flush()
 }
