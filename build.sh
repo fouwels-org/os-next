@@ -26,6 +26,10 @@ SRC_DIR=$BUILD_DIR/src
 OUT_DIR=$BUILD_DIR/out
 AUFS_SRC=$SRC_DIR/$AUFS
 
+GOPATH=$SRC_DIR/go
+GOBIN=$GOPATH/bin
+PATH=$PATH:$GOBIN
+
 debug() {
   echo "Dropping into a shell for debugging ..."
   /bin/sh
@@ -172,9 +176,10 @@ build_rootfs() {
   rm -rf usr/lib/pkgconfig
   rm -rf usr/include
 
+  go get github.com/u-root/u-root
   u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
 
-  touch $SRC_DIR/flag_build_rootfs
+  touch $SRC_DIR/flag_built_rootfs
 }
 
 patch_kernel() {
@@ -225,6 +230,7 @@ build_kernel() {
   cd $SRC_DIR/linux-$KERNEL_VERSION
   cp -f $BUILD_DIR/$KERNEL_CONFIG .config
 
+  go get github.com/u-root/u-root
   u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
 
   make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
