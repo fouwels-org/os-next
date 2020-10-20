@@ -98,10 +98,10 @@ build_musl() {
 }
 
 build_nftables() {
-    cd $SRC_DIR/libnftnl && sh autogen.sh && ./configure && make && make install
-    cd $SRC_DIR/libmnl && sh autogen.sh && ./configure && make && make install
-    cd $SRC_DIR/nftables && sh autogen.sh && ./configure && make && make install
-    cd $SRC_DIR/iptables && sh autogen.sh && ./configure && make && make install
+    cd $SRC_DIR/libnftnl && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
+    cd $SRC_DIR/libmnl && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
+    cd $SRC_DIR/nftables && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
+    cd $SRC_DIR/iptables && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
 
     # symlink iptables to iptables-nft (nft backed), instead of iptables-legacy (iptables backed)
     # see: https://www.redhat.com/en/blog/using-iptables-nft-hybrid-linux-firewall
@@ -183,6 +183,8 @@ patch_kernel() {
     #cp -av $AUFS_SRC/include/* include/
 
     xzcat ../patch-$KERNEL_RT.patch.xz | patch -p1
+
+    touch $SRC_DIR/flag_patched_kernel
 
 }
 
@@ -270,12 +272,16 @@ download_packages() {
   download_docker
   #download_aufs
   install_docker
+
+  touch $SRC_DIR/flag_downloaded
 }
 
 build_packages() {
   build_musl
   build_kmod
   build_nftables
+
+  touch $SRC_DIR/flag_built_packages
 }
 
 clean() {
@@ -283,10 +289,16 @@ clean() {
 }
 
 prepare_build() {
-  clean
-  mkdir -p $SRC_DIR
+
+  # Create src dir
+  if [ ! -d $SRC_DIR ]; then
+    mkdir -p $SRC_DIR
+  fi  
 
   # Clean up old out
+  if [ ! -d $OUT_DIR ]; then
+    mkdir -p $OUT_DIR
+  fi
   rm -rf $OUT_DIR/*
 
   # Clean up old rootfs
@@ -305,10 +317,17 @@ build_all() {
 
   prepare_build
 
-  download_packages
-  patch_kernel
+  if [ ! -f $SRC_DIR/flag_downloaded ]; then
+    download_packages
+  fi
+  
+  if [ ! -f $SRC_DIR/flag_patched_kernel ]; then
+    patch_kernel
+  fi
 
-  build_packages
+  if [ ! -f $SRC_DIR/flag_built_packages ]; then
+    build_packages
+  fi
 
   # build the Golang init command
   build_custom_init
