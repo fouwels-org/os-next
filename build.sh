@@ -334,7 +334,7 @@ build_all() {
 
   # Creates the release file in the rootfs
   # makes the rootfs into an initramfs, which is build into the kernel (see kernel config)
-  build_rootfs
+  build_rootfs #TODO: is this redundant now? - we're running the same thing in build_kernel directly after? -KF.
 
   # makes the kernel into EFI image (/img/BOOTx64.EFI) which can deployed directly on a target system on a VFAT EFI partition in the location /EFI/BOOT/BOOTx64.EFI
   build_kernel
