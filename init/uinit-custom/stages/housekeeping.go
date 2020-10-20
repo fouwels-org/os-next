@@ -26,7 +26,7 @@ func (n Housekeeping) Run(c config.Config) error {
 
 	err := writeLines("1")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	return nil
