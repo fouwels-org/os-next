@@ -7,11 +7,15 @@ KERNEL_CONFIG=config-5.9-rt
 KERNEL_VERSION=5.9  
 KERNEL_RT=5.9-rt16 
 MUSL_VERSION=1.2.0
-IPTABLES_VERSION=1.8.5
 DOCKER_VERSION=19.03.9
 KMOD=26
-WG=v1.0.20200513
 AUFS=aufs5-standalone
+
+NFTABLES_TAG=v0.9.6
+NFTABLES_LIBNFTNL_TAG=libnftnl-1.1.7
+NFTABLES_LIBMNL_TAG=libmnl-1.0.4
+NFTABLES_IPTABLES_VERSION=v1.8.5
+
 
 NUM_JOBS="$(grep ^processor /proc/cpuinfo | wc -l)"
 
@@ -25,13 +29,6 @@ debug() {
   echo "Dropping into a shell for debugging ..."
   /bin/sh
 }
-
-# download_wg() { 
-#   cd $SRC_DIR
-#   if [ ! -f "wireguard-tools" ]; then
-#     git clone -b $WG https://git.zx2c4.com/wireguard-tools wireguard-tools
-#   fi
-# }
 
 download_kmod() {
   cd $SRC_DIR
@@ -61,12 +58,16 @@ download_musl() {
   fi
 }
 
-download_iptables() {
-  if [ ! -f "iptables.tar.bz2" ]; then
+download_nftables() {
+  # surpress git detached head message, this is what we want
+  git config --global advice.detachedHead false
+
+  if [ ! -d "$SRC_DIR/nftables" ]; then
     cd $SRC_DIR
-    wget -q -O iptables.tar.bz2 \
-      https://netfilter.org/projects/iptables/files/iptables-$IPTABLES_VERSION.tar.bz2
-    tar -xf iptables.tar.bz2
+    git clone --depth 1 --branch $NFTABLES_TAG git://git.netfilter.org/nftables
+    git clone --depth 1 --branch $NFTABLES_LIBNFTNL_TAG git://git.netfilter.org/libnftnl
+    git clone --depth 1 --branch $NFTABLES_LIBMNL_TAG git://git.netfilter.org/libmnl
+    git clone --depth 1 --branch $NFTABLES_IPTABLES_VERSION git://git.netfilter.org/iptables
   fi
 }
 
@@ -86,14 +87,6 @@ download_docker() {
 #  git checkout origin/aufs5.6
 #}
 
-# build_wg() {
-#   (
-#     cd $SRC_DIR/wireguard-tools/src
-#     make -j $NUM_JOBS
-#     make DESTDIR=$ROOTFS_DIR install
-#   )
-# }
-
 build_musl() {
   (
     cd $SRC_DIR/musl-$MUSL_VERSION
@@ -104,21 +97,43 @@ build_musl() {
   )
 }
 
-build_iptables() {
-  (
-    cd $SRC_DIR/iptables-$IPTABLES_VERSION
+build_nftables() {
+    cd $SRC_DIR/libnftnl && sh autogen.sh && ./configure && make && make install
+    cd $SRC_DIR/libmnl && sh autogen.sh && ./configure && make && make install
+    cd $SRC_DIR/nftables && sh autogen.sh && ./configure && make && make install
+    cd $SRC_DIR/iptables && sh autogen.sh && ./configure && make && make install
 
-    ./configure \
-      --prefix=/usr \
-      --enable-libipq \
-      --disable-nftables \
-      --with-xtlibdir=/lib/xtables
+    # symlink iptables to iptables-nft (nft backed), instead of iptables-legacy (iptables backed)
+    # see: https://www.redhat.com/en/blog/using-iptables-nft-hybrid-linux-firewall
+    # this will allow docker to call legacy iptables, and write into the nft instead.
 
-    make \
-      EXTRA_CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" \
-      -j $NUM_JOBS
-    make DESTDIR=$ROOTFS_DIR install
-  )
+    PREFIX=/usr/local/sbin
+
+    rm $PREFIX/iptables
+    rm $PREFIX/iptables-save
+    rm $PREFIX/iptables-restore
+    rm $PREFIX/ip6tables
+    rm $PREFIX/ip6tables-save
+    rm $PREFIX/ip6tables-restore
+    rm $PREFIX/arptables
+    rm $PREFIX/arptables-save
+    rm $PREFIX/arptables-restore
+    rm $PREFIX/ebtables
+    rm $PREFIX/ebtables-save
+    rm $PREFIX/ebtables-restore
+
+    ln -s $PREFIX/iptables-nft $PREFIX/iptables
+    ln -s $PREFIX/iptables-nft-save $PREFIX/iptables-save
+    ln -s $PREFIX/iptables-nft-restore $PREFIX/iptables-restore
+    ln -s $PREFIX/ip6tables-nft $PREFIX/ip6tables
+    ln -s $PREFIX/ip6tables-nft-save $PREFIX/ip6tables-save
+    ln -s $PREFIX/ip6tables-nft-restore $PREFIX/ip6tables-restore
+    ln -s $PREFIX/arptables-nft $PREFIX/arptables
+    ln -s $PREFIX/arptables-nft-save $PREFIX/arptables-save
+    ln -s $PREFIX/arptables-nft-restore $PREFIX/arptables-restore
+    ln -s $PREFIX/ebtables-nft $PREFIX/ebtables
+    ln -s $PREFIX/ebtables-nft-save $PREFIX/ebtables-save
+    ln -s $PREFIX/ebtables-nft-restore $PREFIX/ebtables-restore
 }
 
 install_docker() {
@@ -250,17 +265,17 @@ build_kmod() {
 download_packages() {
   download_musl
   download_kmod
-  download_iptables
+  download_nftables
   download_kernel
   download_docker
- # download_aufs
+  #download_aufs
   install_docker
 }
 
 build_packages() {
   build_musl
-  build_iptables
   build_kmod
+  build_nftables
 }
 
 clean() {
@@ -306,29 +321,38 @@ build_all() {
   build_kernel
 }
 
+# set -e needs to be re-applied after every ), as the bracket creates a new scope.
 case "${1}" in
 prepare)
+  set -e
   prepare_build
   ;;
 download)
+  set -e
   download_packages
   ;;
 patch)
+  set -e
   patch_kernel
   ;;
-build)
+build_packages)
+  set -e
   build_packages
   ;;
 build_kernel)
+  set -e
   build_kernel
   ;;
 build_init)
+  set -e
   build_custom_init
   ;;  
 rebuild)
+  set -e
   rebuild_system
   ;;
 *)
+  set -e
   build_all
   ;;
 esac
