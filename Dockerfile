@@ -1,6 +1,6 @@
-FROM golang:1.13.12-alpine3.12
+FROM golang:1.13-alpine3.12
 
-RUN apk -U add wget bc build-base gawk xorriso elfutils-dev openssl openssl-dev bison flex ncurses-dev xz autoconf automake docbook2x alpine-sdk 
+RUN apk -U add wget bc build-base gawk xorriso elfutils-dev openssl openssl-dev bison flex ncurses-dev xz autoconf automake docbook2x alpine-sdk libtool asciidoc readline-dev gmp-dev
 RUN apk -U add linux-headers perl
 RUN apk -U add rsync git
 RUN apk -U add argp-standalone
