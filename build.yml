@@ -9,7 +9,12 @@ services:
     volumes:
       - src:/build/src
       - ./out:/build/out
-
+  kernel-check:
+    image: registry2.lagoni.co.uk/kernel-check:dev
+    container_name: kernel-check
+    build:
+      dockerfile: Dockerfile.check
+      context: "./"
 volumes:
   src:
   cache:
