@@ -2,6 +2,8 @@ version: "2"
 services:
   mjolnir:
     image: registry2.lagoni.co.uk/lagoni-engineering/mjolnir:dev
+    tty: true
+    stdin_open: true
     container_name: mjolnir
     build:
       dockerfile: Dockerfile
@@ -9,12 +11,6 @@ services:
     volumes:
       - src:/build/src
       - ./out:/build/out
-  kernel-check:
-    image: registry2.lagoni.co.uk/kernel-check:dev
-    container_name: kernel-check
-    build:
-      dockerfile: Dockerfile.check
-      context: "./"
+    entrypoint: ["/build.sh"]
 volumes:
   src:
-  cache:
