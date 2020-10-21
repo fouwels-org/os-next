@@ -113,16 +113,18 @@ build_kmod() {
 }
 
 build_nftables() {
-  cd $SRC_DIR/libnftnl && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
-  cd $SRC_DIR/libmnl && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
-  cd $SRC_DIR/nftables && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
-  cd $SRC_DIR/iptables && sh autogen.sh && ./configure && make -j $NUM_JOBS && make install
+  cd $SRC_DIR/libnftnl && sh autogen.sh && ./configure && make -j $NUM_JOBS && make DESTDIR=$ROOTFS_DIR install
+  cd $SRC_DIR/libmnl && sh autogen.sh && ./configure && make -j $NUM_JOBS && make DESTDIR=$ROOTFS_DIR install
+  cd $SRC_DIR/nftables && sh autogen.sh && ./configure && make -j $NUM_JOBS && make DESTDIR=$ROOTFS_DIR install
+  cd $SRC_DIR/iptables && sh autogen.sh && ./configure && make -j $NUM_JOBS && make DESTDIR=$ROOTFS_DIR install
 
   # symlink iptables to iptables-nft (nft backed), instead of iptables-legacy (iptables backed)
   # see: https://www.redhat.com/en/blog/using-iptables-nft-hybrid-linux-firewall
   # this will allow docker to call legacy iptables, and write into the nft instead.
 
-  PREFIX=/usr/local/sbin
+
+  cd $ROOTFS_DIR
+  PREFIX=usr/local/sbin
 
   rm $PREFIX/iptables
   rm $PREFIX/iptables-save
@@ -137,18 +139,18 @@ build_nftables() {
   rm $PREFIX/ebtables-save
   rm $PREFIX/ebtables-restore
 
-  ln -s $PREFIX/iptables-nft $PREFIX/iptables
-  ln -s $PREFIX/iptables-nft-save $PREFIX/iptables-save
-  ln -s $PREFIX/iptables-nft-restore $PREFIX/iptables-restore
-  ln -s $PREFIX/ip6tables-nft $PREFIX/ip6tables
-  ln -s $PREFIX/ip6tables-nft-save $PREFIX/ip6tables-save
-  ln -s $PREFIX/ip6tables-nft-restore $PREFIX/ip6tables-restore
-  ln -s $PREFIX/arptables-nft $PREFIX/arptables
-  ln -s $PREFIX/arptables-nft-save $PREFIX/arptables-save
-  ln -s $PREFIX/arptables-nft-restore $PREFIX/arptables-restore
-  ln -s $PREFIX/ebtables-nft $PREFIX/ebtables
-  ln -s $PREFIX/ebtables-nft-save $PREFIX/ebtables-save
-  ln -s $PREFIX/ebtables-nft-restore $PREFIX/ebtables-restore
+  ln -sfv ../$PREFIX/iptables-nft sbin/iptables
+  ln -sfv ../$PREFIX/iptables-nft-save sbin/iptables-save
+  ln -sfv ../$PREFIX/iptables-nft-restore sbin/iptables-restore
+  ln -sfv ../$PREFIX/ip6tables-nft sbin/ip6tables
+  ln -sfv ../$PREFIX/ip6tables-nft-save sbin/ip6tables-save
+  ln -sfv ../$PREFIX/ip6tables-nft-restore sbin/ip6tables-restore
+  ln -sfv ../$PREFIX/arptables-nft sbin/arptables
+  ln -sfv ../$PREFIX/arptables-nft-save sbin/arptables-save
+  ln -sfv ../$PREFIX/arptables-nft-restore sbin/arptables-restore
+  ln -sfv ../$PREFIX/ebtables-nft sbin/ebtables
+  ln -sfv ../$PREFIX/ebtables-nft-save sbin/ebtables-save
+  ln -sfv ../$PREFIX/ebtables-nft-restore sbin/ebtables-restore
 }
 
 install_docker() {
