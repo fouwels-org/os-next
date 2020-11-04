@@ -1,0 +1,30 @@
+on:
+  push:
+
+jobs:
+  build-and-scan:
+    env:
+      REPO: ${{github.repository}}
+      REGISTRY: registry2.lagoni.co.uk
+
+    runs-on: ubuntu-latest
+    name: build-and-scan
+    steps:
+      - name: get vars
+        id: vars
+        run: echo ::set-output name=TAG::${GITHUB_REF##*/}
+
+      - run: echo "Running for target ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}}"
+
+      - uses: actions/checkout@master
+        with:
+          lfs: true
+
+      - run: docker build -t ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} .
+
+      - uses: azure/container-scan@v0
+        with:
+          image-name: ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}}
+          severity-threshold: LOW
+
+
