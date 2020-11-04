@@ -23,16 +23,14 @@ func (m Modules) Finalise() []string {
 //Run ..
 func (m Modules) Run(c config.Config) error {
 
-	commands := []string{}
-
 	for _, v := range c.Modules {
-		commands = append(commands, fmt.Sprintf("modprobe %v", v))
+		command := fmt.Sprintf("modprobe %v", v)
+		_, err := executeOne(command, "")
+		logf("Executing Command:  " + command)
+		if err != nil {
+			logf("Command failed:  " + err.Error())
+			continue
+		}
 	}
-
-	err := execute(commands)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }

@@ -31,8 +31,8 @@ func run() error {
 	}
 
 	stageList := []stages.IStage{
-		&stages.Housekeeping{},
 		&stages.Modules{},
+		&stages.Housekeeping{},
 		&stages.Networking{},
 		&stages.Time{},
 		&stages.Docker{},

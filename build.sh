@@ -3,10 +3,10 @@
 set -ex
 PS4="[main] "
 
-KERNEL_CONFIG=config-5.9-RT-testing
+KERNEL_CONFIG=config-5.4.70-rt40
 
-KERNEL_VERSION=5.9  
-KERNEL_RT=5.9.1-rt17 
+KERNEL_VERSION=5.4.70
+KERNEL_RT=5.4.70-rt40
 MUSL_VERSION=1.2.0
 DOCKER_VERSION=19.03.9
 KMOD=26
@@ -49,7 +49,7 @@ download_kernel() {
   if [ ! -f "kernel.tar.xz" ]; then
     wget -q -O kernel.tar.xz http://kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
     tar -xf kernel.tar.xz
-    wget -q -O patch-$KERNEL_RT.patch.xz https://cdn.kernel.org/pub/linux/kernel/projects/rt/5.9/patch-$KERNEL_RT.patch.xz
+    wget -q -O patch-$KERNEL_RT.patch.xz https://cdn.kernel.org/pub/linux/kernel/projects/rt/5.4/older/patch-$KERNEL_RT.patch.xz
   fi
 }
 

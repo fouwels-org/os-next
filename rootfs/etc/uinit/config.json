@@ -4,14 +4,18 @@
         "comment": ""
     },
     "modules": [
-        "igb",
-        "btrfs",
+        "ahci",
         "xhci_pci",
         "xhci_hcd",
+        "sd_mod",
+        "scsi_mod",
+        "igb",
+        "ipv6",
+        "btrfs",
         "usbhid",
         "hid_generic",
-        "usbserial",
-        "hid"
+        "hid",
+        "usbserial"
     ],
     "networking": {
         "networks": [

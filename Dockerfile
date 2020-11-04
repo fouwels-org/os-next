@@ -12,4 +12,8 @@ RUN chmod +x /build.sh
 RUN mv /build/kernel-test.sh /kernel-test.sh
 RUN chmod +x /kernel-test.sh
 
+WORKDIR /build
+RUN wget https://github.com/moby/moby/raw/master/contrib/check-config.sh
+RUN chmod +x check-config.sh
+
 #ENTRYPOINT ["/build.sh"]
