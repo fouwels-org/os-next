@@ -1,0 +1,5 @@
+general:
+  bestPracticeViolations:
+    - CIS-DI-0005 # Does not apply (INFO)
+    - CIS-DI-0006 # Does not apply (INFO)
+    - DKL-LI-0003 # Does not apply (INFO)
