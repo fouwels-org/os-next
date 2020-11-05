@@ -1,7 +1,7 @@
 # IIoT OS Mjolnir Build (Thor's Hammer)
 This is a real-time IIoT OS made for Docker. All is build from within a container using musl rather than libc. The Dockerfile included is used to create the toolchain image. 
 
-It is a UEFI based boot system.
+It is a EFI based boot system.
 
 ## Quick Start
 
