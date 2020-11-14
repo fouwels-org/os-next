@@ -1,0 +1,58 @@
+name: Core
+on:
+  push:
+env:
+  REPO: ${{github.repository}}
+  REGISTRY: registry2.lagoni.co.uk
+  GOSEC_VERSION: 2.5.0
+  ARCH: linux_amd64
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    name: Build and Scan (CVE)
+    steps:
+      - name: Get vars
+        id: vars
+        run: echo ::set-output name=TAG::${GITHUB_REF##*/}
+
+      - name: Print headers
+        run: echo "Running for target ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}}"
+
+      - name: Checkout repo
+        uses: actions/checkout@master
+        with:
+          lfs: true
+
+      - name: Docker build
+        run: docker build -t ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} .
+
+      - name: Run container scan
+        uses: azure/container-scan@v0
+        with:
+          image-name: ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}}
+          severity-threshold: LOW
+
+  code-security:
+    runs-on: ubuntu-latest
+    name: Code Security (MITRE)
+    steps:
+      - id: vars
+        run: echo ::set-output name=TAG::${GITHUB_REF##*/}
+
+      - name: Print headers
+        run: echo "Running for target ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} in ${GITHUB_WORKSPACE}"
+
+      - name: Checkout repo 
+        uses: actions/checkout@master
+        with:
+          lfs: true
+
+      - run: echo Working in ${GITHUB_WORKSPACE}
+
+      - name: Downloading and extracting gosec ${{env.GOSEC_VERSION}}
+        run: wget https://github.com/securego/gosec/releases/download/v${{env.GOSEC_VERSION}}/gosec_${{env.GOSEC_VERSION}}_${{env.ARCH}}.tar.gz -O gosec.tar.gz && tar -xzf gosec.tar.gz
+
+      - name: Run gosec/MITRE static security scanner (uinit-custom)
+        run: cd ${GITHUB_WORKSPACE}/init/uinit-custom && ${GITHUB_WORKSPACE}/gosec ./...
+
+

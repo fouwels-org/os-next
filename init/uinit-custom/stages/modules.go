@@ -1,7 +1,6 @@
 package stages
 
 import (
-	"fmt"
 	"uinit-custom/config"
 )
 
@@ -24,11 +23,12 @@ func (m Modules) Finalise() []string {
 func (m Modules) Run(c config.Config) error {
 
 	for _, v := range c.Modules {
-		command := fmt.Sprintf("modprobe %v", v)
-		_, err := executeOne(command, "")
-		logf("Executing Command:  " + command)
+		com := command{command: "modprobe", arguments: []string{v}}
+		_, err := executeOne(com, "")
+
+		logf("Executing Command: %v", com)
 		if err != nil {
-			logf("Command failed:  " + err.Error())
+			logf("Command failed: %v ", err)
 			continue
 		}
 	}

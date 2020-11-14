@@ -8,7 +8,7 @@ import (
 	"uinit-custom/stages"
 )
 
-var _configPath = "/etc/uinit/config.json"
+const _configPath = "/etc/uinit/config.json"
 
 func main() {
 	err := run()
@@ -16,8 +16,11 @@ func main() {
 		logf("%v", err)
 	}
 
-	fmt.Printf("press enter to drop to shell")
-	fmt.Scanln()
+	logf("press enter to exit")
+	_, err = fmt.Scanln()
+	if err != nil {
+		logf("Failed to scan console: %v", err)
+	}
 
 	os.Exit(-1)
 }
@@ -47,7 +50,7 @@ func run() error {
 
 		err := st.Run(c)
 		if err != nil {
-			fmt.Errorf("[%v] failed: %v/n", st, err)
+			logf("[%v] failed: %v/n", st, err)
 		} else {
 			logf("[%v] succeeded", st)
 		}

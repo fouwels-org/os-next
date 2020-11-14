@@ -31,12 +31,15 @@ func (d Docker) Run(c config.Config) error {
 	cmd := exec.Command("dockerd")
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "DOCKER_RAMDISK=true")
-	cmd.Start()
+	err := cmd.Start()
+	if err != nil {
+		return fmt.Errorf("Failed to start dockerd: %w", err)
+	}
 
 	response := ""
 	for i := 0; i < 5; i++ {
 
-		resp, err := executeOne("docker version", "")
+		resp, err := executeOne(command{command: "docker", arguments: []string{"version"}}, "")
 		if err != nil {
 			time.Sleep(1 * time.Second)
 			continue

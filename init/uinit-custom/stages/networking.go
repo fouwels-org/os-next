@@ -23,14 +23,14 @@ func (n Networking) Finalise() []string {
 //Run ..
 func (n Networking) Run(c config.Config) error {
 
-	commands := []string{}
+	commands := []command{}
 
 	for _, n := range c.Networking.Networks {
 		if n.DHCP {
 			if n.IPV6 {
-				commands = append(commands, fmt.Sprintf("/bbin/dhclient %v", n.Device))
+				commands = append(commands, command{command: "/bbin/dhclient", arguments: []string{n.Device}})
 			} else {
-				commands = append(commands, fmt.Sprintf("/bbin/dhclient -ipv6=false %v", n.Device))
+				commands = append(commands, command{command: "/bbin/dhclient", arguments: []string{"--ipv6=false", n.Device}})
 			}
 		} else {
 			return fmt.Errorf("NOTIMPLEMENTED: Static Addressing")

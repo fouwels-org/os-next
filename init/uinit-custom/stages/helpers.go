@@ -7,20 +7,18 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
+	"path/filepath"
 )
 
-func executeOne(command string, stdin string) (string, error) {
-
-	cmdSplit := strings.Split(command, " ")
-	if len(cmdSplit) == 0 {
-		return "", fmt.Errorf("Empty command provided")
-	}
+func executeOne(c command, stdin string) (string, error) {
 
 	buffer := bytes.Buffer{}
 	buffer.Write([]byte(stdin))
 
-	cmd := exec.Command(cmdSplit[0], cmdSplit[1:]...)
+	// #nosec G204 (CWE-78).
+	// N/A: subprocesses are executed dynamically by design, based on fixed
+	// configuration within calling functions.
+	cmd := exec.Command(c.command, c.arguments...)
 	cmd.Stdin = &buffer
 	out, err := cmd.CombinedOutput()
 
@@ -31,11 +29,11 @@ func executeOne(command string, stdin string) (string, error) {
 	return string(out), nil
 }
 
-func execute(command []string) error {
-	for _, c := range command {
+func execute(commands []command) error {
+	for _, c := range commands {
 		out, err := executeOne(c, "")
 		if err != nil {
-			return fmt.Errorf("%v failed: %v %w", command, string(out), err)
+			return fmt.Errorf("%v failed: %v %w", c, string(out), err)
 		}
 	}
 
@@ -47,24 +45,46 @@ func logf(format string, v ...interface{}) {
 	log.Printf("[uinit] %v", message)
 }
 
-func writeLines(path string, line string) error {
+type command struct {
+	command   string
+	arguments []string
+}
 
-	// overwrite file if it exists
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
+func (c command) String() string {
+
+	combo := []string{}
+	combo = append(combo, c.command)
+	combo = append(combo, c.arguments...)
+	return fmt.Sprintf("%v", combo)
+}
+
+func setFile(path string, value string, filemode os.FileMode) (e error) {
+
+	// #nosec G304 (CWE-22).
+	// N/A: filemode parameter is incorrectly being flagged.
+	// This is intended to be variable, and does not represent a path traversal.
+	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE, filemode)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to open: %w", err)
 	}
 
-	defer file.Close()
+	defer func() {
+		ferr := file.Close()
+		if ferr != nil {
+			e = fmt.Errorf("Failed to close file: %w", ferr)
+		}
+	}()
 
-	// new writer w/ default 4096 buffer size
 	w := bufio.NewWriter(file)
 
-	_, err = w.WriteString(line)
+	_, err = w.WriteString(value)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error writing: %w", err)
+	}
+	err = w.Flush()
+	if err != nil {
+		return fmt.Errorf("Failed to flush: %w", err)
 	}
 
-	// flush outstanding data
-	return w.Flush()
+	return nil
 }

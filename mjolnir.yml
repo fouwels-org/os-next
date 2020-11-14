@@ -4,7 +4,6 @@ services:
     image: registry2.lagoni.co.uk/lagoni-engineering/mjolnir:dev
     tty: true
     stdin_open: true
-    container_name: mjolnir
     build:
       dockerfile: Dockerfile
       context: "./"

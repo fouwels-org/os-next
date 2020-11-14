@@ -5,7 +5,7 @@ import (
 	"uinit-custom/config"
 )
 
-//Networking implements IStage
+//Housekeeping implements IStage
 type Housekeeping struct {
 	finals []string
 }
@@ -23,20 +23,17 @@ func (n Housekeeping) Finalise() []string {
 //Run ..
 func (n Housekeeping) Run(c config.Config) error {
 
-	err := writeLines("/sys/fs/cgroup/memory/memory.use_hierarchy", "1")
+	err := setFile("/sys/fs/cgroup/memory/memory.use_hierarchy", "1", 0644)
 	if err != nil {
-		logf("Error setting memory use_hierarchy:  " + err.Error())
-		return err
+		return fmt.Errorf("Failed to set file: %w", err)
 	}
 
-	commands := []string{}
-	v := "/dev/sda2"
-	commands = append(commands, fmt.Sprintf("mount -t ext4 %v /var/lib/docker", v))
-
+	commands := []command{
+		{command: "mount", arguments: []string{"-t", "ext4", "/dev/sda2", "/var/lib/docker"}},
+	}
 	err = execute(commands)
 	if err != nil {
-		logf("Error setting memory use_hierarchy:  " + err.Error())
-		return err
+		return fmt.Errorf("Error mounting: %w", err)
 	}
 
 	return nil

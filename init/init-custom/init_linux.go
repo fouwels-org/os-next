@@ -33,6 +33,8 @@ func installModules() {
 	}
 
 	for _, filename := range files {
+		// #nosec G304 (CWE-22)
+		// N/A: Filenames are sourced from the static modulePattern above.
 		f, err := os.Open(filename)
 		if err != nil {
 			log.Printf("installModules: can't open %q: %v", filename, err)
@@ -43,9 +45,12 @@ func installModules() {
 		moduleName := strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
 		flags := cmdline.FlagsForModule(moduleName)
 		err = kmodule.FileInit(f, flags, 0)
-		f.Close()
 		if err != nil {
 			log.Printf("installModules: can't install %q: %v", filename, err)
+		}
+		err = f.Close()
+		if err != nil {
+			log.Printf("failed to close %v: %v", filename, err)
 		}
 	}
 }
@@ -68,6 +73,9 @@ func runOSInitGo() {
 	systemd, present := initFlags["systemd"]
 	systemdEnabled, boolErr := strconv.ParseBool(systemd)
 	if present && boolErr == nil && systemdEnabled {
+		// #nosec G204 (CWE-78)
+		// N/A: use of os.Environ() to forward environment variables is intended.
+		// User injection of additional environment variables is not viable at this stage.
 		if err := syscall.Exec("/inito", []string{"/inito"}, os.Environ()); err != nil {
 			log.Printf("Lucky you, systemd failed: %v", err)
 		}

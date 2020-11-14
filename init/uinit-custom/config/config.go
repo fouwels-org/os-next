@@ -2,7 +2,9 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -36,15 +38,20 @@ type NetworkingNetwork struct {
 }
 
 //LoadConfig ..
-func LoadConfig(path string) (Config, error) {
+func LoadConfig(path string) (c Config, e error) {
 
-	c := Config{}
-
-	f, err := os.Open(path)
+	c = Config{}
+	f, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return Config{}, err
 	}
-	defer f.Close()
+
+	defer func() {
+		ferr := f.Close()
+		if ferr != nil {
+			e = fmt.Errorf("Failed to close file: %v", ferr)
+		}
+	}()
 
 	jd := json.NewDecoder(f)
 	err = jd.Decode(&c)

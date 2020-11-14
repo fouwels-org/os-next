@@ -1,0 +1,29 @@
+name: PRs
+on:
+  pull_request:
+env:
+  REPO: ${{github.repository}}
+  REGISTRY: registry2.lagoni.co.uk
+  ARCH: linux_amd64
+jobs:
+  kernel-build:
+    runs-on: self-hosted
+    name: kernel-build
+    steps:
+      - name: Get vars
+        id: vars
+        run: echo ::set-output name=TAG::${GITHUB_REF##*/}
+
+      - name: Print headers
+        run: echo "Running for target ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}}"
+
+      - name: Checkout repo
+        uses: actions/checkout@master
+        with:
+          lfs: true
+
+      - name: Docker build
+        run: docker build -t ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} .
+
+      - name: Docker run
+        run: docker run -v ghrunner_src:/build/src --entrypoint "/build.sh" ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}}

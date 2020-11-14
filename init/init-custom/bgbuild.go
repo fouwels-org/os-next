@@ -36,8 +36,11 @@ func (p cmdSlice) Swap(i, j int) {
 
 func worker(cmds chan string) {
 	for cmdName := range cmds {
-		args := []string{"--onlybuild", "--noforce", "--lowpri", cmdName}
-		cmd := exec.Command("installcommand", args...)
+
+		// #nosec G204 (CWE-78)
+		// N/A commands are specified by caller, based on fixed content of /buildbin.
+		// This is by design through u-root.
+		cmd := exec.Command("installcommand", "--onlybuild", "--noforce", "--lowpri", cmdName)
 		if err := cmd.Start(); err != nil {
 			log.Println("Cannot start:", err)
 			continue
