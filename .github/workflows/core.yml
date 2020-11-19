@@ -52,7 +52,7 @@ jobs:
       - name: Downloading and extracting gosec ${{env.GOSEC_VERSION}}
         run: wget https://github.com/securego/gosec/releases/download/v${{env.GOSEC_VERSION}}/gosec_${{env.GOSEC_VERSION}}_${{env.ARCH}}.tar.gz -O gosec.tar.gz && tar -xzf gosec.tar.gz
 
-      - name: Run gosec/MITRE static security scanner (uinit-custom)
-        run: cd ${GITHUB_WORKSPACE}/init/uinit-custom && ${GITHUB_WORKSPACE}/gosec ./...
+      - name: Run gosec/MITRE static security scanner (init-custom)
+        run: cd ${GITHUB_WORKSPACE}/init/init-custom && ${GITHUB_WORKSPACE}/gosec ./...
 
 

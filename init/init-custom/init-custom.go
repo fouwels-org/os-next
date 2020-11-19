@@ -7,15 +7,15 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"init-custom/config"
+	"init-custom/stages"
 
-	"io/ioutil"
 	"log"
 	"os/exec"
 	"syscall"
 
-	"github.com/u-root/u-root/pkg/cmdline"
 	"github.com/u-root/u-root/pkg/libinit"
-	"github.com/u-root/u-root/pkg/uflag"
 	"github.com/u-root/u-root/pkg/ulog"
 )
 
@@ -37,6 +37,8 @@ var (
 	osInitGo = func() {}
 )
 
+const _configPath = "/etc/init/config.json"
+
 func main() {
 	flag.Parse()
 
@@ -57,51 +59,23 @@ func main() {
 		}
 	}
 
+	// sets the system environmental variables
 	libinit.SetEnv()
+	// creates the rootfs
 	libinit.CreateRootfs()
-	libinit.NetInit()
-
-	// Potentially exec systemd if we have been asked to.
-	osInitGo()
-
-	// Start background build.
-	if isBgBuildEnabled() {
-		go startBgBuild()
-	}
 
 	// Turn off job control when test mode is on.
 	ctty := libinit.WithTTYControl(!*test)
 
-	// Allows passing args to uinit via kernel parameters, for example:
-	//
-	// uroot.uinitargs="-v --foobar"
-	//
-	// We also allow passing args to uinit via a flags file in
-	// /etc/uinit.flags.
-	args := cmdline.GetUinitArgs()
-	if contents, err := ioutil.ReadFile("/etc/uinit.flags"); err == nil {
-		args = append(args, uflag.FileToArgv(string(contents))...)
-	}
-	uinitArgs := libinit.WithArguments(args...)
-
 	cmdList := []*exec.Cmd{
-		// inito is (optionally) created by the u-root command when the
-		// u-root initramfs is merged with an existing initramfs that
-		// has a /init. The name inito means "original /init" There may
-		// be an inito if we are building on an existing initramfs. All
-		// initos need their own pid space.
-		libinit.Command("/inito", libinit.WithCloneFlags(syscall.CLONE_NEWPID), ctty),
-
-		libinit.Command("/bbin/uinit", ctty, uinitArgs),
-		libinit.Command("/bin/uinit", ctty, uinitArgs),
-		libinit.Command("/buildbin/uinit", ctty, uinitArgs),
-
-		//libinit.Command("/bbin/dhclient -ipv4 -ipv6=false eth0", ctty),
-
-		libinit.Command("/bin/defaultsh", ctty),
-		libinit.Command("/bin/sh", ctty),
+		libinit.Command("/bin/ash", ctty), // start ash when all user defined init is done
 	}
-
+	// run the user-defined init taskes
+	err := uinit()
+	if err != nil {
+		logf("failed loading the staged init services: %v", err)
+	}
+	// finally run the list of commands
 	cmdCount := libinit.RunCommands(debug, cmdList...)
 	if cmdCount == 0 {
 		log.Printf("No suitable executable found in %v", cmdList)
@@ -115,4 +89,57 @@ func main() {
 	syscall.Sync()
 	log.Printf("Exiting...")
 
+}
+
+func uinit() error {
+
+	logf("loading config")
+	c, err := config.LoadConfig(_configPath)
+	if err != nil {
+		return fmt.Errorf("failed to load config from %v: %v", _configPath, err)
+	}
+
+	stageList := []stages.IStage{
+		&stages.Modules{},
+		&stages.Housekeeping{},
+		&stages.Networking{},
+		&stages.Time{},
+		&stages.Docker{},
+		&stages.Systeminfo{},
+	}
+
+	logf("executing stages")
+
+	for _, st := range stageList {
+
+		logf("[%v] starting", st)
+
+		err := st.Run(c)
+		if err != nil {
+			logf("[%v] failed: %v/n", st, err)
+		} else {
+			logf("[%v] succeeded", st)
+		}
+	}
+
+	logf("stage information")
+
+	for _, st := range stageList {
+
+		finals := st.Finalise()
+		if len(finals) == 0 {
+			continue
+		}
+
+		for _, f := range finals {
+			logf("[%v] %v", st, f)
+		}
+	}
+
+	return nil
+}
+
+func logf(format string, v ...interface{}) {
+	message := fmt.Sprintf(format, v...)
+	log.Printf("[uinit] %v", message)
 }

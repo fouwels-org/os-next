@@ -26,4 +26,4 @@ jobs:
         run: docker build -t ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} .
 
       - name: Docker run
-        run: docker run -v ghrunner_src:/build/src --entrypoint "/build.sh" ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}}
+        run: docker run --entrypoint "/build.sh" ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}}

@@ -4,7 +4,7 @@ RUN apk -U --no-cache add wget bc build-base gawk xorriso elfutils-dev openssl o
 RUN apk -U --no-cache add linux-headers perl
 RUN apk -U --no-cache add rsync git
 RUN apk -U --no-cache add argp-standalone
-RUN apk -U --no-cache add xz-dev libmnl-dev libnftnl-dev cmake libnfnetlink-dev gzip ccache diffutils util-linux libuuid util-linux-dev lvm2-dev popt popt-dev json-c json-c-dev libaio-dev
+RUN apk -U --no-cache add xz-dev libmnl-dev libnftnl-dev cmake libnfnetlink-dev gzip ccache diffutils util-linux libuuid util-linux-dev lvm2-dev popt popt-dev json-c json-c-dev libaio-dev upx
 RUN apk -U --no-cache add openssl-libs-static --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
 RUN apk -U --no-cache add lvm2-static --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
 RUN apk -U --no-cache add device-mapper-static --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
