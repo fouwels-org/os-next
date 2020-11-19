@@ -8,15 +8,14 @@ KERNEL_CONFIG=config-5.4.70-rt40
 KERNEL_VERSION=5.4.70
 KERNEL_RT=5.4.70-rt40
 MUSL_VERSION=1.2.0
-DOCKER_VERSION=19.03.9
+DOCKER_VERSION=19.03.13
+CRYPTSETUP=2.3.4
 KMOD=26
-AUFS=aufs5-standalone
 
 NFTABLES_TAG=v0.9.6
 NFTABLES_LIBNFTNL_TAG=libnftnl-1.1.7
 NFTABLES_LIBMNL_TAG=libmnl-1.0.4
 NFTABLES_IPTABLES_VERSION=v1.8.5
-
 
 NUM_JOBS="$(grep ^processor /proc/cpuinfo | wc -l)"
 
@@ -33,6 +32,15 @@ PATH=$PATH:$GOBIN
 debug() {
   echo "Dropping into a shell for debugging ..."
   /bin/sh
+}
+
+download_cryptsetup() {
+  cd $SRC_DIR
+  if [ ! -f "cryptsetup.tar.xz" ]; then
+    wget -q -O cryptsetup.tar.xz \
+      https://www.kernel.org/pub/linux/utils/cryptsetup/v2.3/cryptsetup-$CRYPTSETUP.tar.xz    
+    tar -xf cryptsetup.tar.xz
+  fi
 }
 
 download_kmod() {
@@ -90,6 +98,17 @@ download_docker() {
 #  cd $AUFS
 #  git checkout origin/aufs5.6
 #}
+
+build_cryptsetup() {
+    cd $SRC_DIR/cryptsetup-$CRYPTSETUP
+    ./configure --enable-static-cryptsetup --enable-static
+    make -j $NUM_JOBS
+    strip cryptsetup.static 
+    if [ ! -d $ROOTFS_DIR/usr/sbin ]; then
+      mkdir -p $ROOTFS_DIR/usr/sbin
+    fi
+    cp cryptsetup.static $ROOTFS_DIR/usr/sbin/cryptsetup
+}
 
 build_musl() {
     cd $SRC_DIR/musl-$MUSL_VERSION
@@ -181,6 +200,7 @@ build_rootfs() {
   go get github.com/u-root/u-root
   u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
 
+  #cpio -idv < /build/initrmfs.cpio  touch $SRC_DIR/flag_built_rootfs
   touch $SRC_DIR/flag_built_rootfs
 }
 
@@ -193,17 +213,6 @@ patch_kernel() {
 
   #echo "AUFS patching  " + $AUFS_SRC
 
-  #cat $AUFS_SRC/aufs5-base.patch | patch -Np1
-  #cat $AUFS_SRC/aufs5-kbuild.patch | patch -Np1
-  #cat $AUFS_SRC/aufs5-mmap.patch | patch -Np1
-  #cat $AUFS_SRC/aufs5-standalone.patch | patch -Np1
-
-  #rm -f $AUFS_SRC/include/uapi/linux/Kbuild
-
-  #cp -av $AUFS_SRC/Documentation Documentation/
-  #cp -av $AUFS_SRC/fs/* fs/
-  #cp -av $AUFS_SRC/include/* include/
-
   xzcat ../patch-$KERNEL_RT.patch.xz | patch -p1
 
   touch $SRC_DIR/flag_patched_kernel
@@ -213,15 +222,18 @@ build_modules() {
   PS4="[build_modules] "
   
   cd $SRC_DIR/linux-$KERNEL_VERSION
-  cp -f $BUILD_DIR/$KERNEL_CONFIG .config
+  cp -f $BUILD_DIR/config/$KERNEL_CONFIG .config
 
-  #make mrproper defconfig -j $NUM_JOBS
   # NOT NEEDED WITH IF THE KERNEL CONFIG IS CORRECRTLY CONFIGURED
   make oldconfig -j $NUM_JOBS
 
   # finally build the kernel
   make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
   make INSTALL_MOD_PATH=$ROOTFS_DIR modules_install
+
+  # get a system specific modules list and remove all others taht aren't loaded
+  
+  #find $ROOTFS_DIR/lib/modules | grep "\.ko$" | grep  -v -f $BUILD_DIR/config/k300-modules.txt | xargs rm
 
   touch $SRC_DIR/flag_built_modules
 }
@@ -230,15 +242,22 @@ build_kernel() {
   PS4="[build_kernel] "
 
   cd $SRC_DIR/linux-$KERNEL_VERSION
-  cp -f $BUILD_DIR/$KERNEL_CONFIG .config
+  cp -f $BUILD_DIR/config/$KERNEL_CONFIG .config
 
+  #find $ROOTFS_DIR -print0 | cpio --null --create --verbose --owner root:root --format=newc > $BUILD_DIR/initrmfs.cpio
   go get github.com/u-root/u-root
   u-root -initcmd="/init-custom" -uinitcmd="/uinit-custom" -build=bb -format=cpio -o /build/initrmfs.cpio -files $ROOTFS_DIR:/ core boot
 
   make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
-
+  
   #cp arch/x86_64/boot/bzImage $SRC_DIR/kernel.gz
   cp arch/x86_64/boot/bzImage $OUT_DIR/BOOTx64.EFI
+  #cp arch/x86_64/boot/bzImage $OUT_DIR/bzImage
+  # uncompressed
+  #cp $BUILD_DIR/initrmfs.cpio $OUT_DIR/initrmfs.cpio
+  # XZ compressed
+  #xz --check=crc32 -c $BUILD_DIR/initrmfs.cpio > $OUT_DIR/initrmfs.cpio.xz
+
 }
 
 build_custom_init() {
@@ -257,13 +276,12 @@ build_custom_init() {
 
 download_packages() {
   PS4="[download_packages] "
-
+  download_cryptsetup
   download_musl
   download_kmod
   download_nftables
   download_kernel
   download_docker
-  #download_aufs
   install_docker
 
   touch $SRC_DIR/flag_downloaded
@@ -271,7 +289,7 @@ download_packages() {
 
 build_packages() {
   PS4="[build_packages] "
-
+  build_cryptsetup
   build_musl
   build_kmod
   build_nftables

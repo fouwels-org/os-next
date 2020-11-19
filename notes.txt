@@ -1,0 +1,71 @@
+objcopy \
+	--add-section .osrel=os-release --change-section-vma .osrel=0x20000 \
+	--add-section .cmdline=cmdline.txt --change-section-vma .cmdline=0x30000 \
+	--add-section .linux="bzImage" --change-section-vma .linux=0x40000 \
+	--add-section .initrd="initramfs.cpio.xz" --change-section-vma .initrd=0x3000000 \
+	/usr/lib/systemd/boot/efi/linuxx64.efi.stub /boot/EFI/BOOT/BOOTX64.EFI
+
+    objcopy --add-section .osrel=os-release --change-section-vma .osrel=0x20000 --add-section .cmdline=cmdline.txt --change-section-vma .cmdline=0x30000 --add-section .linux="bzImage" --change-section-vma .linux=0x40000 --add-section .initrd="initramfs.cpio.xz" --change-section-vma .initrd=0x3000000 /usr/lib/systemd/boot/efi/linuxx64.efi.stub BOOTX64.EFI
+
+    apt-get update
+    apt-get install nano
+    apt-get install systemd
+    apr-get install cryptsetup hashalot
+
+    mount /dev/sda1 /mnt/
+    bootctl --path=/mnt$esp install
+
+
+    # Files in /lib/modules/ to be retained 
+    cat /proc/modules | cut -d ' ' -f1 | sort | sed 's/^.*/\/&.ko/'
+    
+    # modules loaded    
+    cat /proc/modules | cut -d ' ' -f1 
+
+    # JSON
+    cat /proc/modules | cut -d ' ' -f1 | sort | sed 's/^.*/"&",/'
+
+    find . | grep -v -f modules.txt | grep ".ko"
+
+    # removes modules not in the list
+    find . | grep -v -f /build/init/modules.txt | grep ".ko" | xargs rm
+
+
+
+
+
+######## SCRIPT TO EXTRACT THE MODULES FROM A LIVE system #############
+
+#!/bin/bash
+
+for module in $(cat /proc/modules | cut -d ' ' -f1 ) 
+do
+  modprobe -D "$module" | cut -d ' ' -f2 | sed 's/.*kernel/\/kernel/' >> ./tmp.dat
+done
+  sort -u ./tmp.dat
+
+echo -n pass0 | /usr/crypt/cryptsetup luksFormat /dev/sdb2 -
+echo "pass0" | /usr/crypt/cryptsetup luksOpen /dev/sdb2 usbcrypt -
+mkfs.ext4 /dev/mapper/usbcrypt
+mkdir /usbcrypt
+mount /dev/mapper/usbcrypt /usbcrypt
+umount /usbcrypt
+/usr/crypt/cryptsetup luksClose usbcrypt
+
+
+
+
+
+
+state report
+
+/sys/kernel/realtime (0 or 1) // should be 1 for PREEMPT realtime
+/sys/bus/cpu/devices/processor
+/sys/class/net
+
+free
+ps -e
+dmesg | grep sd
+lsmod
+hwclock
+pci

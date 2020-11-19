@@ -4,15 +4,31 @@ RUN apk -U --no-cache add wget bc build-base gawk xorriso elfutils-dev openssl o
 RUN apk -U --no-cache add linux-headers perl
 RUN apk -U --no-cache add rsync git
 RUN apk -U --no-cache add argp-standalone
-RUN apk -U --no-cache add xz-dev libmnl-dev libnftnl-dev libnfnetlink-dev gzip ccache
+RUN apk -U --no-cache add xz-dev libmnl-dev libnftnl-dev cmake libnfnetlink-dev gzip ccache diffutils util-linux libuuid util-linux-dev lvm2-dev popt popt-dev json-c json-c-dev libaio-dev
+RUN apk -U --no-cache add openssl-libs-static --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
+RUN apk -U --no-cache add lvm2-static --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
+RUN apk -U --no-cache add device-mapper-static --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
+
+WORKDIR /tmp
+RUN wget http://ftp.rpm.org/popt/releases/popt-1.x/popt-1.18.tar.gz && \
+    tar -xvf popt-1.18.tar.gz && cd popt-1.18 && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install 
+
+RUN wget https://s3.amazonaws.com/json-c_releases/releases/json-c-0.15.tar.gz && \
+    tar -xvf json-c-0.15.tar.gz && cd json-c-0.15 && \
+    cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON && \ 
+    make && \
+    make install
 
 COPY . /build
-RUN mv /build/build.sh /build.sh
+RUN cp /build/scripts/build.sh /build.sh
 RUN chmod +x /build.sh
-RUN mv /build/kernel-test.sh /kernel-test.sh
+RUN mv /build/scripts/kernel-test.sh /kernel-test.sh
 RUN chmod +x /kernel-test.sh
 
-WORKDIR /build
+WORKDIR /build/scripts
 RUN wget https://github.com/moby/moby/raw/master/contrib/check-config.sh
 RUN chmod +x check-config.sh
 

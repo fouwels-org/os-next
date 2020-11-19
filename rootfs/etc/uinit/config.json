@@ -15,7 +15,19 @@
         "usbhid",
         "hid_generic",
         "hid",
-        "usbserial"
+        "usbserial",
+        "dm_mod",
+        "dm_crypt",
+        "aes",
+        "tpm_tis_core",
+        "tpm_tis",
+        "tpm_crb",
+        "tpm",
+        "uas",
+        "vfat",
+        "fat",
+        "nls_utf8",
+        "nls_cp437"
     ],
     "networking": {
         "networks": [
