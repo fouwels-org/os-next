@@ -3,6 +3,7 @@ package stages
 import (
 	"fmt"
 	"init-custom/config"
+	"os"
 )
 
 //Networking implements IStage
@@ -21,47 +22,81 @@ func (n Networking) Finalise() []string {
 }
 
 //Run ..
-func (n Networking) Run(c config.Config) error {
+func (n Networking) Run(c config.Config) (e error) {
 
 	commands := []command{}
 	commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", "lo", "up"}})
-	for _, n := range c.Networking.Networks {
-		if n.DHCP {
-			if n.IPV6 {
-				commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", n.Device, "up"}})
-				commands = append(commands, command{command: "/sbin/udhcpc", arguments: []string{"-b", "-i", n.Device, "-p", "/var/run/udhcpc.pid"}})
+	for _, nd := range c.Secondary.Networking.Networks {
+
+		if nd.Type != "" {
+			// If type not default, create as specified
+			commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "add", "dev", nd.Device, "type", nd.Type}})
+		}
+
+		if nd.DHCP {
+			if nd.IPV6 {
+				commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", nd.Device, "up"}})
+				commands = append(commands, command{command: "/sbin/udhcpc", arguments: []string{"-b", "-i", nd.Device, "-p", "/var/run/udhcpc.pid"}})
 			} else {
-				commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", n.Device, "up"}})
-				commands = append(commands, command{command: "/sbin/udhcpc", arguments: []string{"-b", "-i", n.Device, "-p", "/var/run/udhcpc.pid"}})
+				commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", nd.Device, "up"}})
+				commands = append(commands, command{command: "/sbin/udhcpc", arguments: []string{"-b", "-i", nd.Device, "-p", "/var/run/udhcpc.pid"}})
 			}
 		} else {
-			return fmt.Errorf("NOTIMPLEMENTED: Static Addressing")
+
+			commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", nd.Device, "up"}})
+
+			for _, v := range nd.Addresses {
+				commands = append(commands, command{command: "/sbin/ip", arguments: []string{"addr", "add", v, "dev", nd.Device}})
+			}
+
+			if nd.DefaultGateway != "" {
+				commands = append(commands, command{command: "/sbin/ip", arguments: []string{"route", "add", "default", "via", nd.DefaultGateway, "dev", nd.Device}})
+			}
 		}
 	}
 
-	// wireguard test
-	/*
-		ip link add dev wg0 type wireguard
-		wg set wg0 listen-port 51820 private-key /root/wg.key peer vezQ++zg/pvTjZ73XAXHtTnYi618BvllGHQ37a74tgc= allowed-ips 10.200.4.0/24 persistent-keepalive 5 endpoint 81.201.135.86:51820
-		ip address add dev wg0 10.200.4.99/32
-		ip link set up dev wg0
-		ip route add 10.200.4.0/24 dev wg0
-	*/
-
-	err := setFile("/root/wg.key", string("0JD938XTDYNfszGp8EoMOoT1eq710ryzJm6a0JPEkEs="), 0600)
+	err := execute(commands)
 	if err != nil {
 		return err
 	}
 
-	commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "add", "dev", "wg0", "type", "wireguard"}})
-	commands = append(commands, command{command: "/usr/sbin/wg", arguments: []string{"set", "wg0", "listen-port", "51820", "private-key", "/root/wg.key", "peer", "vezQ++zg/pvTjZ73XAXHtTnYi618BvllGHQ37a74tgc=", "allowed-ips", "10.200.4.0/24", "persistent-keepalive", "5", "endpoint", "concentrator.lagoni.co.uk:51820"}})
-	commands = append(commands, command{command: "/sbin/ip", arguments: []string{"address", "add", "dev", "wg0", "10.200.4.99/32"}})
-	commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "up", "dev", "wg0"}})
-	commands = append(commands, command{command: "/sbin/ip", arguments: []string{"route", "add", "10.200.4.0/24", "dev", "wg0"}})
+	commands = []command{}
+	for _, rt := range c.Secondary.Networking.Routes {
+		commands = append(commands, command{command: "/sbin/ip", arguments: []string{"route", "add", rt.Address, "dev", rt.Device}})
+	}
 
 	err = execute(commands)
 	if err != nil {
 		return err
+	}
+
+	if len(c.Secondary.Networking.Nameservers) != 0 {
+		// #nosec G302 (CWE-276). 644 is intentional.
+		f, err := os.OpenFile("/etc/resolv.conf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 644)
+		if err != nil {
+			return fmt.Errorf("Failed to open file to write nameservers: %v", err)
+		}
+		// #nosec G307. Double defer is safe for file.Writer
+		defer f.Close()
+
+		for _, ns := range c.Secondary.Networking.Nameservers {
+			_, err = fmt.Fprintf(f, "nameserver %v\n", ns)
+			if err != nil {
+				return fmt.Errorf("Failed to write nameserver: %v", err)
+			}
+		}
+
+		err = f.Sync()
+		if err != nil {
+			return fmt.Errorf("Failed to sync on %v: %v", f.Name(), err)
+		}
+
+		err = f.Close()
+		if err != nil {
+			return fmt.Errorf("Failed to close on %v: %v", f.Name(), err)
+		}
+
+		n.finals = append(n.finals, fmt.Sprintf("nameservers configured to %v", c.Secondary.Networking.Nameservers))
 	}
 	return nil
 }

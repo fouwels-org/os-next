@@ -17,7 +17,7 @@ Run the toolchain on a host machine. This will give you access to the linux comm
 
 Compile go init from the host volume. 
 
-    docker run -it --rm -v build_data:/build -v $PWD/out:/build/out -v $PWD/init:/build/init -v $PWD/config:/build/cocdnfig -v $PWD/scripts:/build/scripts --name toolchain registry.lagoni.co.uk/os_build_env:latest /bin/ash
+    docker run -it --rm -v build_data:/build -v $PWD/out:/build/out -v $PWD/init:/build/init -v $PWD/config:/build/config -v $PWD/scripts:/build/scripts --name toolchain registry.lagoni.co.uk/os_build_env:latest /bin/ash
 
 At this point you will be taken to the command line within the container. The build process will use the config-enicore as the config file for the .config of the kernel. If you want to configure your own kernel, then change the config-enicore. The kernel version supported is 4.20. 
   

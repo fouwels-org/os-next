@@ -10,13 +10,14 @@ import (
 	"fmt"
 	"init-custom/config"
 	"init-custom/stages"
+	"os"
 
 	"log"
 	"os/exec"
 	"syscall"
 
-	"github.com/u-root/u-root/pkg/libinit"
-	"github.com/u-root/u-root/pkg/ulog"
+	"init-custom/contrib/u-root/libinit"
+	"init-custom/contrib/u-root/ulog"
 )
 
 // Copyright 2012-2017 the u-root Authors. All rights reserved
@@ -37,13 +38,31 @@ var (
 	osInitGo = func() {}
 )
 
-const _configPath = "/etc/init/config.json"
+const _configPrimaryPath = "/etc/init/primary.json"
+const _configSecondaryPath = "/var/config/secondary.json"
 
 func main() {
-	flag.Parse()
+	err := run()
+	if err != nil {
+		log.Print("Exit with err: %v", err)
+	} else {
+		log.Printf("Exit without error?")
+	}
 
+	// We need to reap all children before exiting.
+	log.Printf("All commands exited")
+	log.Printf("Syncing filesystems")
+	syscall.Sync()
+	log.Printf("Exiting...")
+
+	os.Exit(1)
+}
+
+func run() error {
+
+	flag.Parse()
 	log.Printf("Welcome to Mjolnir - IIoT OS!")
-	log.SetPrefix("init: ")
+	log.SetPrefix("[init]: ")
 
 	if *verbose {
 		debug = log.Printf
@@ -60,71 +79,91 @@ func main() {
 	}
 
 	// sets the system environmental variables
-	libinit.SetEnv()
+	err := libinit.SetEnv()
+	if err != nil {
+		return fmt.Errorf("Failed to set system environment variables: %w", err)
+	}
+
 	// creates the rootfs
 	libinit.CreateRootfs()
 
-	// Turn off job control when test mode is on.
-	ctty := libinit.WithTTYControl(!*test)
-
-	cmdList := []*exec.Cmd{
-		libinit.Command("/bin/ash", ctty), // start ash when all user defined init is done
-	}
 	// run the user-defined init taskes
-	err := uinit()
+	err = uinit()
 	if err != nil {
-		logf("failed loading the staged init services: %v", err)
-	}
-	// finally run the list of commands
-	cmdCount := libinit.RunCommands(debug, cmdList...)
-	if cmdCount == 0 {
-		log.Printf("No suitable executable found in %v", cmdList)
+		return fmt.Errorf("failed loading the staged init services: %v", err)
 	}
 
-	// We need to reap all children before exiting.
-	log.Printf("Waiting for orphaned children")
-	libinit.WaitOrphans()
-	log.Printf("All commands exited")
-	log.Printf("Syncing filesystems")
-	syscall.Sync()
-	log.Printf("Exiting...")
+	for {
+		// Turn off job control when test mode is on.
+		ctty := libinit.WithTTYControl(!*test)
 
-}
-
-func uinit() error {
-
-	logf("loading config")
-	c, err := config.LoadConfig(_configPath)
-	if err != nil {
-		return fmt.Errorf("failed to load config from %v: %v", _configPath, err)
-	}
-
-	stageList := []stages.IStage{
-		&stages.Modules{},
-		&stages.Housekeeping{},
-		&stages.Networking{},
-		&stages.Time{},
-		&stages.Docker{},
-		&stages.Systeminfo{},
-	}
-
-	logf("executing stages")
-
-	for _, st := range stageList {
-
-		logf("[%v] starting", st)
-
-		err := st.Run(c)
-		if err != nil {
-			logf("[%v] failed: %v/n", st, err)
-		} else {
-			logf("[%v] succeeded", st)
+		cmdList := []*exec.Cmd{
+			libinit.Command("/bin/top", ctty),   // display the processes running and memory usage
+			libinit.Command("/bin/login", ctty), // start login so there is no direct access to the shell, if not logged in within 60sec of existing top then it will exit and show top again.
+		}
+		// finally run the list of commands
+		cmdCount := libinit.RunCommands(debug, cmdList...)
+		if cmdCount == 0 {
+			return fmt.Errorf("No suitable executable found in %v", cmdList)
 		}
 	}
 
-	logf("stage information")
+	return nil
+}
 
-	for _, st := range stageList {
+func uinit() error {
+	c := config.Config{}
+
+	primary := []stages.IStage{
+		&stages.Modules{},
+		&stages.KernelConfig{},
+		&stages.Filesystem{},
+		&stages.Systeminfo{},
+	}
+
+	secondary := []stages.IStage{
+		&stages.Networking{},
+		&stages.Wireguard{},
+		&stages.Time{},
+		&stages.Docker{},
+	}
+
+	log.Printf("loading primary config")
+	configPrimary := config.PrimaryFile{}
+
+	err := config.LoadConfig(_configPrimaryPath, &configPrimary)
+	if err != nil {
+		return fmt.Errorf("failed to load primary config from %v: %v", _configPrimaryPath, err)
+	}
+	c.Primary = configPrimary.Primary
+
+	log.Printf("running primary stage")
+	err = executeStages(c, primary)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("loading secondary config")
+	secondLoaded := false
+
+	configSecondary := config.SecondaryFile{}
+	err = config.LoadConfig(_configSecondaryPath, &configSecondary)
+	if err != nil {
+		log.Printf("Failed to load secondary config, not running second stage: %v", err)
+		secondLoaded = false
+	} else {
+		secondLoaded = true
+	}
+
+	if secondLoaded {
+		c.Secondary = configSecondary.Secondary
+		err = executeStages(c, secondary)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, st := range primary {
 
 		finals := st.Finalise()
 		if len(finals) == 0 {
@@ -132,14 +171,39 @@ func uinit() error {
 		}
 
 		for _, f := range finals {
-			logf("[%v] %v", st, f)
+			log.Printf("[%v] %v", st, f)
+		}
+	}
+
+	if secondLoaded {
+		for _, st := range secondary {
+
+			finals := st.Finalise()
+			if len(finals) == 0 {
+				continue
+			}
+
+			for _, f := range finals {
+				log.Printf("[%v] %v", st, f)
+			}
 		}
 	}
 
 	return nil
 }
 
-func logf(format string, v ...interface{}) {
-	message := fmt.Sprintf(format, v...)
-	log.Printf("[uinit] %v", message)
+func executeStages(c config.Config, stages []stages.IStage) error {
+
+	for _, st := range stages {
+
+		log.Printf("[%v] starting", st)
+
+		err := st.Run(c)
+		if err != nil {
+			log.Printf("[%v] failed: %v/n", st, err)
+		} else {
+			log.Printf("[%v] succeeded", st)
+		}
+	}
+	return nil
 }

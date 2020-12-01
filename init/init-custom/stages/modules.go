@@ -22,7 +22,7 @@ func (m Modules) Finalise() []string {
 //Run ..
 func (m Modules) Run(c config.Config) error {
 
-	for _, v := range c.Modules {
+	for _, v := range c.Primary.Modules {
 		com := command{command: "/sbin/modprobe", arguments: []string{v}}
 		_, err := executeOne(com, "")
 
