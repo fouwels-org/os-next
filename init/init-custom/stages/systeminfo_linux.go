@@ -4,8 +4,8 @@ package stages
 
 import (
 	"encoding/json"
+	"fmt"
 	"init-custom/config"
-	"log"
 	"os/user"
 
 	"github.com/zcalusic/sysinfo"
@@ -17,24 +17,24 @@ type Systeminfo struct {
 }
 
 //String ..
-func (n Systeminfo) String() string {
+func (n *Systeminfo) String() string {
 	return "System Info"
 }
 
 //Finalise ..
-func (n Systeminfo) Finalise() []string {
+func (n *Systeminfo) Finalise() []string {
 	return n.finals
 }
 
 //Run ..
-func (n Systeminfo) Run(c config.Config) error {
+func (n *Systeminfo) Run(c config.Config) error {
 	current, err := user.Current()
 	if err != nil {
 		return err
 	}
 
 	if current.Uid != "0" {
-		log.Fatal("requires superuser privilege")
+		return fmt.Errorf("requires superuser privilege")
 	}
 
 	var si sysinfo.SysInfo

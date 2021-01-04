@@ -11,6 +11,7 @@ import (
 	"init-custom/config"
 	"init-custom/stages"
 	"os"
+	"time"
 
 	"log"
 	"os/exec"
@@ -44,7 +45,7 @@ const _configSecondaryPath = "/var/config/secondary.json"
 func main() {
 	err := run()
 	if err != nil {
-		log.Print("Exit with err: %v", err)
+		log.Printf("Exit with err: %v", err)
 	} else {
 		log.Printf("Exit without error?")
 	}
@@ -93,6 +94,10 @@ func run() error {
 		return fmt.Errorf("failed loading the staged init services: %v", err)
 	}
 
+	// sleep to allow output from uinit to be read
+	log.Printf("Waiting 3 seconds to start TTY")
+	time.Sleep(3 * time.Second)
+
 	for {
 		// Turn off job control when test mode is on.
 		ctty := libinit.WithTTYControl(!*test)
@@ -107,8 +112,6 @@ func run() error {
 			return fmt.Errorf("No suitable executable found in %v", cmdList)
 		}
 	}
-
-	return nil
 }
 
 func uinit() error {
@@ -162,6 +165,8 @@ func uinit() error {
 			return err
 		}
 	}
+
+	log.Printf("finalised:")
 
 	for _, st := range primary {
 

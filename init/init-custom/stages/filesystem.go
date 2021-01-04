@@ -11,17 +11,17 @@ type Filesystem struct {
 }
 
 //String ..
-func (n Filesystem) String() string {
+func (n *Filesystem) String() string {
 	return "Filesystem"
 }
 
 //Finalise ..
-func (n Filesystem) Finalise() []string {
+func (n *Filesystem) Finalise() []string {
 	return n.finals
 }
 
 //Run ..
-func (n Filesystem) Run(c config.Config) error {
+func (n *Filesystem) Run(c config.Config) error {
 
 	commands := []command{}
 

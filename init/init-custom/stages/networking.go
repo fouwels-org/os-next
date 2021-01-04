@@ -12,17 +12,17 @@ type Networking struct {
 }
 
 //String ..
-func (n Networking) String() string {
+func (n *Networking) String() string {
 	return "Networking"
 }
 
 //Finalise ..
-func (n Networking) Finalise() []string {
+func (n *Networking) Finalise() []string {
 	return n.finals
 }
 
 //Run ..
-func (n Networking) Run(c config.Config) (e error) {
+func (n *Networking) Run(c config.Config) (e error) {
 
 	commands := []command{}
 	commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", "lo", "up"}})

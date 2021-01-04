@@ -12,17 +12,17 @@ type Systeminfo struct {
 }
 
 //String ..
-func (n Systeminfo) String() string {
+func (n *Systeminfo) String() string {
 	return "System Info"
 }
 
 //Finalise ..
-func (n Systeminfo) Finalise() []string {
+func (n *Systeminfo) Finalise() []string {
 	return n.finals
 }
 
 //Run ..
-func (n Systeminfo) Run(c config.Config) error {
+func (n *Systeminfo) Run(c config.Config) error {
 	strerr := "zcalusic/sysinfo is not supported on this platform"
 	n.finals = append(n.finals, strerr)
 	return nil

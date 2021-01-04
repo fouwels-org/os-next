@@ -14,17 +14,17 @@ type Docker struct {
 }
 
 //String ..
-func (d Docker) String() string {
+func (d *Docker) String() string {
 	return "Docker"
 }
 
 //Finalise ..
-func (d Docker) Finalise() []string {
+func (d *Docker) Finalise() []string {
 	return d.finals
 }
 
 //Run ..
-func (d Docker) Run(c config.Config) error {
+func (d *Docker) Run(c config.Config) error {
 
 	// Start Docker
 
@@ -49,10 +49,8 @@ func (d Docker) Run(c config.Config) error {
 	}
 
 	if response == "" {
-		return fmt.Errorf("Failed to get docker version, docker did not start correctly")
+		return fmt.Errorf("failed to get docker version, docker did not start correctly")
 	}
-
-	d.finals = append(d.finals, fmt.Sprintf("Docker version: %v", response))
 
 	return nil
 

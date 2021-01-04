@@ -1,4 +1,4 @@
-FROM golang:1.13-alpine3.12
+FROM golang:1.15-alpine3.12
 
 RUN apk -U --no-cache add wget bc build-base gawk xorriso elfutils-dev openssl openssl-dev bison flex ncurses-dev xz autoconf automake docbook2x alpine-sdk libtool asciidoc readline-dev gmp-dev
 RUN apk -U --no-cache add linux-headers perl

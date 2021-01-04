@@ -10,17 +10,17 @@ type Modules struct {
 }
 
 //String ..
-func (m Modules) String() string {
+func (m *Modules) String() string {
 	return "Modules"
 }
 
 //Finalise ..
-func (m Modules) Finalise() []string {
+func (m *Modules) Finalise() []string {
 	return m.finals
 }
 
 //Run ..
-func (m Modules) Run(c config.Config) error {
+func (m *Modules) Run(c config.Config) error {
 
 	for _, v := range c.Primary.Modules {
 		com := command{command: "/sbin/modprobe", arguments: []string{v}}

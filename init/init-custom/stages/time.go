@@ -13,17 +13,17 @@ type Time struct {
 }
 
 //String ..
-func (n Time) String() string {
+func (n *Time) String() string {
 	return "Time"
 }
 
 //Finalise ..
-func (n Time) Finalise() []string {
+func (n *Time) Finalise() []string {
 	return n.finals
 }
 
 //Run ..
-func (n Time) Run(c config.Config) (e error) {
+func (n *Time) Run(c config.Config) (e error) {
 
 	// Configure NTP
 	err := func() error {

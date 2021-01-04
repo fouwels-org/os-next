@@ -1,6 +1,7 @@
 package stages
 
 import (
+	"bytes"
 	"fmt"
 	"init-custom/config"
 	"io/ioutil"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/mdp/qrterminal"
 	"golang.zx2c4.com/wireguard/wgctrl"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
@@ -18,17 +20,17 @@ type Wireguard struct {
 }
 
 //String ..
-func (n Wireguard) String() string {
+func (n *Wireguard) String() string {
 	return "Wireguard"
 }
 
 //Finalise ..
-func (n Wireguard) Finalise() []string {
+func (n *Wireguard) Finalise() []string {
 	return n.finals
 }
 
 //Run ..
-func (n Wireguard) Run(c config.Config) error {
+func (n *Wireguard) Run(c config.Config) error {
 
 	const _keyroot = "/var/lib/docker"
 
@@ -69,6 +71,7 @@ func (n Wireguard) Run(c config.Config) error {
 		}
 
 		n.finals = append(n.finals, fmt.Sprintf("Public Key for %v: %v", wg.Device, wgkey.PublicKey().String()))
+		n.finals = append(n.finals, fmt.Sprintf("\n%v", n.writeQR(wgkey.PublicKey())))
 
 		wgpeers := []wgtypes.PeerConfig{}
 
@@ -120,4 +123,21 @@ func (n Wireguard) Run(c config.Config) error {
 	}
 
 	return nil
+}
+func (n Wireguard) writeQR(publicKey wgtypes.Key) string {
+
+	var buf bytes.Buffer
+
+	config := qrterminal.Config{
+		Level:      qrterminal.L,
+		HalfBlocks: false,
+		Writer:     &buf,
+		BlackChar:  qrterminal.BLACK,
+		WhiteChar:  qrterminal.WHITE,
+		QuietZone:  1,
+	}
+
+	qrterminal.GenerateWithConfig(publicKey.String(), config)
+
+	return string(buf.Bytes())
 }
