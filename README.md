@@ -27,6 +27,9 @@ To start the build process run:
     /build.sh build_init  - will only build the go init and uinit programs
     /build.sh rebuild  - will only build the go init and uinit programs and the reassmble the EFI. It will not rebuild the kernel, but /build.sh must have been run for this to work
 
+    ./build.sh FACTORY - will build the EFI for a factory setup of the a box
+    ./build.sh %DEV% - will build the EFI for the specific %DEV%. Supported is K300, K700, Magelis
+
 When the build process completes there will be a EFI image, called BOOTx64, in the out folder. 
         
 ## To clean up

@@ -3,8 +3,11 @@ module init-custom
 go 1.15
 
 require (
+	github.com/anatol/luks.go v0.0.0-20201214200247-1ec7c4af97f2
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/mdlayher/netlink v1.2.0 // indirect
 	github.com/mdp/qrterminal v1.0.1
+	github.com/u-root/u-root v7.0.0+incompatible // indirect
 	github.com/vishvananda/netlink v1.1.0
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f // indirect
 	github.com/zcalusic/sysinfo v0.0.0-20201228191146-22fe1fd10b0f

@@ -89,7 +89,7 @@ func run() error {
 	libinit.CreateRootfs()
 
 	// run the user-defined init taskes
-	err = uinit()
+	_, secondaryLoaded, err := uinit()
 	if err != nil {
 		return fmt.Errorf("failed loading the staged init services: %v", err)
 	}
@@ -101,11 +101,19 @@ func run() error {
 	for {
 		// Turn off job control when test mode is on.
 		ctty := libinit.WithTTYControl(!*test)
-
-		cmdList := []*exec.Cmd{
-			libinit.Command("/bin/top", ctty),   // display the processes running and memory usage
-			libinit.Command("/bin/login", ctty), // start login so there is no direct access to the shell, if not logged in within 60sec of existing top then it will exit and show top again.
+		cmdList := []*exec.Cmd{}
+		if !secondaryLoaded {
+			cmdList = []*exec.Cmd{
+				libinit.Command("/bin/ash", ctty), // start login so there is no direct access to the shell, if not logged in within 60sec of existing top then it will exit and show top again.
+			}
+		} else {
+			// Loading the full operational OS
+			cmdList = []*exec.Cmd{
+				libinit.Command("/bin/top", ctty),   // display the processes running and memory usage
+				libinit.Command("/bin/login", ctty), // start login so there is no direct access to the shell, if not logged in within 60sec of existing top then it will exit and show top again.
+			}
 		}
+
 		// finally run the list of commands
 		cmdCount := libinit.RunCommands(debug, cmdList...)
 		if cmdCount == 0 {
@@ -114,7 +122,12 @@ func run() error {
 	}
 }
 
-func uinit() error {
+// This function loads the primary and secondary boot stages after the kernel hands over to the init process
+// return parameters:
+// 		bool: true if the primary stage loads successfully otherwise false
+// 		bool: true if the secondary stage loads successfully otherwise false
+//		error: nil if both stages loads successfully, otherwise an error is returned
+func uinit() (bool, bool, error) {
 	c := config.Config{}
 
 	primary := []stages.IStage{
@@ -136,14 +149,14 @@ func uinit() error {
 
 	err := config.LoadConfig(_configPrimaryPath, &configPrimary)
 	if err != nil {
-		return fmt.Errorf("failed to load primary config from %v: %v", _configPrimaryPath, err)
+		return false, false, fmt.Errorf("failed to load primary config from %v: %v", _configPrimaryPath, err)
 	}
 	c.Primary = configPrimary.Primary
 
 	log.Printf("running primary stage")
 	err = executeStages(c, primary)
 	if err != nil {
-		return err
+		return false, false, err
 	}
 
 	log.Printf("loading secondary config")
@@ -162,7 +175,7 @@ func uinit() error {
 		c.Secondary = configSecondary.Secondary
 		err = executeStages(c, secondary)
 		if err != nil {
-			return err
+			return true, secondLoaded, err
 		}
 	}
 
@@ -194,9 +207,10 @@ func uinit() error {
 		}
 	}
 
-	return nil
+	return true, true, nil
 }
 
+// function to execute the stages, returns an error if any of the stages fail
 func executeStages(c config.Config, stages []stages.IStage) error {
 
 	for _, st := range stages {

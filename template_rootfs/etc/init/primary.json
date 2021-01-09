@@ -31,17 +31,20 @@
             "nls_utf8",
             "nls_cp437",
             "wireguard",
-            "nvme"
+            "nvme",
+            "uio_netx"
         ],
         "filesystem": {
             "devices": [
                 {
-                    "id": "/dev/nvme0n1p2",
+                    "label": "CONFIG",
+                    "id": "/dev/sda2",
                     "mountpoint": "/var/config",
                     "filesystem": "ext4"
                 },
                 {
-                    "id": "/dev/nvme0n1p3",
+                    "label": "DATA",
+                    "id": "/dev/sda3",
                     "mountpoint": "/var/lib/docker",
                     "filesystem": "ext4"
                 }

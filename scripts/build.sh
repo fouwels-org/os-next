@@ -10,13 +10,11 @@ KERNEL_VERSION=5.6.19
 KERNEL_RT=5.6.19-rt12
 
 # base system versions
-MUSL_VERSION=1.2.0
+MUSL_VERSION=1.2.1
 DOCKER_VERSION=19.03.13
 BUSYBOX_VERSION=1.32.0
 
 # security system versions, full disk encryption and wireguard P2P
-CRYPTSETUP=2.3.4
-WG=v1.0.20201112
 WG_TOOLS=v1.0.20200827
 
 # Networking for docker (nftables rather than IPtables), using kernel nftables
@@ -52,15 +50,6 @@ download_busybox() {
   tar -xf busybox.tar.bz2
 }
 
-download_cryptsetup() {
-  cd $SRC_DIR
-  if [ ! -f "cryptsetup.tar.xz" ]; then
-    wget -q -O cryptsetup.tar.xz \
-      https://www.kernel.org/pub/linux/utils/cryptsetup/v2.3/cryptsetup-$CRYPTSETUP.tar.xz    
-    tar -xf cryptsetup.tar.xz
-  fi
-}
-
 download_kernel() {
   cd $SRC_DIR
   if [ ! -f "kernel.tar.xz" ]; then
@@ -68,8 +57,6 @@ download_kernel() {
     tar -xf kernel.tar.xz
     
     wget -q -O patch-$KERNEL_RT.patch.xz https://cdn.kernel.org/pub/linux/kernel/projects/rt/5.6/older/patch-$KERNEL_RT.patch.xz
-    
-    git clone -b $WG https://git.zx2c4.com/wireguard-linux-compat
     
   fi
 }
@@ -115,12 +102,6 @@ download_wg_tools(){
 # Build Packages
 ###############################################
 
-build_cryptsetup() {
-    cd $SRC_DIR/cryptsetup-$CRYPTSETUP
-    ./configure --enable-static-cryptsetup --enable-static
-    make -j $NUM_JOBS
-}
-
 build_musl() {
     cd $SRC_DIR/musl-$MUSL_VERSION
     ./configure \
@@ -142,15 +123,6 @@ build_wg_tools() {
 ###############################################
 # Install Packages
 ###############################################
-
-install_cryptsetup() {
-    cd $SRC_DIR/cryptsetup-$CRYPTSETUP
-    strip cryptsetup.static 
-    if [ ! -d $ROOTFS_DIR/usr/sbin ]; then
-      mkdir -p $ROOTFS_DIR/usr/sbin
-    fi
-    cp cryptsetup.static $ROOTFS_DIR/usr/sbin/cryptsetup
-}
 
 install_musl() {
     cd $SRC_DIR/musl-$MUSL_VERSION
@@ -325,7 +297,20 @@ install_modules() {
   cd $SRC_DIR/linux-$KERNEL_VERSION
   make INSTALL_MOD_PATH=$ROOTFS_DIR modules_install
   # get a system specific modules list and remove all others taht aren't loaded - This is for a production solution
-  #find $ROOTFS_DIR/lib/modules | grep "\.ko$" | grep  -v -f $BUILD_DIR/config/k300-modules.txt | xargs rm
+  case "$BUILD_TYPE" in
+    "FACTORY")
+      echo "including the Factory EFI Image - All modules are included"
+      ;;
+    "K300")
+      echo "Production OS - Only K300 modules included"
+      find $ROOTFS_DIR/lib/modules | grep "\.ko$" | grep  -v -f $BUILD_DIR/config/k300-modules.txt | xargs rm
+      ;;
+    "MAGELIS")
+      echo "Production OS - Only MAGELIS modules included"
+      find $ROOTFS_DIR/lib/modules | grep "\.ko$" | grep  -v -f $BUILD_DIR/config/magelis-modules.txt | xargs rm
+      ;;
+  esac
+  
 }
 
 build_initrmfs(){
@@ -345,7 +330,7 @@ build_initrmfs(){
   find $ROOTFS_DIR | grep ".\.a$" | xargs rm
   find $ROOTFS_DIR | grep ".\.o$" | xargs rm
   
-  find $ROOTFS_DIR -executable -type f | grep -v '.\.script$' | grep -v '.\.sh$' | xargs strip
+  find $ROOTFS_DIR -executable -type f | grep -v '.\.script$' | grep -v '.\.sh$' | grep -v '.\.bin$' | grep -v '.\.txt$'| xargs strip
 
   find . -print0 | cpio --null --create --verbose  --format=newc > $BUILD_DIR/initrmfs.cpio
 }
@@ -383,7 +368,7 @@ download_packages() {
   PS4="[download_packages] "
   download_kernel
   download_wg_tools
-  download_cryptsetup
+
   download_nftables
   download_musl
   download_busybox
@@ -399,18 +384,16 @@ download_packages() {
 build_packages() {
   PS4="[build_packages] "
   build_busybox
-  build_cryptsetup
   build_musl
   build_nftables
   build_wg_tools
-
+  
   touch $SRC_DIR/flag_built_packages
 }
 
 install_packages() {
   PS4="[install_packages] "
   install_busybox
-  install_cryptsetup
   install_musl
   install_nftables
   install_wg_tools
@@ -427,6 +410,32 @@ build_busybox() {
 install_busybox() {
   cd $SRC_DIR/busybox-$BUSYBOX_VERSION
   make EXTRA_CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" busybox install #-j $NUM_JOBS
+}
+
+# cheat! using the prebuid alpine docker libs and binaries for cryptscript and e2fsprogs
+install_deployment_tools() {
+  cp -av /sbin/cryptsetup $ROOTFS_DIR/sbin
+  cp -av /lib/libcryptsetup.so.* $ROOTFS_DIR/lib
+  cp -av /lib/libpopt.so.* $ROOTFS_DIR/lib
+  cp -av /lib/libuuid.so.* $ROOTFS_DIR/lib
+  cp -av /lib/libblkid.so.* $ROOTFS_DIR/lib 
+  cp -av /lib/libdevmapper.so.1.* $ROOTFS_DIR/lib
+  cp -av /lib/libcrypto.so.1.* $ROOTFS_DIR/lib 
+  cp -av /usr/lib/libargon2.so.* $ROOTFS_DIR/usr/lib
+  cp -av /usr/lib/libjson-c.so.* $ROOTFS_DIR/usr/lib
+
+  cp -av /sbin/mke2fs $ROOTFS_DIR/sbin
+
+  cp -av /lib/libext2fs.so.* $ROOTFS_DIR/lib 
+  cp -av /lib/libcom_err.so.* $ROOTFS_DIR/lib 
+  cp -av /lib/libblkid.so.* $ROOTFS_DIR/lib 
+  cp -av /lib/libuuid.so.* $ROOTFS_DIR/lib 
+  cp -av /lib/libe2p.so.* $ROOTFS_DIR/lib 
+
+  cd $ROOTFS_DIR
+  ln -sfv mke2fs sbin/mkfs.ext4 
+  ln -sfv mke2fs sbin/mkfs.ext3
+  
 }
 
 clean() {
@@ -476,8 +485,20 @@ build_all() {
   build_custom_init
   # build the rootfs
   build_rootfs
+
   install_packages
   install_modules
+  
+case "$BUILD_TYPE" in
+  "FACTORY")
+    echo "including the Factory EFI Image"
+    install_deployment_tools
+    ;;
+  *)
+    echo "Production OS for $BUILD_TYPE"
+    rm $ROOTFS_DIR/sbin/*.sh
+    ;;
+esac
 
   # strip and create the initramfs for the kernel build 
   build_initrmfs
@@ -514,6 +535,10 @@ build_init)
   ;;
 *)
   set -ex
+  BUILD_TYPE=$1
+  echo "Building EFI for: $BUILD_TYPE"
   build_all
+  echo "Production OS build completed for: $BUILD_TYPE"
+
   ;;
 esac

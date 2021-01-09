@@ -69,3 +69,8 @@ dmesg | grep sd
 lsmod
 hwclock
 pci
+
+#CFIX reconfigure to use automake 1.16
+autoreconf -vfi
+
+

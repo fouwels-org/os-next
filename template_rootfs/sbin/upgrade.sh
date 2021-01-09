@@ -1,15 +1,31 @@
 #!/bin/sh
-mkdir /mnt
-mount -t vfat /dev/nvme0n1p1 /mnt
+DEVFILE=/tmp/vfat.txt
+DEV="/dev/sda1" # default vfat location
 
-rm /mnt/EFI/BOOT/BOOTx64.EFI
+if [ -f "$DEVFILE" ]; then
+    DEV=`cat /tmp/vfat.txt`
+    echo "partition obtained from the tmp filesystem : $DEV"
 
-#wget -O bzImage http://81.201.135.86:11223/v1/files/Qk9PVHg2NC5FRkk=
-#wget -O initrmfs.cpio.xz http://81.201.135.86:11223/v1/files/aW5pdHJtZnMuY3Bpby54eg==
+fi
 
-wget -O /mnt/EFI/BOOT/BOOTx64.EFI http://81.201.135.86:11223/v1/files/Qk9PVHg2NC5FRkk=
+echo "BOOTx64 is on partition $DEV"
 
-#wget -O initramfs.cpio http://81.201.135.86:11223/v1/files/aW5pdHJtZnMuY3Bpbw==
+FILE=/mnt
+if [ ! -d "$FILE" ]; then
+    mkdir /mnt
+    echo "$FILE did not exist, but has been created"
+fi
 
-
-umount /mnt
+echo "downloading EFI image"
+wget -O /tmp/BOOTx64.EFI http://81.201.135.86:11223/v1/files/Qk9PVHg2NC5FRkk=
+echo "download complete"
+if [ $? -eq 0 ]; then
+    mount -t vfat $DEV /mnt
+    rm /mnt/EFI/BOOT/BOOTx64.EFI
+    cp /tmp/BOOTx64.EFI /mnt/EFI/BOOT/BOOTx64.EFI
+    umount /mnt
+    rm /tmp/BOOTx64.EFI
+    echo "BOOTx64.EFI has been upgraded"
+else
+    echo "Error downloading file"
+fi

@@ -35,12 +35,14 @@
         "filesystem": {
             "devices": [
                 {
-                    "id": "/dev/nvme0n1p2",
+                    "label": "config",
+                    "id": "/dev/sda2",
                     "mountpoint": "/var/config",
                     "filesystem": "ext4"
                 },
                 {
-                    "id": "/dev/nvme0n1p2",
+                    "label": "data",
+                    "id": "/dev/sda3",
                     "mountpoint": "/var/lib/docker",
                     "filesystem": "ext4"
                 }
