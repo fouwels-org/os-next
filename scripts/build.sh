@@ -3,16 +3,16 @@
 set -ex
 PS4="[main] "
 
-KERNEL_CONFIG=config-5.6.19-rt12
+KERNEL_CONFIG=config-5.10.1-rt20
 
 # Kernel versions
-KERNEL_VERSION=5.6.19
-KERNEL_RT=5.6.19-rt12
+KERNEL_VERSION=5.10.1
+KERNEL_RT=5.10.1-rt20
 
 # base system versions
 MUSL_VERSION=1.2.1
-DOCKER_VERSION=19.03.13
-BUSYBOX_VERSION=1.32.0
+DOCKER_VERSION=20.10.2
+BUSYBOX_VERSION=1.32.1
 
 # security system versions, full disk encryption and wireguard P2P
 WG_TOOLS=v1.0.20200827
@@ -56,7 +56,7 @@ download_kernel() {
     wget -q -O kernel.tar.xz http://kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
     tar -xf kernel.tar.xz
     
-    wget -q -O patch-$KERNEL_RT.patch.xz https://cdn.kernel.org/pub/linux/kernel/projects/rt/5.6/older/patch-$KERNEL_RT.patch.xz
+    wget -q -O patch-$KERNEL_RT.patch.xz https://cdn.kernel.org/pub/linux/kernel/projects/rt/5.10/older/patch-$KERNEL_RT.patch.xz
     
   fi
 }
