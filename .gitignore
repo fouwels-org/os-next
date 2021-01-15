@@ -1,5 +1,6 @@
-iso/BOOTx64.EFI
 build
 out
 temp
 .DS_Store
+*.img
+*.EFI
