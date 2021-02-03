@@ -7,11 +7,9 @@ package libinit
 
 import (
 	"fmt"
+	"log"
 	"os"
-	"runtime"
 	"syscall"
-
-	"init-custom/contrib/u-root/ulog"
 
 	"golang.org/x/sys/unix"
 )
@@ -61,22 +59,6 @@ func (d dev) create() error {
 
 func (d dev) String() string {
 	return fmt.Sprintf("dev %q (mode %#o; magic %d)", d.Name, d.Mode, d.Dev)
-}
-
-type mount struct {
-	Source string
-	Target string
-	FSType string
-	Flags  uintptr
-	Opts   string
-}
-
-func (m mount) create() error {
-	return syscall.Mount(m.Source, m.Target, m.FSType, m.Flags, m.Opts)
-}
-
-func (m mount) String() string {
-	return fmt.Sprintf("mount -t %q -o %s %q %q flags %#x", m.FSType, m.Opts, m.Source, m.Target, m.Flags)
 }
 
 var (
@@ -148,10 +130,6 @@ var (
 	}
 )
 
-func goBin() string {
-	return fmt.Sprintf("/go/bin/%s_%s:/go/bin:/go/pkg/tool/%s_%s", runtime.GOOS, runtime.GOARCH, runtime.GOOS, runtime.GOARCH)
-}
-
 func create(namespace []creator, optional bool) {
 	// Clear umask bits so that we get stuff like ptmx right.
 	m := unix.Umask(0)
@@ -159,45 +137,18 @@ func create(namespace []creator, optional bool) {
 	for _, c := range namespace {
 		if err := c.create(); err != nil {
 			if optional {
-				ulog.KernelLog.Printf("u-root init [optional]: warning creating %s: %v", c, err)
+				log.Printf("u-root init [optional]: warning creating %s: %v", c, err)
 			} else {
-				ulog.KernelLog.Printf("u-root init: error creating %s: %v", c, err)
+				log.Printf("u-root init: error creating %s: %v", c, err)
 			}
 		}
 	}
-}
-
-// SetEnv sets the default u-root environment.
-func SetEnv() error {
-	env := map[string]string{
-		"LD_LIBRARY_PATH": "/usr/local/lib",
-		"GOROOT":          "/go",
-		"GOPATH":          "/",
-		"GOBIN":           "/ubin",
-		"CGO_ENABLED":     "0",
-		"USER":            "root",
-	}
-
-	// Not all these paths may be populated or even exist but OTOH they might.
-	path := "/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin:/usr/local/sbin"
-
-	env["PATH"] = fmt.Sprintf("%v:%v", goBin(), path)
-	for k, v := range env {
-		err := os.Setenv(k, v)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // CreateRootfs creates the default u-root file system.
 func CreateRootfs() {
 	// Mount devtmpfs, then open /dev/kmsg with Reinit.
 	create(preNamespace, false)
-	ulog.KernelLog.Reinit()
-
 	create(namespace, false)
 	create(cgroupsnamespace, true)
 }

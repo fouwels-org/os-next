@@ -1,0 +1,34 @@
+{
+    "header": {
+        "site": "QEMU",
+        "comment": ""
+    },
+    "secondary": {
+        "networking": {
+            "networks": [
+                {
+                    "device": "eth0",
+                    "type": "",
+                    "dhcp": true,
+                    "ipv6": false,
+                    "addresses": [],
+                    "defaultGateway": ""
+                }
+            ],
+            "routes": [],
+            "nameservers": [
+                "1.1.1.1",
+                "8.8.8.8"
+            ]
+        },
+        "wireguard": [],
+        "time": {
+            "ntp": true,
+            "hwclock": true,
+            "servers": [
+                "0.uk.pool.ntp.org",
+                "1.uk.pool.ntp.org"
+            ]
+        }
+    }
+}

@@ -52,7 +52,7 @@ To deploy this onto a physical hardware device, this hardware needs to support U
 
 To make this work, first format a drive (can be USB or HDD) with FAT32. Then create a directory structure on this device /EFI/BOOT and simply copy the BOOTx64.EFI into the folder. The BIOS will identify this path and boot.
 
-TODO - can this be done with a VM?
+See `deploy/qemu` for a software deployment. This will automatically format and set up a drive, before starting with QEMU/KVM.
 
 ## CHECKS
 

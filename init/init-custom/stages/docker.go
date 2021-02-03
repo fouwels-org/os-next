@@ -3,8 +3,8 @@ package stages
 import (
 	"fmt"
 	"init-custom/config"
+	"init-custom/util"
 	"os"
-	"os/exec"
 	"time"
 )
 
@@ -15,7 +15,7 @@ type Docker struct {
 
 //String ..
 func (d *Docker) String() string {
-	return "Docker"
+	return "docker"
 }
 
 //Finalise ..
@@ -26,32 +26,44 @@ func (d *Docker) Finalise() []string {
 //Run ..
 func (d *Docker) Run(c config.Config) error {
 
-	// Start Docker
+	const _logpath string = "/var/lib/docker/docker.log"
 
-	cmd := exec.Command("/usr/bin/dockerd")
-	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, "DOCKER_RAMDISK=true")
-	err := cmd.Start()
+	// Start Docker
+	// Set path to allow docker to find containerd
+	command := util.Command{
+		Target:    "/usr/bin/dockerd",
+		Arguments: []string{},
+		Env:       []string{"DOCKER_RAMDISK=true", "PATH=/sbin:/usr/sbin:/bin:/usr/bin"},
+	}
+
+	b, err := os.Create(_logpath)
+	if err != nil {
+		return fmt.Errorf("Failed to create docker log at %v: %w", _logpath, err)
+	}
+
+	err = util.Shell.ExecuteDaemon(command, b)
 	if err != nil {
 		return fmt.Errorf("Failed to start dockerd: %w", err)
 	}
 
-	response := ""
+	started := false
 	for i := 0; i < 5; i++ {
 
-		resp, err := executeOne(command{command: "/usr/bin/docker", arguments: []string{"version"}}, "")
+		commands := []util.Command{}
+		commands = append(commands, util.Command{Target: "/usr/bin/docker", Arguments: []string{"version"}})
+
+		err := util.Shell.Execute(commands)
 		if err != nil {
 			time.Sleep(1 * time.Second)
 			continue
 		}
-
-		response = resp
+		started = true
 	}
 
-	if response == "" {
-		return fmt.Errorf("failed to get docker version, docker did not start correctly")
+	if !started {
+		return fmt.Errorf("Failed to get docker version, docker did not start correctly")
 	}
 
+	d.finals = append(d.finals, fmt.Sprintf("logging to %v", _logpath))
 	return nil
-
 }

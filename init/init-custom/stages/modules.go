@@ -1,7 +1,9 @@
 package stages
 
 import (
+	"fmt"
 	"init-custom/config"
+	"init-custom/util"
 )
 
 //Modules implementes IStage
@@ -11,7 +13,7 @@ type Modules struct {
 
 //String ..
 func (m *Modules) String() string {
-	return "Modules"
+	return "modules"
 }
 
 //Finalise ..
@@ -22,15 +24,22 @@ func (m *Modules) Finalise() []string {
 //Run ..
 func (m *Modules) Run(c config.Config) error {
 
+	lok := 0
+	errs := []error{}
 	for _, v := range c.Primary.Modules {
-		com := command{command: "/sbin/modprobe", arguments: []string{v}}
-		_, err := executeOne(com, "")
 
-		logf("Executing Command: %v", com)
+		com := []util.Command{{Target: "/sbin/modprobe", Arguments: []string{v}}}
+		err := util.Shell.Execute(com)
+
 		if err != nil {
-			logf("Command failed: %v ", err)
-			continue
+			errs = append(errs, err)
+		} else {
+			lok++
 		}
 	}
+
+	m.finals = append(m.finals, fmt.Sprintf("loaded %v/%v modules ok", lok, len(c.Primary.Modules)))
+	m.finals = append(m.finals, fmt.Sprintf("Errors: %v", errs))
+
 	return nil
 }

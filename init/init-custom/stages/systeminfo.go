@@ -1,9 +1,9 @@
-// +build !linux
-
 package stages
 
 import (
+	"fmt"
 	"init-custom/config"
+	"init-custom/util"
 )
 
 //Systeminfo implements IStage
@@ -13,7 +13,7 @@ type Systeminfo struct {
 
 //String ..
 func (n *Systeminfo) String() string {
-	return "System Info"
+	return "system Info"
 }
 
 //Finalise ..
@@ -23,7 +23,16 @@ func (n *Systeminfo) Finalise() []string {
 
 //Run ..
 func (n *Systeminfo) Run(c config.Config) error {
-	strerr := "zcalusic/sysinfo is not supported on this platform"
-	n.finals = append(n.finals, strerr)
+
+	data, err := util.System.StringInfo()
+	if err != nil {
+		return fmt.Errorf("Failed to get system info: %w", err)
+	}
+
+	err = util.File.SetFile("/tmp/info.json", data, 0644)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

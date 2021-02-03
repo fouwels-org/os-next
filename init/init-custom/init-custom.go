@@ -1,48 +1,28 @@
-// Copyright 2012-2017 the u-root Authors. All rights reserved
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-// This is a basic init script.
 package main
 
 import (
-	"flag"
 	"fmt"
 	"init-custom/config"
+	"init-custom/contrib/u-root/libinit"
 	"init-custom/stages"
+	"init-custom/static"
+	"init-custom/util"
 	"os"
 	"time"
 
 	"log"
-	"os/exec"
 	"syscall"
-
-	"init-custom/contrib/u-root/libinit"
-	"init-custom/contrib/u-root/ulog"
 )
 
-// Copyright 2012-2017 the u-root Authors. All rights reserved
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-// init is u-root's standard userspace init process.
-//
-// init is intended to be the first process run by the kernel when it boots up.
-// init does some basic initialization (mount file systems, turn on loopback)
-// and then tries to execute, in order, /inito, a uinit (either in /bin, /bbin,
-// or /ubin), and then a shell (/bin/defaultsh and /bin/sh).
-
-var (
-	verbose  = flag.Bool("v", false, "print all build commands")
-	test     = flag.Bool("test", false, "Test mode: don't try to set control tty")
-	debug    = func(string, ...interface{}) {}
-	osInitGo = func() {}
-)
+var _banner string = static.Splash
 
 const _configPrimaryPath = "/etc/init/primary.json"
 const _configSecondaryPath = "/var/config/secondary.json"
 
 func main() {
+
+	log.SetFlags(0)
+
 	err := run()
 	if err != nil {
 		log.Printf("Exit with err: %v", err)
@@ -51,74 +31,46 @@ func main() {
 	}
 
 	// We need to reap all children before exiting.
-	log.Printf("All commands exited")
-	log.Printf("Syncing filesystems")
+	log.Printf("all commands exited, syncing filesystems")
 	syscall.Sync()
-	log.Printf("Exiting...")
 
 	os.Exit(1)
 }
 
 func run() error {
 
-	flag.Parse()
-	log.Printf("Welcome to Mjolnir - IIoT OS!")
-	log.SetPrefix("[init]: ")
-
-	if *verbose {
-		debug = log.Printf
-	}
-
-	// Before entering an interactive shell, decrease the loglevel because
-	// spamming non-critical logs onto the shell frustrates users. The logs
-	// are still accessible through dmesg.
-	if !*verbose {
-		// Only messages more severe than "notice" are printed.
-		if err := ulog.KernelLog.SetConsoleLogLevel(ulog.KLogNotice); err != nil {
-			log.Printf("Could not set log level: %v", err)
-		}
-	}
-
-	// sets the system environmental variables
-	err := libinit.SetEnv()
+	err := util.System.SetConsoleLogLevel(util.KLogCritical)
 	if err != nil {
-		return fmt.Errorf("Failed to set system environment variables: %w", err)
+		return fmt.Errorf("Failed to set kernel log level: %v", err)
 	}
+
+	log.Printf("\033[2J") // Clear console
+	log.Printf(_banner)
 
 	// creates the rootfs
 	libinit.CreateRootfs()
 
-	// run the user-defined init taskes
+	// run the user-defined init tasks
 	_, secondaryLoaded, err := uinit()
 	if err != nil {
-		return fmt.Errorf("failed loading the staged init services: %v", err)
+		return fmt.Errorf("Init failed : %v", err)
 	}
 
-	// sleep to allow output from uinit to be read
-	log.Printf("Waiting 3 seconds to start TTY")
-	time.Sleep(3 * time.Second)
-
 	for {
-		// Turn off job control when test mode is on.
-		ctty := libinit.WithTTYControl(!*test)
-		cmdList := []*exec.Cmd{}
+		commands := []util.Command{}
 		if !secondaryLoaded {
-			cmdList = []*exec.Cmd{
-				libinit.Command("/bin/ash", ctty), // start login so there is no direct access to the shell, if not logged in within 60sec of existing top then it will exit and show top again.
-			}
+			commands = append(commands, util.Command{Target: "/bin/ash", Arguments: []string{}})
 		} else {
 			// Loading the full operational OS
-			cmdList = []*exec.Cmd{
-				libinit.Command("/bin/top", ctty),   // display the processes running and memory usage
-				libinit.Command("/bin/login", ctty), // start login so there is no direct access to the shell, if not logged in within 60sec of existing top then it will exit and show top again.
-			}
+			commands = append(commands, util.Command{Target: "/bin/login", Arguments: []string{}})
 		}
 
-		// finally run the list of commands
-		cmdCount := libinit.RunCommands(debug, cmdList...)
-		if cmdCount == 0 {
-			return fmt.Errorf("No suitable executable found in %v", cmdList)
+		err := util.Shell.ExecuteInteractive(commands)
+		if err != nil {
+			log.Printf("Error returned from shell, restarting: %v", err)
 		}
+
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
@@ -144,7 +96,7 @@ func uinit() (bool, bool, error) {
 		&stages.Docker{},
 	}
 
-	log.Printf("loading primary config")
+	log.Printf("[uinit] loading primary config")
 	configPrimary := config.PrimaryFile{}
 
 	err := config.LoadConfig(_configPrimaryPath, &configPrimary)
@@ -153,19 +105,19 @@ func uinit() (bool, bool, error) {
 	}
 	c.Primary = configPrimary.Primary
 
-	log.Printf("running primary stage")
+	log.Printf("[uinit] running primary stage")
 	err = executeStages(c, primary)
 	if err != nil {
 		return false, false, err
 	}
 
-	log.Printf("loading secondary config")
+	log.Printf("[uinit] loading secondary config")
 	secondLoaded := false
 
 	configSecondary := config.SecondaryFile{}
 	err = config.LoadConfig(_configSecondaryPath, &configSecondary)
 	if err != nil {
-		log.Printf("Failed to load secondary config, not running second stage: %v", err)
+		log.Printf("[uinit] failed to find secondary config, not running second stage: %v", err)
 		secondLoaded = false
 	} else {
 		secondLoaded = true
@@ -179,7 +131,8 @@ func uinit() (bool, bool, error) {
 		}
 	}
 
-	log.Printf("finalised:")
+	log.Printf("[uinit] init complete")
+	log.Printf("[uinit] messages:")
 
 	for _, st := range primary {
 
@@ -189,7 +142,7 @@ func uinit() (bool, bool, error) {
 		}
 
 		for _, f := range finals {
-			log.Printf("[%v] %v", st, f)
+			log.Printf("[uinit] %v: %v", st, f)
 		}
 	}
 
@@ -202,7 +155,7 @@ func uinit() (bool, bool, error) {
 			}
 
 			for _, f := range finals {
-				log.Printf("[%v] %v", st, f)
+				log.Printf("[uinit] %v: %v", st, f)
 			}
 		}
 	}

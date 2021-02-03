@@ -3,8 +3,10 @@ package stages
 import (
 	"fmt"
 	"init-custom/config"
+	"init-custom/util"
 	"log"
 	"os"
+	"time"
 )
 
 //Time implements IStage
@@ -14,7 +16,7 @@ type Time struct {
 
 //String ..
 func (n *Time) String() string {
-	return "Time"
+	return "time"
 }
 
 //Finalise ..
@@ -62,28 +64,38 @@ func (n *Time) Run(c config.Config) (e error) {
 		n.finals = append(n.finals, fmt.Sprintf("NTP servers set to %v", c.Secondary.Time.Servers))
 	} else {
 		if c.Secondary.Time.NTP {
-			n.finals = append(n.finals, fmt.Sprintf("[warn] NTP enabled, but no NTP servers have been configured"))
+			n.finals = append(n.finals, fmt.Sprintf("warning: NTP enabled, but no NTP servers have been configured"))
 		}
 	}
 
 	// Run command set
 	if c.Secondary.Time.NTP {
-		_, err = executeOne(command{command: "/sbin/ntpd", arguments: []string{}}, "")
+
+		commands := []util.Command{}
+		commands = append(commands, util.Command{Target: "/sbin/ntpd", Arguments: []string{"-q"}})
+
+		err := util.Shell.Execute(commands)
 		if err != nil {
 			log.Printf("Error updating NTP: %v", err)
 		}
 	} else {
-		n.finals = append(n.finals, fmt.Sprintf("[Notice] NTP Disabled"))
+		n.finals = append(n.finals, fmt.Sprintf("notice: NTP Disabled"))
 	}
 
 	if c.Secondary.Time.HWClock {
-		_, err = executeOne(command{command: "/sbin/hwclock", arguments: []string{"-w"}}, "")
+
+		commands := []util.Command{}
+		commands = append(commands, util.Command{Target: "/sbin/hwclock", Arguments: []string{"-w"}})
+
+		err := util.Shell.Execute(commands)
 		if err != nil {
 			log.Printf("Error setting HW Clock: %v", err)
 		}
 	} else {
-		n.finals = append(n.finals, fmt.Sprintf("[Notice] HW Clock Disabled"))
+		n.finals = append(n.finals, fmt.Sprintf("notice: HW Clock Disabled"))
 	}
+
+	n.finals = append(n.finals, fmt.Sprintf("time is now: %v", time.Now().UTC()))
 
 	return nil
 }

@@ -26,6 +26,7 @@ NFTABLES_IPTABLES_VERSION=v1.8.5
 NUM_JOBS="$(grep ^processor /proc/cpuinfo | wc -l)"
 
 BUILD_DIR=/build
+REBUILD_DIR=/rebuild
 ROOTFS_DIR=$BUILD_DIR/rootfs
 SRC_DIR=$BUILD_DIR/src
 OUT_DIR=$BUILD_DIR/out
@@ -353,8 +354,7 @@ build_kernel() {
 build_custom_init() {
   PS4="[build_custom_init] "
 
-  cd $BUILD_DIR/init/init-custom
-  go get github.com/u-root/u-root
+  cd $REBUILD_DIR/init/init-custom
   go build -ldflags "-s -w" -o $ROOTFS_DIR/init-custom
 
   strip $ROOTFS_DIR/init-custom

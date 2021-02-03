@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"init-custom/config"
+	"init-custom/util"
 	"io/ioutil"
 	"net"
 	"path/filepath"
@@ -21,7 +22,7 @@ type Wireguard struct {
 
 //String ..
 func (n *Wireguard) String() string {
-	return "Wireguard"
+	return "wireguard"
 }
 
 //Finalise ..
@@ -56,7 +57,7 @@ func (n *Wireguard) Run(c config.Config) error {
 				return fmt.Errorf("Failed to generate private key: %v", err)
 			}
 
-			err = setFile(keypath, wgkey.String(), 0600)
+			err = util.File.SetFile(keypath, wgkey.String(), 0600)
 			if err != nil {
 				return fmt.Errorf("Failed to save wg key: %v", err)
 			}

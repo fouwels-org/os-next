@@ -3,6 +3,7 @@ package stages
 import (
 	"fmt"
 	"init-custom/config"
+	"init-custom/util"
 	"os"
 )
 
@@ -13,7 +14,7 @@ type Networking struct {
 
 //String ..
 func (n *Networking) String() string {
-	return "Networking"
+	return "networking"
 }
 
 //Finalise ..
@@ -24,48 +25,48 @@ func (n *Networking) Finalise() []string {
 //Run ..
 func (n *Networking) Run(c config.Config) (e error) {
 
-	commands := []command{}
-	commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", "lo", "up"}})
+	commands := []util.Command{}
+	commands = append(commands, util.Command{Target: "/sbin/ip", Arguments: []string{"link", "set", "dev", "lo", "up"}})
 	for _, nd := range c.Secondary.Networking.Networks {
 
 		if nd.Type != "" {
 			// If type not default, create as specified
-			commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "add", "dev", nd.Device, "type", nd.Type}})
+			commands = append(commands, util.Command{Target: "/sbin/ip", Arguments: []string{"link", "add", "dev", nd.Device, "type", nd.Type}})
 		}
 
 		if nd.DHCP {
 			if nd.IPV6 {
-				commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", nd.Device, "up"}})
-				commands = append(commands, command{command: "/sbin/udhcpc", arguments: []string{"-b", "-i", nd.Device, "-p", "/var/run/udhcpc.pid"}})
+				commands = append(commands, util.Command{Target: "/sbin/ip", Arguments: []string{"link", "set", "dev", nd.Device, "up"}})
+				commands = append(commands, util.Command{Target: "/sbin/udhcpc", Arguments: []string{"-b", "-i", nd.Device, "-p", "/var/run/udhcpc.pid"}})
 			} else {
-				commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", nd.Device, "up"}})
-				commands = append(commands, command{command: "/sbin/udhcpc", arguments: []string{"-b", "-i", nd.Device, "-p", "/var/run/udhcpc.pid"}})
+				commands = append(commands, util.Command{Target: "/sbin/ip", Arguments: []string{"link", "set", "dev", nd.Device, "up"}})
+				commands = append(commands, util.Command{Target: "/sbin/udhcpc", Arguments: []string{"-b", "-i", nd.Device, "-p", "/var/run/udhcpc.pid"}})
 			}
 		} else {
 
-			commands = append(commands, command{command: "/sbin/ip", arguments: []string{"link", "set", "dev", nd.Device, "up"}})
+			commands = append(commands, util.Command{Target: "/sbin/ip", Arguments: []string{"link", "set", "dev", nd.Device, "up"}})
 
 			for _, v := range nd.Addresses {
-				commands = append(commands, command{command: "/sbin/ip", arguments: []string{"addr", "add", v, "dev", nd.Device}})
+				commands = append(commands, util.Command{Target: "/sbin/ip", Arguments: []string{"addr", "add", v, "dev", nd.Device}})
 			}
 
 			if nd.DefaultGateway != "" {
-				commands = append(commands, command{command: "/sbin/ip", arguments: []string{"route", "add", "default", "via", nd.DefaultGateway, "dev", nd.Device}})
+				commands = append(commands, util.Command{Target: "/sbin/ip", Arguments: []string{"route", "add", "default", "via", nd.DefaultGateway, "dev", nd.Device}})
 			}
 		}
 	}
 
-	err := execute(commands)
+	err := util.Shell.Execute(commands)
 	if err != nil {
 		return err
 	}
 
-	commands = []command{}
+	commands = []util.Command{}
 	for _, rt := range c.Secondary.Networking.Routes {
-		commands = append(commands, command{command: "/sbin/ip", arguments: []string{"route", "add", rt.Address, "dev", rt.Device}})
+		commands = append(commands, util.Command{Target: "/sbin/ip", Arguments: []string{"route", "add", rt.Address, "dev", rt.Device}})
 	}
 
-	err = execute(commands)
+	err = util.Shell.Execute(commands)
 	if err != nil {
 		return err
 	}
