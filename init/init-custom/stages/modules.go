@@ -39,7 +39,7 @@ func (m *Modules) Run(c config.Config) error {
 	}
 
 	m.finals = append(m.finals, fmt.Sprintf("loaded %v/%v modules ok", lok, len(c.Primary.Modules)))
-	m.finals = append(m.finals, fmt.Sprintf("Errors: %v", errs))
+	m.finals = append(m.finals, fmt.Sprintf("errors: %v", errs))
 
 	return nil
 }

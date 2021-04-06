@@ -1,6 +1,6 @@
 {
     "header": {
-        "site": "reference",
+        "site": "k300-sata",
         "comment": ""
     },
     "primary": {
@@ -11,6 +11,7 @@
             "sd_mod",
             "scsi_mod",
             "igb",
+            "e1000e",
             "ipv6",
             "btrfs",
             "usbhid",
@@ -30,7 +31,10 @@
             "nls_utf8",
             "nls_cp437",
             "wireguard",
-            "nvme"
+            "nvme",
+            "uio_netx",
+            "kvm",
+            "kvm-intel"
         ],
         "filesystem": {
             "devices": [
@@ -38,7 +42,7 @@
                     "label": "BOOT",
                     "id": "/dev/sda1",
                     "mountpoint": "/boot",
-                    "filesystem": "ext4"
+                    "filesystem": "vfat"
                 },
                 {
                     "label": "CONFIG",

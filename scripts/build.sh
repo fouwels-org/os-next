@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -ex
+set -e
 PS4="[main] "
 
 KERNEL_CONFIG=config-5.10.1-rt20
@@ -45,7 +45,7 @@ debug() {
 ###############################################
 
 download_busybox() {
-  cd /build/src    
+   cd $SRC_DIR   
   wget -q -O busybox.tar.bz2 \
     http://busybox.net/downloads/busybox-$BUSYBOX_VERSION.tar.bz2
   tar -xf busybox.tar.bz2
@@ -280,7 +280,15 @@ build_modules() {
   touch $BUILD_DIR/initrmfs.cpio
 
   cd $SRC_DIR/linux-$KERNEL_VERSION
-  cp -f $BUILD_DIR/config/$KERNEL_CONFIG .config
+
+  if cmp -s "$BUILD_DIR/config/$KERNEL_CONFIG" ".config_le"; then
+    echo "Kernel config unchanged, not replacing"
+  else
+    echo "Kernel config changed, replacing"
+    cp -f $BUILD_DIR/config/$KERNEL_CONFIG .config
+    cp -f $BUILD_DIR/config/$KERNEL_CONFIG .config_le
+  fi
+
   # NOT NEEDED WITH IF THE KERNEL CONFIG IS CORRECRTLY CONFIGURED
   make oldconfig -j $NUM_JOBS
   # finally build the kernel
@@ -298,20 +306,15 @@ install_modules() {
   cd $SRC_DIR/linux-$KERNEL_VERSION
   make INSTALL_MOD_PATH=$ROOTFS_DIR modules_install
   # get a system specific modules list and remove all others taht aren't loaded - This is for a production solution
-  case "$BUILD_TYPE" in
-    "FACTORY")
-      echo "including the Factory EFI Image - All modules are included"
-      ;;
-    "K300")
-      echo "Production OS - Only K300 modules included"
-      find $ROOTFS_DIR/lib/modules | grep "\.ko$" | grep  -v -f $BUILD_DIR/config/k300-modules.txt | xargs rm
-      ;;
-    "MAGELIS")
-      echo "Production OS - Only MAGELIS modules included"
-      find $ROOTFS_DIR/lib/modules | grep "\.ko$" | grep  -v -f $BUILD_DIR/config/magelis-modules.txt | xargs rm
-      ;;
-  esac
-  
+
+  if [[ -f "$BUILD_DIR/config/modules/$BUILD_MODULES-modules.txt" ]]; then
+
+    echo "$BUILD_DIR/config/modules/$BUILD_MODULES-modules.txt exists, trimming to specified modules"
+    find $ROOTFS_DIR/lib/modules | grep "\.ko$" | grep  -v -f $BUILD_DIR/config/modules/$BUILD_MODULES-modules.txt | xargs rm
+
+  else 
+    echo "$BUILD_DIR/config/modules/$BUILD_MODULES-modules.txt does not exist, not trimming modules"
+  fi
 }
 
 build_initrmfs(){
@@ -340,11 +343,27 @@ build_kernel() {
   PS4="[build_kernel] "
 
   cd $SRC_DIR/linux-$KERNEL_VERSION
-  cp -f $BUILD_DIR/config/$KERNEL_CONFIG .config
+
+  if cmp -s "$BUILD_DIR/config/$KERNEL_CONFIG" ".config_le"; then
+    echo "Kernel config unchanged, not replacing"
+  else
+    echo "Kernel config changed, replacing"
+    cp -f $BUILD_DIR/config/$KERNEL_CONFIG .config
+    cp -f $BUILD_DIR/config/$KERNEL_CONFIG .config_le
+  fi
 
   make CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $NUM_JOBS
   
-  cp arch/x86_64/boot/bzImage $OUT_DIR/BOOTx64.EFI
+  NOW=$(date +'[%H-%M-%S]')
+
+  cp arch/x86_64/boot/bzImage $OUT_DIR/BOOTx64_$BUILD_CONFIG-$BUILD_MODULES-$NOW.EFI
+
+  if [ -f "$OUT_DIR/BOOTx64.EFI" ]; then
+    rm $OUT_DIR/BOOTx64.EFI 
+  fi
+
+  cd $OUT_DIR
+  ln -s BOOTx64_$BUILD_CONFIG-$BUILD_MODULES-$NOW.EFI BOOTx64.EFI 
 }
 
 ###############################################
@@ -453,7 +472,6 @@ prepare_build() {
   if [ ! -d $OUT_DIR ]; then
     mkdir -p $OUT_DIR
   fi
-  rm -rf $OUT_DIR/*
 
   if [ ! -d $ROOTFS_DIR ]; then
     mkdir -p $ROOTFS_DIR
@@ -462,83 +480,112 @@ prepare_build() {
 }
 
 build_all() {
-
+  echo "prepare_build"
   prepare_build
 
   if [ ! -f $SRC_DIR/flag_downloaded ]; then
+    echo "download_packages"
     download_packages
   fi
   
   if [ ! -f $SRC_DIR/flag_patched_kernel ]; then
+    echo "patch_kernel"
     patch_kernel
   fi
 
   if [ ! -f $SRC_DIR/flag_built_packages ]; then
+    echo "build_packages"
     build_packages
   fi
 
   if [ ! -f $SRC_DIR/flag_built_modules ]; then
+    echo "build_modules"
     build_modules
+  
+  elif cmp -s "$BUILD_DIR/config/$KERNEL_CONFIG" "$SRC_DIR/linux-$KERNEL_VERSION/config_le"; then
+    echo "build_modules (forcing rebuild, kernel config has changed)"
+    rm $SRC_DIR/flag_built_modules
+    build_modules 
   fi
 
   # build the Golang init command
+  echo "build_custom_init"
   build_custom_init
+
   # build the rootfs
+  echo "build_rootfs"
   build_rootfs
 
+  echo "install_packages"
   install_packages
+
+  echo "install_modules"
   install_modules
-  
-case "$BUILD_TYPE" in
+
+  case "$BUILD_MODULES" in
   "FACTORY")
-    echo "including the Factory EFI Image"
+    echo "FACTORY mode set, including the Factory EFI Image"
     install_deployment_tools
     ;;
   *)
-    echo "Production OS for $BUILD_TYPE"
     rm $ROOTFS_DIR/sbin/*.sh
     ;;
-esac
+  esac
+  
+  # copy in the primary config
+  cp $PRIMARY_CONFIG $ROOTFS_DIR/etc/init/primary.json
 
   # strip and create the initramfs for the kernel build 
+  echo "build_initrmfs"
   build_initrmfs
+  
   # makes the kernel into EFI image (/img/BOOTx64.EFI) which can deployed directly on a target system on a VFAT EFI partition in the location /EFI/BOOT/BOOTx64.EFI
+  echo "build_kernel"
   build_kernel
 }
 
 # set -e needs to be re-applied after every ), as the bracket creates a new scope.
 case "${1}" in
 prepare)
-  set -ex
+  set -e
   prepare_build
   ;;
 download)
-  set -ex
+  set -e
   download_packages
   ;;
 patch)
-  set -ex
+  set -e
   patch_kernel
   ;;
 build_packages)
-  set -ex
+  set -e
   build_packages
   ;;
 build_kernel)
-  set -ex
+  set -e
   build_modules
   build_kernel
   ;;
 build_init)
-  set -ex
+  set -e
   build_custom_init
   ;;
 *)
-  set -ex
-  BUILD_TYPE=$1
-  echo "Building EFI for: $BUILD_TYPE"
-  build_all
-  echo "Production OS build completed for: $BUILD_TYPE"
+  set -e
+  BUILD_CONFIG=$1
+  BUILD_MODULES=$2
 
+  PRIMARY_CONFIG=$BUILD_DIR/config/primary/$BUILD_CONFIG.json
+  if [ ! -f "$PRIMARY_CONFIG" ]; then
+    echo "$PRIMARY_CONFIG does not exist, missing config for build type $BUILD_CONFIG."
+    exit
+  fi
+
+  echo "Building EFI for: [$BUILD_CONFIG] with config: '[$BUILD_MODULES]' "
+  build_all
+  
+  echo ""
+  echo "OS build completed for: [$BUILD_CONFIG]' with config: '[$BUILD_MODULES]' "
   ;;
 esac

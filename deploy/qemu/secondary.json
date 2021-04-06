@@ -13,15 +13,45 @@
                     "ipv6": false,
                     "addresses": [],
                     "defaultGateway": ""
+                },
+                {
+                    "device": "wg0",
+                    "type": "wireguard",
+                    "dhcp": false,
+                    "ipv6": false,
+                    "addresses": [
+                        "10.200.4.99/32"
+                    ],
+                    "defaultGateway": ""
                 }
             ],
-            "routes": [],
+            "routes": [
+                {
+                    "address": "10.200.4.0/24",
+                    "device": "wg0"
+                }
+            ],
             "nameservers": [
                 "1.1.1.1",
                 "8.8.8.8"
             ]
         },
-        "wireguard": [],
+        "wireguard": [
+            {
+                "device": "wg0",
+                "listenPort": 51820,
+                "peers": [
+                    {
+                        "publicKey": "vezQ++zg/pvTjZ73XAXHtTnYi618BvllGHQ37a74tgc=",
+                        "endpoint": "concentrator.lagoni.co.uk:51820",
+                        "allowed-ips": [
+                            "10.200.4.0/24"
+                        ],
+                        "persistent-keepalive": 5
+                    }
+                ]
+            }
+        ],
         "time": {
             "ntp": true,
             "hwclock": true,

@@ -49,8 +49,8 @@ type Filesystem struct {
 
 //FilesystemDevice ..
 type FilesystemDevice struct {
-	LABEL      string
 	ID         string
+	Label      string
 	MountPoint string
 	FileSystem string
 }

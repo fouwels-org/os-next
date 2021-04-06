@@ -6,11 +6,9 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/anatol/luks.go"
@@ -18,140 +16,109 @@ import (
 
 //DiskUtil ..
 type DiskUtil struct {
+	MapperIndex int
 }
 
-//OpenLUKSvolumes Decrypts the volume or returns an error if decryption fails
-func (d *DiskUtil) OpenLUKSvolumes() error {
+//Decrypt decrypts and maps the device, if found to be encrypted
+//device: /dev/id, dmlabel: LABEL of matching /dev/dm- device, key: LUKS key, returns: [mapped /dev/id, error]
+func (d *DiskUtil) Decrypt(device string, dmlabel string, key string) (string, error) {
 
-	devices, err := d.FormatBlkid()
+	devices, err := d.GetBLKDevices()
 	if err != nil {
-		log.Printf("Faild to format BLKID: %v ", err)
-		return err
+		return "", fmt.Errorf("failed to get BLKID (labelled) devices: %w", err)
 	}
 
-	luksFound := 0
+	for _, dev := range devices {
 
-	for index, deviceBlk := range devices {
-		blkFSType := strings.ToUpper(deviceBlk.FSTYPE)
-		if blkFSType == "CRYPTO_LUKS" {
-			luksFound++
+		if dev.Device == device {
 
-			// LOAD KEY FROM TPM
-			key := "pass0"
-			dev, err := luks.Open(deviceBlk.DEV)
-			if err != nil {
-				log.Printf("Faild to format BLKID: %v ", err)
-				return err
+			if strings.ToUpper(dev.FsType) != "CRYPTO_LUKS" {
+				log.Printf("%v is not of type CRYPTO_LUKS, skipped", dev.Device)
+				return device, nil
 			}
-			defer dev.Close()
+
+			lkd, err := luks.Open(device)
+			if err != nil {
+				return "", fmt.Errorf("failed to LUKS open %v: %w", device, err)
+			}
+			defer lkd.Close()
 
 			// equivalent of `cryptsetup open /dev/sda1 volumename`
-			err = dev.Unlock( /* slot */ 0, []byte(key), ("luks" + strconv.Itoa(index)))
+			d.MapperIndex++
+			err = lkd.Unlock(0, []byte(key), fmt.Sprintf("luks%v", d.MapperIndex))
+			mapper := fmt.Sprintf("/dev/mapper/luks%v", d.MapperIndex)
 
 			if err == luks.ErrPassphraseDoesNotMatch {
-				log.Printf("The password is incorrect")
-				return err
-			} else if err != nil {
-				log.Print(err)
-				return err
-			} else {
-				log.Printf("LUKS opened %s", deviceBlk.DEV)
-				log.Printf("mapped to /dev/mapper/%s", "luks"+strconv.Itoa(index))
-
-				// at this point system should have a file `/dev/mapper/volumename`.
+				return "", fmt.Errorf("failed to unlock %v, password is incorrect", device)
 			}
+			if err != nil {
+				return "", fmt.Errorf("unexpected error unlocking %v: %w", device, err)
+			}
+
+			log.Printf("%v mapped to %v", device, mapper)
+			return mapper, nil
 		}
 	}
 
-	if luksFound == 0 {
-		log.Printf("No encrypted LUKS volumes found")
-	} else {
-		log.Printf("%d encrypted LUKS volumes found", luksFound)
-	}
-
-	return nil
+	return "", fmt.Errorf("device %v not found in BLKID", device)
 }
 
-//FormatBlkid returns the available blockId as a deviceType from the underlying OS
-func (d *DiskUtil) FormatBlkid() ([]DeviceType, error) {
+// GetBLKDevices returns the decoded block devices
+func (d *DiskUtil) GetBLKDevices() ([]BLKDevice, error) {
+
 	var re1 = regexp.MustCompile(`"(.*?)"`)
 
-	devices := []DeviceType{}
+	devices := []BLKDevice{}
 
 	cmd := exec.Command("/sbin/blkid")
 	stdout, err := cmd.StdoutPipe()
 	err = cmd.Start()
 	if err != nil {
-		log.Printf("Command failed: %v ", err)
-		return nil, fmt.Errorf("Command failed: %v", err)
+		return []BLKDevice{}, fmt.Errorf("Failed to get blkid: %w", err)
 	}
 
 	r := bufio.NewReader(stdout)
-
 	for {
 		line, _, err := r.ReadLine()
 		if err == io.EOF {
 			break
 		}
 
-		data := DeviceType{}
+		data := BLKDevice{}
 
 		strLine := string(line)
 		partLine := strings.Fields(strLine)
 
 		devStr := strings.Split(strLine, ":")
 		if len(devStr) > 0 {
-			data.DEV = devStr[0]
+			data.Device = devStr[0]
 		}
 
 		for i := 0; i < len(partLine); i++ {
 			col := partLine[i]
 			if strings.HasPrefix(col, "UUID") {
+
 				ms := re1.FindString(col)
 				data.UUID = strings.Trim(ms, "\"")
+
 			} else if strings.HasPrefix(col, "LABEL") {
+
 				ms := re1.FindString(col)
-				data.LABEL = strings.Trim(ms, "\"")
+				data.Label = strings.Trim(ms, "\"")
+
 			} else if strings.HasPrefix(col, "TYPE") {
+
 				ms := re1.FindString(col)
-				data.FSTYPE = strings.Trim(ms, "\"")
+				data.FsType = strings.Trim(ms, "\"")
+
 			} else if strings.HasPrefix(col, "PARTUUID") {
+
 				ms := re1.FindString(col)
-				data.PARTUUID = strings.Trim(ms, "\"")
+				data.PartUUID = strings.Trim(ms, "\"")
 			}
 		}
 		devices = append(devices, data)
 	}
+
 	return devices, nil
-}
-
-// FindLabelledDevices returns the config and data partitions based on the formatted partitions.
-// string: Config partition e.g /dev/sda2
-// string: Data partition e.g /dev/sda3
-// error: nil if partitons are found otherwise !nil
-func (d *DiskUtil) FindLabelledDevices(partitions Partitions) (string, string, error) {
-	devices, err := d.FormatBlkid()
-	if err != nil {
-		log.Printf("Faild to format BLKID: %v ", err)
-		return "", "", err
-	}
-	// assign the default return values
-	config, data := partitions.DefaultDevConfig, partitions.DefaultDevData
-	for _, dev := range devices {
-		devLabel := strings.ToUpper(dev.LABEL)
-		if devLabel == partitions.ConfigPartition {
-			config = dev.DEV
-			log.Printf("Config label found %s", dev.DEV)
-		} else if devLabel == partitions.DataPartition {
-			data = dev.DEV
-			log.Printf("Data label found %s", dev.DEV)
-		} else if devLabel == partitions.BootPartition {
-			err := ioutil.WriteFile(partitions.BootFile, []byte(dev.DEV), 0600)
-			if err != nil {
-				log.Printf("Could not write the file %s", dev.DEV)
-			}
-		}
-	}
-
-	return config, data, nil
 }

@@ -128,9 +128,10 @@ run() {
         -m $MEM \
         -drive format=raw,file=$TARGET,if=none,id=os2 \
         -device ich9-ahci,id=ahci \
-        -device ide-drive,drive=os2,bus=ahci.0 \
+        -device nvme,drive=os2,serial=nvme-1
         -device virtio-rng-pci \
         -nodefaults \
+        -nic user,model=e1000 \
         -boot c
 }
 

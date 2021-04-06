@@ -4,19 +4,7 @@ import (
 	"fmt"
 	"init-custom/config"
 	"init-custom/util"
-	"strings"
 )
-
-var _partitions = util.Partitions{
-	BootPartition:   "BOOT",
-	DataPartition:   "DATA",
-	ConfigPartition: "CONFIG",
-
-	BootFile: "/tmp/vfat.txt",
-
-	DefaultDevConfig: "/dev/sda2",
-	DefaultDevData:   "/dev/sda3",
-}
 
 //Filesystem implements IStage
 type Filesystem struct {
@@ -36,39 +24,27 @@ func (n *Filesystem) Finalise() []string {
 //Run ..
 func (n *Filesystem) Run(c config.Config) error {
 
-	// Find LUKS volumes and open them
-	err := util.Disk.OpenLUKSvolumes()
-	if err != nil {
-		return fmt.Errorf("Opening LUKS volumes failed: %v ", err)
-	}
-
-	// Find the Labelled device points from the linux blkid
-	configDev, dataDev, err := util.Disk.FindLabelledDevices(_partitions)
-	if err != nil {
-		return fmt.Errorf("Finding lablled mount points failed: %v ", err)
-	}
+	const _pass string = "pass0"
 
 	commands := []util.Command{}
 
-	for _, v := range c.Primary.Filesystem.Devices {
-		commands = append(commands, util.Command{Target: "/bin/mkdir", Arguments: []string{"-p", v.MountPoint}})
+	for _, vloop := range c.Primary.Filesystem.Devices {
 
-		// set the mount point based on the tag in the primary.json config file
-		dev := v.ID
-		if strings.ToUpper(v.LABEL) == _partitions.DataPartition {
-			dev = dataDev
-		} else if strings.ToUpper(v.LABEL) == _partitions.ConfigPartition {
-			dev = configDev
+		v := vloop
+
+		// LUKS open each device if identified
+		mappedID, err := util.Disk.Decrypt(v.ID, v.Label, _pass)
+		if err != nil {
+			return fmt.Errorf("decrypting volume on %v failed: %w", v.ID, err)
 		}
-		commands = append(commands, util.Command{Target: "/bin/mount", Arguments: []string{"-t", v.FileSystem, dev, v.MountPoint}})
+
+		commands = append(commands, util.Command{Target: "/bin/mkdir", Arguments: []string{"-p", v.MountPoint}})
+		commands = append(commands, util.Command{Target: "/bin/mount", Arguments: []string{"-t", v.FileSystem, mappedID, v.MountPoint}})
 	}
 
-	err = util.Shell.Execute(commands)
+	err := util.Shell.Execute(commands)
 	if err != nil {
-		return fmt.Errorf("Error mounting: %w", err)
+		return fmt.Errorf("error: %w", err)
 	}
-
-	n.finals = append(n.finals, fmt.Sprintf("initialized as config %v data %v", configDev, dataDev))
-
 	return nil
 }

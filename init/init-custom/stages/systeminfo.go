@@ -13,7 +13,7 @@ type Systeminfo struct {
 
 //String ..
 func (n *Systeminfo) String() string {
-	return "system Info"
+	return "system info"
 }
 
 //Finalise ..

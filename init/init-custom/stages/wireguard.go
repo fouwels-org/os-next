@@ -38,7 +38,7 @@ func (n *Wireguard) Run(c config.Config) error {
 	for _, wloop := range c.Secondary.Wireguard {
 		wg := wloop //Prevent loop ref capture
 
-		keypath := fmt.Sprintf("%v/%v.private", _keyroot, wg.Device)
+		keypath := fmt.Sprintf("%v/%v", _keyroot, wg.Device)
 
 		wgc, err := wgctrl.New()
 		if err != nil {
@@ -47,17 +47,17 @@ func (n *Wireguard) Run(c config.Config) error {
 
 		wgkey := wgtypes.Key{}
 
-		skey, err := ioutil.ReadFile(filepath.Clean(keypath))
+		skey, err := ioutil.ReadFile(filepath.Clean(keypath + ".private"))
 		if err != nil {
 
-			n.finals = append(n.finals, fmt.Sprintf("Private key generated for %v", wg.Device))
+			n.finals = append(n.finals, fmt.Sprintf("private key generated for %v", wg.Device))
 
 			wgkey, err = wgtypes.GeneratePrivateKey()
 			if err != nil {
 				return fmt.Errorf("Failed to generate private key: %v", err)
 			}
 
-			err = util.File.SetFile(keypath, wgkey.String(), 0600)
+			err = util.File.SetFile(filepath.Clean(keypath+".private"), wgkey.String(), 0600)
 			if err != nil {
 				return fmt.Errorf("Failed to save wg key: %v", err)
 			}
@@ -68,11 +68,14 @@ func (n *Wireguard) Run(c config.Config) error {
 				return fmt.Errorf("Failed to parse loaded private key: %w", err)
 			}
 
-			n.finals = append(n.finals, "Private Key Loaded")
+			n.finals = append(n.finals, "private key Loaded")
 		}
 
-		n.finals = append(n.finals, fmt.Sprintf("Public Key for %v: %v", wg.Device, wgkey.PublicKey().String()))
-		n.finals = append(n.finals, fmt.Sprintf("\n%v", n.writeQR(wgkey.PublicKey())))
+		err = util.File.SetFile(filepath.Clean(keypath+".pub.qr"), n.writeQR(wgkey.PublicKey()), 0600)
+		if err != nil {
+			return fmt.Errorf("Failed to write public key QR: %v", err)
+		}
+		n.finals = append(n.finals, fmt.Sprintf("public key written to %v", filepath.Clean(keypath+".qr")))
 
 		wgpeers := []wgtypes.PeerConfig{}
 

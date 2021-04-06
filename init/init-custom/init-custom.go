@@ -34,6 +34,9 @@ func main() {
 	log.Printf("all commands exited, syncing filesystems")
 	syscall.Sync()
 
+	log.Printf("rebooting in 5 seconds")
+	time.Sleep(5 * time.Second)
+
 	os.Exit(1)
 }
 
@@ -51,19 +54,15 @@ func run() error {
 	libinit.CreateRootfs()
 
 	// run the user-defined init tasks
-	_, secondaryLoaded, err := uinit()
+	err = uinit()
 	if err != nil {
-		return fmt.Errorf("Init failed : %v", err)
+		log.Printf("Init failed: %v", err)
 	}
 
 	for {
 		commands := []util.Command{}
-		if !secondaryLoaded {
-			commands = append(commands, util.Command{Target: "/bin/ash", Arguments: []string{}})
-		} else {
-			// Loading the full operational OS
-			commands = append(commands, util.Command{Target: "/bin/login", Arguments: []string{}})
-		}
+
+		commands = append(commands, util.Command{Target: "/bin/login", Arguments: []string{}})
 
 		err := util.Shell.ExecuteInteractive(commands)
 		if err != nil {
@@ -76,10 +75,8 @@ func run() error {
 
 // This function loads the primary and secondary boot stages after the kernel hands over to the init process
 // return parameters:
-// 		bool: true if the primary stage loads successfully otherwise false
-// 		bool: true if the secondary stage loads successfully otherwise false
 //		error: nil if both stages loads successfully, otherwise an error is returned
-func uinit() (bool, bool, error) {
+func uinit() error {
 	c := config.Config{}
 
 	primary := []stages.IStage{
@@ -97,42 +94,20 @@ func uinit() (bool, bool, error) {
 	}
 
 	log.Printf("[uinit] loading primary config")
+
 	configPrimary := config.PrimaryFile{}
 
 	err := config.LoadConfig(_configPrimaryPath, &configPrimary)
 	if err != nil {
-		return false, false, fmt.Errorf("failed to load primary config from %v: %v", _configPrimaryPath, err)
+		return fmt.Errorf("failed to load primary config from %v: %v", _configPrimaryPath, err)
 	}
 	c.Primary = configPrimary.Primary
 
 	log.Printf("[uinit] running primary stage")
-	err = executeStages(c, primary)
-	if err != nil {
-		return false, false, err
-	}
 
-	log.Printf("[uinit] loading secondary config")
-	secondLoaded := false
+	_ = executeStages(c, primary)
 
-	configSecondary := config.SecondaryFile{}
-	err = config.LoadConfig(_configSecondaryPath, &configSecondary)
-	if err != nil {
-		log.Printf("[uinit] failed to find secondary config, not running second stage: %v", err)
-		secondLoaded = false
-	} else {
-		secondLoaded = true
-	}
-
-	if secondLoaded {
-		c.Secondary = configSecondary.Secondary
-		err = executeStages(c, secondary)
-		if err != nil {
-			return true, secondLoaded, err
-		}
-	}
-
-	log.Printf("[uinit] init complete")
-	log.Printf("[uinit] messages:")
+	log.Printf("[uinit] messages (primary):")
 
 	for _, st := range primary {
 
@@ -146,36 +121,50 @@ func uinit() (bool, bool, error) {
 		}
 	}
 
-	if secondLoaded {
-		for _, st := range secondary {
+	log.Printf("[uinit] loading secondary config")
 
-			finals := st.Finalise()
-			if len(finals) == 0 {
-				continue
-			}
+	configSecondary := config.SecondaryFile{}
+	err = config.LoadConfig(_configSecondaryPath, &configSecondary)
+	if err != nil {
+		return fmt.Errorf("failed to find secondary config, not running second stage: %v", err)
+	}
 
-			for _, f := range finals {
-				log.Printf("[uinit] %v: %v", st, f)
-			}
+	c.Secondary = configSecondary.Secondary
+
+	_ = executeStages(c, secondary)
+
+	log.Printf("[uinit] messages (secondary):")
+
+	for _, st := range secondary {
+
+		finals := st.Finalise()
+		if len(finals) == 0 {
+			continue
+		}
+
+		for _, f := range finals {
+			log.Printf("[uinit] %v: %v", st, f)
 		}
 	}
 
-	return true, true, nil
+	return nil
 }
 
 // function to execute the stages, returns an error if any of the stages fail
-func executeStages(c config.Config, stages []stages.IStage) error {
+func executeStages(c config.Config, stages []stages.IStage) []error {
 
+	errors := []error{}
 	for _, st := range stages {
 
 		log.Printf("[%v] starting", st)
 
 		err := st.Run(c)
 		if err != nil {
+			errors = append(errors, fmt.Errorf("%v failed: %w", st, err))
 			log.Printf("[%v] failed: %v/n", st, err)
 		} else {
 			log.Printf("[%v] succeeded", st)
 		}
 	}
-	return nil
+	return errors
 }
