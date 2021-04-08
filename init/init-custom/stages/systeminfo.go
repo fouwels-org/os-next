@@ -26,7 +26,7 @@ func (n *Systeminfo) Run(c config.Config) error {
 
 	data, err := util.System.StringInfo()
 	if err != nil {
-		return fmt.Errorf("Failed to get system info: %w", err)
+		return fmt.Errorf("failed to get system info: %w", err)
 	}
 
 	err = util.File.SetFile("/tmp/info.json", data, 0644)

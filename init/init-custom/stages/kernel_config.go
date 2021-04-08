@@ -26,7 +26,7 @@ func (n *KernelConfig) Run(c config.Config) error {
 
 	err := util.File.SetFile("/sys/fs/cgroup/memory/memory.use_hierarchy", "1", 0644)
 	if err != nil {
-		return fmt.Errorf("Failed to set file: %w", err)
+		return fmt.Errorf("failed to set file: %w", err)
 	}
 	return nil
 }

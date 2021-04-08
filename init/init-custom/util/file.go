@@ -21,7 +21,7 @@ func (c *FileUtil) SetFile(path string, value string, filemode os.FileMode) (e e
 	// This is intended to be variable, and does not represent a path traversal.
 	f, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filemode)
 	if err != nil {
-		return fmt.Errorf("Failed to open: %w", err)
+		return fmt.Errorf("failed to open: %w", err)
 	}
 
 	// #nosec G307. Double defer is safe for file.Writer
@@ -29,17 +29,17 @@ func (c *FileUtil) SetFile(path string, value string, filemode os.FileMode) (e e
 
 	_, err = fmt.Fprintf(f, "%v", value)
 	if err != nil {
-		return fmt.Errorf("Failed to write: %v", err)
+		return fmt.Errorf("failed to write: %v", err)
 	}
 
 	err = f.Sync()
 	if err != nil {
-		return fmt.Errorf("Failed to sync on %v: %v", f.Name(), err)
+		return fmt.Errorf("failed to sync on %v: %v", f.Name(), err)
 	}
 
 	err = f.Close()
 	if err != nil {
-		return fmt.Errorf("Failed to close on %v: %v", f.Name(), err)
+		return fmt.Errorf("failed to close on %v: %v", f.Name(), err)
 	}
 
 	return nil

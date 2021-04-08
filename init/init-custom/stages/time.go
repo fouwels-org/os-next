@@ -30,9 +30,9 @@ func (n *Time) Run(c config.Config) (e error) {
 	// Configure NTP
 	err := func() error {
 		// #nosec G302 (CWE-276). 644 is intentional.
-		f, err := os.OpenFile("/etc/ntp.conf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 644)
+		f, err := os.OpenFile("/etc/ntp.conf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
-			return fmt.Errorf("Failed to open file to write ntp settings: %v", err)
+			return fmt.Errorf("failed to open file to write ntp settings: %v", err)
 		}
 		// #nosec G307. Double defer is safe for file.Writer
 		defer f.Close()
@@ -40,18 +40,18 @@ func (n *Time) Run(c config.Config) (e error) {
 		for _, ns := range c.Secondary.Time.Servers {
 			_, err = fmt.Fprintf(f, "server %v\n", ns)
 			if err != nil {
-				return fmt.Errorf("Failed to write ntp server: %v", err)
+				return fmt.Errorf("failed to write ntp server: %v", err)
 			}
 		}
 
 		err = f.Sync()
 		if err != nil {
-			return fmt.Errorf("Failed to sync on %v: %v", f.Name(), err)
+			return fmt.Errorf("failed to sync on %v: %v", f.Name(), err)
 		}
 
 		ferr := f.Close()
 		if ferr != nil {
-			e = fmt.Errorf("Failed to close on %v: %w", f.Name(), ferr)
+			e = fmt.Errorf("failed to close on %v: %w", f.Name(), ferr)
 		}
 
 		return nil
@@ -64,7 +64,7 @@ func (n *Time) Run(c config.Config) (e error) {
 		n.finals = append(n.finals, fmt.Sprintf("NTP servers set to %v", c.Secondary.Time.Servers))
 	} else {
 		if c.Secondary.Time.NTP {
-			n.finals = append(n.finals, fmt.Sprintf("warning: NTP enabled, but no NTP servers have been configured"))
+			n.finals = append(n.finals, "warning: NTP enabled, but no NTP servers have been configured")
 		}
 	}
 
@@ -79,7 +79,7 @@ func (n *Time) Run(c config.Config) (e error) {
 			log.Printf("Error updating NTP: %v", err)
 		}
 	} else {
-		n.finals = append(n.finals, fmt.Sprintf("notice: NTP Disabled"))
+		n.finals = append(n.finals, "notice: NTP Disabled")
 	}
 
 	if c.Secondary.Time.HWClock {
@@ -92,7 +92,7 @@ func (n *Time) Run(c config.Config) (e error) {
 			log.Printf("Error setting HW Clock: %v", err)
 		}
 	} else {
-		n.finals = append(n.finals, fmt.Sprintf("notice: HW Clock Disabled"))
+		n.finals = append(n.finals, "notice: HW Clock Disabled")
 	}
 
 	n.finals = append(n.finals, fmt.Sprintf("time is now: %v", time.Now().UTC()))

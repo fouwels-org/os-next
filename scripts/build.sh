@@ -35,6 +35,15 @@ GOPATH=$SRC_DIR/go
 GOBIN=$GOPATH/bin
 PATH=$PATH:$GOBIN
 
+
+usage () {
+  echo "> Usage: build.sh BUILD_CONFIG BUILD_MODULES"
+  echo "> Where:"
+  echo ">  BUILD_CONFIG: primary config to bundle, one of config/primary/[BUILD_CONFIG].json"
+  echo ">  BUILD_MODULES: modules to supply, 'ALL', or one of config/modules/[BUILD_MODULES].txt"
+  echo "> For example: ./build.sh nvme ALL"
+}
+
 debug() {
   echo "Dropping into a shell for debugging ..."
   /bin/sh
@@ -576,16 +585,29 @@ build_init)
   BUILD_CONFIG=$1
   BUILD_MODULES=$2
 
-  PRIMARY_CONFIG=$BUILD_DIR/config/primary/$BUILD_CONFIG.json
-  if [ ! -f "$PRIMARY_CONFIG" ]; then
-    echo "$PRIMARY_CONFIG does not exist, missing config for build type $BUILD_CONFIG."
-    exit
+  if [ -z "$BUILD_CONFIG" ]; then
+    echo "Error: BUILD_CONFIG has not been supplied"
+    usage
+    exit 1
   fi
 
-  echo "Building EFI for: [$BUILD_CONFIG] with config: '[$BUILD_MODULES]' "
+  if [ -z "$BUILD_MODULES" ]; then
+    echo "Error: BUILD_MODULES has not been supplied"
+    usage
+    exit 1
+  fi
+
+  PRIMARY_CONFIG=$BUILD_DIR/config/primary/$BUILD_CONFIG.json
+  if [ ! -f "$PRIMARY_CONFIG" ]; then
+    echo "$PRIMARY_CONFIG does not exist, missing primary.json for supplied build config [$BUILD_CONFIG]."
+    usage
+    exit 1
+  fi
+
+  echo "Building EFI for: [$BUILD_CONFIG] with modules: '[$BUILD_MODULES]' "
   build_all
   
   echo ""
-  echo "OS build completed for: [$BUILD_CONFIG]' with config: '[$BUILD_MODULES]' "
+  echo "OS build completed for: [$BUILD_CONFIG]' with modules: '[$BUILD_MODULES]' "
   ;;
 esac

@@ -73,9 +73,9 @@ func (n *Networking) Run(c config.Config) (e error) {
 
 	if len(c.Secondary.Networking.Nameservers) != 0 {
 		// #nosec G302 (CWE-276). 644 is intentional.
-		f, err := os.OpenFile("/etc/resolv.conf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 644)
+		f, err := os.OpenFile("/etc/resolv.conf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
-			return fmt.Errorf("Failed to open file to write nameservers: %v", err)
+			return fmt.Errorf("failed to open file to write nameservers: %v", err)
 		}
 		// #nosec G307. Double defer is safe for file.Writer
 		defer f.Close()
@@ -83,18 +83,18 @@ func (n *Networking) Run(c config.Config) (e error) {
 		for _, ns := range c.Secondary.Networking.Nameservers {
 			_, err = fmt.Fprintf(f, "nameserver %v\n", ns)
 			if err != nil {
-				return fmt.Errorf("Failed to write nameserver: %v", err)
+				return fmt.Errorf("failed to write nameserver: %v", err)
 			}
 		}
 
 		err = f.Sync()
 		if err != nil {
-			return fmt.Errorf("Failed to sync on %v: %v", f.Name(), err)
+			return fmt.Errorf("failed to sync on %v: %v", f.Name(), err)
 		}
 
 		err = f.Close()
 		if err != nil {
-			return fmt.Errorf("Failed to close on %v: %v", f.Name(), err)
+			return fmt.Errorf("failed to close on %v: %v", f.Name(), err)
 		}
 
 		n.finals = append(n.finals, fmt.Sprintf("nameservers configured to %v", c.Secondary.Networking.Nameservers))

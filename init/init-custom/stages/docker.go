@@ -38,12 +38,12 @@ func (d *Docker) Run(c config.Config) error {
 
 	b, err := os.Create(_logpath)
 	if err != nil {
-		return fmt.Errorf("Failed to create docker log at %v: %w", _logpath, err)
+		return fmt.Errorf("failed to create docker log at %v: %w", _logpath, err)
 	}
 
 	err = util.Shell.ExecuteDaemon(command, b)
 	if err != nil {
-		return fmt.Errorf("Failed to start dockerd: %w", err)
+		return fmt.Errorf("failed to start dockerd: %w", err)
 	}
 
 	started := false
@@ -61,7 +61,7 @@ func (d *Docker) Run(c config.Config) error {
 	}
 
 	if !started {
-		return fmt.Errorf("Failed to get docker version, docker did not start correctly")
+		return fmt.Errorf("failed to get docker version, docker did not start correctly")
 	}
 
 	d.finals = append(d.finals, fmt.Sprintf("logging to %v", _logpath))

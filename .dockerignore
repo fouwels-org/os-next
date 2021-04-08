@@ -1,3 +1,5 @@
 **/*.img
 **/*.EFI
-*.efi
+**/*.efi
+.git
+.github

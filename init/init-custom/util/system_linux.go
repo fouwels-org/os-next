@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/user"
-	"golang.org/x/sys/unix"
+
 	"github.com/zcalusic/sysinfo"
+	"golang.org/x/sys/unix"
 )
 
 //StringInfo ..
@@ -19,7 +20,7 @@ func (s *SystemUtil) StringInfo() (string, error) {
 	}
 
 	if current.Uid != "0" {
-		return "", fmt.Errorf("Requires superuser privilege")
+		return "", fmt.Errorf("requires superuser privilege")
 	}
 
 	var si sysinfo.SysInfo

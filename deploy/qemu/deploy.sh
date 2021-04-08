@@ -112,7 +112,7 @@ cleanup() {
     sudo umount $MNTDIR/b || true
     sudo umount $MNTDIR/c || true
 
-    LOOPDEV=$(sudo losetup --find --show $TARGET)
+    LOOPDEV=$(sudo losetup --find --show $TARGET) || true
     sudo losetup -d ${LOOPDEV} || true
     rm -rf $MNTDIR
     mkdir $MNTDIR

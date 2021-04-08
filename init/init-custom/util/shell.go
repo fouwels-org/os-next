@@ -51,9 +51,9 @@ func (s *ShellUtil) ExecuteDaemon(c Command, writer io.Writer) error {
 	// N/A: subprocesses are executed dynamically by design, based on fixed
 	// configuration within calling functions.
 	cmd := exec.Command(c.Target, c.Arguments...)
-	for _, e := range c.Env {
-		cmd.Env = append(cmd.Env, e)
-	}
+
+	cmd.Env = append(cmd.Env, c.Env...)
+
 	cmd.Stderr = writer
 	cmd.Stdout = writer
 
@@ -88,9 +88,7 @@ func (s *ShellUtil) executeOneInteractive(c Command) error {
 	// configuration within calling functions.
 	cmd := exec.Command(c.Target, c.Arguments...)
 
-	for _, e := range c.Env {
-		cmd.Env = append(cmd.Env, e)
-	}
+	cmd.Env = append(cmd.Env, c.Env...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin

@@ -43,12 +43,14 @@ func main() {
 func run() error {
 
 	err := util.System.SetConsoleLogLevel(util.KLogCritical)
+
 	if err != nil {
-		return fmt.Errorf("Failed to set kernel log level: %v", err)
+		//lint:ignore SA4017 - this is a false positive, fixed in master branch of static check
+		return fmt.Errorf("failed to set kernel log level: %w", err)
 	}
 
 	log.Printf("\033[2J") // Clear console
-	log.Printf(_banner)
+	log.Printf("%v", _banner)
 
 	// creates the rootfs
 	libinit.CreateRootfs()

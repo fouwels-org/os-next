@@ -4,7 +4,8 @@ on:
 env:
   REPO: ${{github.repository}}
   REGISTRY: registry2.lagoni.co.uk
-  GOSEC_VERSION: 2.5.0
+  GOSEC_VERSION: 2.7.0
+  STATICCHECK_VERSION: 2020.2.3
   ARCH: linux_amd64
 jobs:
   build-and-scan:
@@ -54,5 +55,28 @@ jobs:
 
       - name: Run gosec/MITRE static security scanner (init-custom)
         run: cd ${GITHUB_WORKSPACE}/init/init-custom && ${GITHUB_WORKSPACE}/gosec ./...
+
+  static-check:
+    runs-on: ubuntu-latest
+    name: Code Security (static checks)
+    steps:
+      - id: vars
+        run: echo ::set-output name=TAG::${GITHUB_REF##*/}
+
+      - name: Print headers
+        run: echo "Running for target ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} in ${GITHUB_WORKSPACE}"
+
+      - name: Checkout repo 
+        uses: actions/checkout@master
+        with:
+          lfs: true
+
+      - run: echo Working in ${GITHUB_WORKSPACE}
+
+      - name: Downloading and extracting static check ${{env.GOSEC_VERSION}}
+        run: wget https://github.com/dominikh/go-tools/releases/download/${{env.STATICCHECK_VERSION}}/staticcheck_${{env.ARCH}}.tar.gz -O staticcheck.tar.gz && tar -xzf staticcheck.tar.gz
+
+      - name: Run static checks (init-custom)
+        run: cd ${GITHUB_WORKSPACE}/init/init-custom && ${GITHUB_WORKSPACE}/staticcheck/staticcheck .
 
 
