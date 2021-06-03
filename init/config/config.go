@@ -19,7 +19,7 @@ func LoadConfig(path string, config interface{}) (e error) {
 	defer func() {
 		ferr := f.Close()
 		if ferr != nil {
-			e = fmt.Errorf("Failed to close file: %v", ferr)
+			e = fmt.Errorf("failed to close file: %v", ferr)
 		}
 	}()
 
@@ -31,7 +31,7 @@ func LoadConfig(path string, config interface{}) (e error) {
 
 	_, err = f.Seek(0, 0)
 	if err != nil {
-		return fmt.Errorf("Could not seek: %w", err)
+		return fmt.Errorf("could not seek: %w", err)
 	}
 
 	jd.DisallowUnknownFields() // Force errors

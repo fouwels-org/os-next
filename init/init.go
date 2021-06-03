@@ -2,21 +2,21 @@ package main
 
 import (
 	"fmt"
-	"init-custom/config"
-	"init-custom/contrib/u-root/libinit"
-	"init-custom/stages"
-	"init-custom/static"
-	"init-custom/util"
-	"os"
-	"time"
-
+	"init/config"
+	"init/contrib/u-root/libinit"
+	"init/stages"
+	"init/static"
+	"init/util"
 	"log"
+	"os"
+
 	"syscall"
+	"time"
 )
 
 var _banner string = static.Splash
 
-const _configPrimaryPath = "/etc/init/primary.json"
+const _configPrimaryPath = "/config/primary.json"
 const _configSecondaryPath = "/var/config/secondary.json"
 
 func main() {
@@ -25,9 +25,9 @@ func main() {
 
 	err := run()
 	if err != nil {
-		log.Printf("Exit with err: %v", err)
+		log.Printf("exit with err: %v", err)
 	} else {
-		log.Printf("Exit without error?")
+		log.Printf("exit without error?")
 	}
 
 	// We need to reap all children before exiting.
@@ -45,7 +45,6 @@ func run() error {
 	err := util.System.SetConsoleLogLevel(util.KLogCritical)
 
 	if err != nil {
-		//lint:ignore SA4017 - this is a false positive, fixed in master branch of static check
 		return fmt.Errorf("failed to set kernel log level: %w", err)
 	}
 
@@ -58,7 +57,7 @@ func run() error {
 	// run the user-defined init tasks
 	err = uinit()
 	if err != nil {
-		log.Printf("Init failed: %v", err)
+		log.Printf("init failed: %v", err)
 	}
 
 	for {
@@ -68,16 +67,15 @@ func run() error {
 
 		err := util.Shell.ExecuteInteractive(commands)
 		if err != nil {
-			log.Printf("Error returned from shell, restarting: %v", err)
+			log.Printf("error returned from shell, restarting: %v", err)
 		}
 
 		time.Sleep(500 * time.Millisecond)
 	}
 }
 
-// This function loads the primary and secondary boot stages after the kernel hands over to the init process
-// return parameters:
-//		error: nil if both stages loads successfully, otherwise an error is returned
+// uinit loads the primary and secondary boot stages after the kernel hands over to the init process
+// Returns nil if both stages loads successfully, otherwise error
 func uinit() error {
 	c := config.Config{}
 
@@ -85,7 +83,7 @@ func uinit() error {
 		&stages.Modules{},
 		&stages.KernelConfig{},
 		&stages.Filesystem{},
-		&stages.Systeminfo{},
+		&stages.Microcode{},
 	}
 
 	secondary := []stages.IStage{
@@ -163,7 +161,7 @@ func executeStages(c config.Config, stages []stages.IStage) []error {
 		err := st.Run(c)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("%v failed: %w", st, err))
-			log.Printf("[%v] failed: %v/n", st, err)
+			log.Printf("[%v] failed: %v", st, err)
 		} else {
 			log.Printf("[%v] succeeded", st)
 		}

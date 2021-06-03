@@ -1,16 +1,14 @@
-build:
+fast: # Generic target with fast compression for development
+	docker build --build-arg CONFIG_COMPRESSION=GZIP --build-arg CONFIG_PRIMARY=nvme.json --build-arg CONFIG_MODULES=ALL -t registry2.lagoni.co.uk/os_build_env:local .
 
-	docker build -t registry.lagoni.co.uk/os_build_env:local .
-sata: 
-	docker run -i -t --rm --privileged=true \
-	-v build_data:/build/src \
-	-v $(PWD)/out:/build/out \
-	--name toolchain \
-	registry.lagoni.co.uk/os_build_env:local /build.sh sata ALL
+small: # Generic target with small compression
+	docker build --build-arg CONFIG_COMPRESSION=XZ --build-arg CONFIG_PRIMARY=nvme.json --build-arg CONFIG_MODULES=ALL -t registry2.lagoni.co.uk/os_build_env:local .
+	
+k300: # OnLogic K300 target
+	docker build --build-arg CONFIG_COMPRESSION=XZ --build-arg CONFIG_PRIMARY=nvme.json --build-arg CONFIG_MODULES=k300.txt -t registry2.lagoni.co.uk/os_build_env:local .
 
-nvme: 
-	docker run -i -t --rm --privileged=true \
-	-v build_data:/build/src \
-	-v $(PWD)/out:/build/out \
-	--name toolchain \
-	registry.lagoni.co.uk/os_build_env:local /build.sh nvme ALL
+magellis: # Schneider Magellis target
+	docker build --build-arg CONFIG_COMPRESSION=XZ --build-arg CONFIG_PRIMARY=sata.json --build-arg CONFIG_MODULES=magelis.txt -t registry2.lagoni.co.uk/os_build_env:local .
+	
+run:
+	docker run -it --rm -v $(PWD)/out:/out registry2.lagoni.co.uk/os_build_env:local

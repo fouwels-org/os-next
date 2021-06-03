@@ -19,9 +19,6 @@ type ShellUtil struct {
 //ExecuteOne ..
 func (s *ShellUtil) executeOne(c Command) (string, error) {
 
-	// #nosec G204 (CWE-78).
-	// N/A: subprocesses are executed dynamically by design, based on fixed
-	// configuration within calling functions.
 	cmd := exec.Command(c.Target, c.Arguments...)
 	out, err := cmd.CombinedOutput()
 
@@ -47,9 +44,6 @@ func (s *ShellUtil) Execute(commands []Command) error {
 //ExecuteDaemon execute in daemon mode
 func (s *ShellUtil) ExecuteDaemon(c Command, writer io.Writer) error {
 
-	// #nosec G204 (CWE-78).
-	// N/A: subprocesses are executed dynamically by design, based on fixed
-	// configuration within calling functions.
 	cmd := exec.Command(c.Target, c.Arguments...)
 
 	cmd.Env = append(cmd.Env, c.Env...)
@@ -83,9 +77,6 @@ func (s *ShellUtil) ExecuteInteractive(commands []Command) error {
 
 func (s *ShellUtil) executeOneInteractive(c Command) error {
 
-	// #nosec G204 (CWE-78).
-	// N/A: subprocesses are executed dynamically by design, based on fixed
-	// configuration within calling functions.
 	cmd := exec.Command(c.Target, c.Arguments...)
 
 	cmd.Env = append(cmd.Env, c.Env...)

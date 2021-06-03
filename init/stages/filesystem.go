@@ -2,8 +2,8 @@ package stages
 
 import (
 	"fmt"
-	"init-custom/config"
-	"init-custom/util"
+	"init/config"
+	"init/util"
 )
 
 //Filesystem implements IStage

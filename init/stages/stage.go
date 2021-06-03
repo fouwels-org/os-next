@@ -1,6 +1,6 @@
 package stages
 
-import "init-custom/config"
+import "init/config"
 
 //IStage ..
 type IStage interface {

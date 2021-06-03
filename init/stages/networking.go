@@ -2,8 +2,8 @@ package stages
 
 import (
 	"fmt"
-	"init-custom/config"
-	"init-custom/util"
+	"init/config"
+	"init/util"
 	"os"
 )
 
@@ -72,12 +72,10 @@ func (n *Networking) Run(c config.Config) (e error) {
 	}
 
 	if len(c.Secondary.Networking.Nameservers) != 0 {
-		// #nosec G302 (CWE-276). 644 is intentional.
 		f, err := os.OpenFile("/etc/resolv.conf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return fmt.Errorf("failed to open file to write nameservers: %v", err)
 		}
-		// #nosec G307. Double defer is safe for file.Writer
 		defer f.Close()
 
 		for _, ns := range c.Secondary.Networking.Nameservers {

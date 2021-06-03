@@ -6,7 +6,10 @@ ARG2="$2"
 ARG3="$3"
 ARG4="$4"
 
-MEM="2048"
+TARGET="$ARG2"
+EFI="$ARG3"
+CONFIG="$ARG4"
+
 MNTDIR="/tmp/qemu/mnt"
 
 init() {
@@ -17,10 +20,6 @@ init() {
     mkdir -p $MNTDIR/a
     mkdir -p $MNTDIR/b
     mkdir -p $MNTDIR/c
-
-    TARGET="$ARG2"
-    EFI="$ARG3"
-    CONFIG="$ARG4"
 
     if [ ! -f $EFI ]; then
         echo "Error: EFI $EFI does not exist"
@@ -33,30 +32,6 @@ init() {
         echo "Error: Unsupported platform: $(uname)"
         exit
     fi
-
-    if [ "$ARG1" = "kvm" ]; then
-        QEMU_ACCEL="--enable-kvm -cpu host -smp 4 -machine type=q35,accel=kvm"
-        QEMU_DISPLAY="-display gtk -vga std"
-    fi
-
-    if [ "$ARG1" = "kvm-headless" ]; then
-        QEMU_ACCEL="--enable-kvm -cpu host -smp 4 -machine type=q35,accel=kvm"
-        QEMU_DISPLAY="-display curses"
-    fi
-
-    if [ "$ARG1" = "emulate" ]; then
-        QEMU_ACCEL=""
-        QEMU_DISPLAY="-display gtk -vga std"
-    fi
-
-    if [ "$ARG1" = "emulate-headless" ]; then
-        QEMU_ACCEL=""
-        QEMU_DISPLAY="-display curses"
-    fi
-
-    QEMU_BIOS="-bios /usr/share/qemu/OVMF.fd"
-
-    echo "Initialized for $RUNTIME with options [$QEMU_DISPLAY $QEMU_ACCEL] using bios: $QEMU_BIOS, baseimage: $TARGET, efi: $EFI, config: $CONFIG"
 }
 
 image() {
@@ -115,24 +90,45 @@ cleanup() {
     LOOPDEV=$(sudo losetup --find --show $TARGET) || true
     sudo losetup -d ${LOOPDEV} || true
     rm -rf $MNTDIR
-    mkdir $MNTDIR
-    mkdir $MNTDIR/a
-    mkdir $MNTDIR/b
-    mkdir $MNTDIR/c
+    mkdir -p $MNTDIR
+    mkdir -p $MNTDIR/a
+    mkdir -p $MNTDIR/b
+    mkdir -p $MNTDIR/c
 }
 
 run() {
     echo ""
     echo "RUN"
-    qemu-system-x86_64 $QEMU_ACCEL $QEMU_DISPLAY $QEMU_BIOS \
-        -m $MEM \
+
+    if [ "$ARG1" = "kvm-gtk" ]; then
+        QEMU_DISPLAY="-display gtk"
+        QEMU_DISK="-nodefaults -boot c -bios /usr/share/ovmf/bios.bin -monitor stdio"
+    fi
+
+    if [ "$ARG1" = "kvm-vnc" ]; then
+        QEMU_DISPLAY="-display vnc=:0"
+        QEMU_DISK="-nodefaults -boot c -bios /usr/share/ovmf/bios.bin -monitor stdio"
+    fi
+
+    if [ "$ARG1" = "kvm-kernel" ]; then
+        QEMU_DISPLAY="-display vnc=:0"
+        QEMU_DISK="-kernel $EFI --append console=ttyS0 -nographic"
+    fi
+    
+    qemu-system-x86_64 $QEMU_DISPLAY $QEMU_DISK \
+        --enable-kvm \
+        -machine type=q35,accel=kvm \
+        -cpu host \
+        -smp 4 \
+        -m 3072 \
+        -vga std \
         -drive format=raw,file=$TARGET,if=none,id=os2 \
         -device ich9-ahci,id=ahci \
-        -device nvme,drive=os2,serial=nvme-1
+        -device nvme,drive=os2,serial=nvme-1 \
         -device virtio-rng-pci \
-        -nodefaults \
-        -nic user,model=e1000 \
-        -boot c
+        -device e1000e,netdev=n1 \
+        -netdev user,id=n1 \
+        
 }
 
 init

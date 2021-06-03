@@ -2,8 +2,8 @@ package stages
 
 import (
 	"fmt"
-	"init-custom/config"
-	"init-custom/util"
+	"init/config"
+	"io/ioutil"
 )
 
 //KernelConfig implements IStage
@@ -24,7 +24,7 @@ func (n *KernelConfig) Finalise() []string {
 //Run ..
 func (n *KernelConfig) Run(c config.Config) error {
 
-	err := util.File.SetFile("/sys/fs/cgroup/memory/memory.use_hierarchy", "1", 0644)
+	err := ioutil.WriteFile("/sys/fs/cgroup/memory/memory.use_hierarchy", []byte("1"), 0644)
 	if err != nil {
 		return fmt.Errorf("failed to set file: %w", err)
 	}

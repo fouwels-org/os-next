@@ -2,8 +2,8 @@ package stages
 
 import (
 	"fmt"
-	"init-custom/config"
-	"init-custom/util"
+	"init/config"
+	"init/util"
 	"os"
 	"time"
 )
@@ -26,7 +26,7 @@ func (d *Docker) Finalise() []string {
 //Run ..
 func (d *Docker) Run(c config.Config) error {
 
-	const _logpath string = "/var/lib/docker/docker.log"
+	const _logpath string = "/var/log/docker/docker.log"
 
 	// Start Docker
 	// Set path to allow docker to find containerd

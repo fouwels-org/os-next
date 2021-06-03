@@ -20,7 +20,7 @@ else
 fi
 
 is_set() {
-    $CAT $CONFIG | grep "$1=[y|m]" > /dev/null
+    $CAT $CONFIG | grep "$1=[y|m]" >/dev/null
     return $?
 }
 
@@ -44,7 +44,7 @@ is_enabled() {
 }
 
 is_probed() {
-    lsmod | grep $1 > /dev/null
+    lsmod | grep $1 >/dev/null
     if [ $? -eq 0 ]; then
         echo -n ", loaded"
     else
@@ -54,13 +54,13 @@ is_probed() {
 
 if [ ! -f $CONFIG ]; then
     echo "Kernel configuration not found at $CONFIG; searching..."
-    KVER="`uname -r`"
+    KVER="$(uname -r)"
     HEADERS_CONFIG="/lib/modules/$KVER/build/.config"
     BOOT_CONFIG="/boot/config-$KVER"
     [ -f "${HEADERS_CONFIG}" ] && CONFIG=${HEADERS_CONFIG}
     [ -f "${BOOT_CONFIG}" ] && CONFIG=${BOOT_CONFIG}
     if [ ! -f "$CONFIG" ]; then
-        MODULEFILE=$(modinfo -k $KVER -n $MODNAME 2> /dev/null)
+        MODULEFILE=$(modinfo -k $KVER -n $MODNAME 2>/dev/null)
         # don't want to modprobe, so give user a hint
         # although scripts/extract-ikconfig could be used to extract contents without loading kernel module
         # http://svn.pld-linux.org/trac/svn/browser/geninitrd/trunk/geninitrd?rev=12696#L327
@@ -80,18 +80,18 @@ if [ ! -f $CONFIG ]; then
     fi
 fi
 
-if gunzip -tq < $CONFIG 2>/dev/null; then
+if gunzip -tq <$CONFIG 2>/dev/null; then
     CAT="zcat"
 fi
 
-KVER_MAJOR=$($CAT $CONFIG | grep '^# Linux.*Kernel Configuration' | \
+KVER_MAJOR=$($CAT $CONFIG | grep '^# Linux.*Kernel Configuration' |
     sed -r 's/.* ([0-9])\.[0-9]{1,2}\.[0-9]{1,3}.*/\1/')
 if [ "$KVER_MAJOR" = "2" ]; then
-KVER_MINOR=$($CAT $CONFIG | grep '^# Linux.*Kernel Configuration' | \
-    sed -r 's/.* 2.6.([0-9]{2}).*/\1/')
+    KVER_MINOR=$($CAT $CONFIG | grep '^# Linux.*Kernel Configuration' |
+        sed -r 's/.* 2.6.([0-9]{2}).*/\1/')
 else
-KVER_MINOR=$($CAT $CONFIG | grep '^# Linux.*Kernel Configuration' | \
-    sed -r 's/.* [0-9]\.([0-9]{1,3})\.[0-9]{1,3}.*/\1/')
+    KVER_MINOR=$($CAT $CONFIG | grep '^# Linux.*Kernel Configuration' |
+        sed -r 's/.* [0-9]\.([0-9]{1,3})\.[0-9]{1,3}.*/\1/')
 fi
 
 if [ -z "${KVER_MAJOR}" ]; then
@@ -112,28 +112,28 @@ echo
 echo -n "User namespace: " && is_enabled CONFIG_USER_NS
 echo
 if is_set CONFIG_USER_NS; then
-	if which newuidmap > /dev/null 2>&1; then
-		f=`which newuidmap`
-		if [ ! -u "${f}" ]; then
-			echo "Warning: newuidmap is not setuid-root"
-		fi
-	else
-		echo "newuidmap is not installed"
-	fi
-	if which newgidmap > /dev/null 2>&1; then
-		f=`which newgidmap`
-		if [ ! -u "${f}" ]; then
-			echo "Warning: newgidmap is not setuid-root"
-		fi
-	else
-		echo "newgidmap is not installed"
-	fi
+    if which newuidmap >/dev/null 2>&1; then
+        f=$(which newuidmap)
+        if [ ! -u "${f}" ]; then
+            echo "Warning: newuidmap is not setuid-root"
+        fi
+    else
+        echo "newuidmap is not installed"
+    fi
+    if which newgidmap >/dev/null 2>&1; then
+        f=$(which newgidmap)
+        if [ ! -u "${f}" ]; then
+            echo "Warning: newgidmap is not setuid-root"
+        fi
+    else
+        echo "newgidmap is not installed"
+    fi
 fi
 echo -n "Network namespace: " && is_enabled CONFIG_NET_NS
 echo
 if ([ $KVER_MAJOR -lt 4 ]) || ([ $KVER_MAJOR -eq 4 ] && [ $KVER_MINOR -lt 7 ]); then
-	echo -n "Multiple /dev/pts instances: " && is_enabled DEVPTS_MULTIPLE_INSTANCES
-	echo
+    echo -n "Multiple /dev/pts instances: " && is_enabled DEVPTS_MULTIPLE_INSTANCES
+    echo
 fi
 echo
 
@@ -143,39 +143,39 @@ echo -n "Cgroups: " && is_enabled CONFIG_CGROUPS
 echo
 
 print_cgroups() {
-  # print all mountpoints for cgroup filesystems
-  awk '$1 !~ /#/ && $3 == mp { print $2; } ; END { exit(0); } '  "mp=$1" "$2" ;
+    # print all mountpoints for cgroup filesystems
+    awk '$1 !~ /#/ && $3 == mp { print $2; } ; END { exit(0); } ' "mp=$1" "$2"
 }
 
-CGROUP_V1_MNTS=`print_cgroups cgroup /proc/self/mounts`
+CGROUP_V1_MNTS=$(print_cgroups cgroup /proc/self/mounts)
 echo
 echo "Cgroup v1 mount points: "
 echo "$CGROUP_V1_MNTS"
 echo
 
-CGROUP_V2_MNTS=`print_cgroups cgroup2 /proc/self/mounts`
+CGROUP_V2_MNTS=$(print_cgroups cgroup2 /proc/self/mounts)
 echo "Cgroup v2 mount points: "
 echo "$CGROUP_V2_MNTS"
 echo
 
-CGROUP_SYSTEMD_MNTPT=`echo "$CGROUP_V1_MNTS" | grep "/systemd"`
+CGROUP_SYSTEMD_MNTPT=$(echo "$CGROUP_V1_MNTS" | grep "/systemd")
 if [ -z "$CGROUP_SYSTEMD_MNTPT" ]; then
     echo -n "Cgroup v1 systemd controller: "
     $SETCOLOR_FAILURE && echo -n "missing" && $SETCOLOR_NORMAL
     echo
 fi
 
-CGROUP_FREEZER_MNTPT=`echo "$CGROUP_V1_MNTS" | grep "/freezer"`
+CGROUP_FREEZER_MNTPT=$(echo "$CGROUP_V1_MNTS" | grep "/freezer")
 if [ -z "$CGROUP_FREEZER_MNTPT" ]; then
     echo -n "Cgroup v1 freezer controller: "
     $SETCOLOR_FAILURE && echo -n "missing" && $SETCOLOR_NORMAL
     echo
 fi
 
-CGROUP_MNT_PATH=`echo "$CGROUP_V1_MNTS" | head -n 1`
+CGROUP_MNT_PATH=$(echo "$CGROUP_V1_MNTS" | head -n 1)
 if [ -f $CGROUP_MNT_PATH/cgroup.clone_children ]; then
     echo -n "Cgroup v1 clone_children flag: " &&
-    $SETCOLOR_SUCCESS && echo "enabled" && $SETCOLOR_NORMAL
+        $SETCOLOR_SUCCESS && echo "enabled" && $SETCOLOR_NORMAL
 else
     echo -n "Cgroup namespace: " && is_enabled CONFIG_CGROUP_NS yes
     echo
@@ -243,12 +243,15 @@ echo -n "CONFIG_PACKET_DIAG: " && is_enabled CONFIG_PACKET_DIAG
 echo
 echo -n "CONFIG_NETLINK_DIAG: " && is_enabled CONFIG_NETLINK_DIAG
 echo
-echo -n "File capabilities: " && \
-    ( [ "${KVER_MAJOR}" = 2 ] && [ ${KVER_MINOR} -lt 33 ] && \
-       is_enabled CONFIG_SECURITY_FILE_CAPABILITIES; echo ) || \
-    ( ( [ "${KVER_MAJOR}" = "2" ] && [ ${KVER_MINOR} -gt 32 ] ) || \
-         [ ${KVER_MAJOR} -gt 2 ] && $SETCOLOR_SUCCESS && \
-         echo "enabled" && $SETCOLOR_NORMAL )
+echo -n "File capabilities: " &&
+    (
+        [ "${KVER_MAJOR}" = 2 ] && [ ${KVER_MINOR} -lt 33 ] &&
+            is_enabled CONFIG_SECURITY_FILE_CAPABILITIES
+        echo
+    ) ||
+    ( ([ "${KVER_MAJOR}" = "2" ] && [ ${KVER_MINOR} -gt 32 ]) ||
+        [ ${KVER_MAJOR} -gt 2 ] && $SETCOLOR_SUCCESS &&
+        echo "enabled" && $SETCOLOR_NORMAL)
 
 echo
 echo "Note : Before booting a new kernel, you can check its configuration"

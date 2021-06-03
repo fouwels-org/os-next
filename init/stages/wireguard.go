@@ -3,8 +3,7 @@ package stages
 import (
 	"bytes"
 	"fmt"
-	"init-custom/config"
-	"init-custom/util"
+	"init/config"
 	"io/ioutil"
 	"net"
 	"path/filepath"
@@ -33,7 +32,7 @@ func (n *Wireguard) Finalise() []string {
 //Run ..
 func (n *Wireguard) Run(c config.Config) error {
 
-	const _keyroot = "/var/lib/docker"
+	const _keyroot = "/var/config"
 
 	for _, wloop := range c.Secondary.Wireguard {
 		wg := wloop //Prevent loop ref capture
@@ -57,7 +56,7 @@ func (n *Wireguard) Run(c config.Config) error {
 				return fmt.Errorf("failed to generate private key: %v", err)
 			}
 
-			err = util.File.SetFile(filepath.Clean(keypath+".private"), wgkey.String(), 0600)
+			err = ioutil.WriteFile(filepath.Clean(keypath+".private"), []byte(wgkey.String()), 0600)
 			if err != nil {
 				return fmt.Errorf("failed to save wg key: %v", err)
 			}
@@ -71,7 +70,7 @@ func (n *Wireguard) Run(c config.Config) error {
 			n.finals = append(n.finals, "private key Loaded")
 		}
 
-		err = util.File.SetFile(filepath.Clean(keypath+".pub.qr"), n.writeQR(wgkey.PublicKey()), 0600)
+		err = ioutil.WriteFile(filepath.Clean(keypath+".pub.qr"), []byte(n.writeQR(wgkey.PublicKey())), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to write public key QR: %v", err)
 		}

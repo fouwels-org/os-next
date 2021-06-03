@@ -2,8 +2,8 @@ package stages
 
 import (
 	"fmt"
-	"init-custom/config"
-	"init-custom/util"
+	"init/config"
+	"init/util"
 	"log"
 	"os"
 	"time"
@@ -28,36 +28,27 @@ func (n *Time) Finalise() []string {
 func (n *Time) Run(c config.Config) (e error) {
 
 	// Configure NTP
-	err := func() error {
-		// #nosec G302 (CWE-276). 644 is intentional.
-		f, err := os.OpenFile("/etc/ntp.conf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-		if err != nil {
-			return fmt.Errorf("failed to open file to write ntp settings: %v", err)
-		}
-		// #nosec G307. Double defer is safe for file.Writer
-		defer f.Close()
-
-		for _, ns := range c.Secondary.Time.Servers {
-			_, err = fmt.Fprintf(f, "server %v\n", ns)
-			if err != nil {
-				return fmt.Errorf("failed to write ntp server: %v", err)
-			}
-		}
-
-		err = f.Sync()
-		if err != nil {
-			return fmt.Errorf("failed to sync on %v: %v", f.Name(), err)
-		}
-
-		ferr := f.Close()
-		if ferr != nil {
-			e = fmt.Errorf("failed to close on %v: %w", f.Name(), ferr)
-		}
-
-		return nil
-	}()
+	f, err := os.OpenFile("/etc/ntp.conf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open file to write ntp settings: %v", err)
+	}
+	defer f.Close()
+
+	for _, ns := range c.Secondary.Time.Servers {
+		_, err = fmt.Fprintf(f, "server %v\n", ns)
+		if err != nil {
+			return fmt.Errorf("failed to write ntp server: %v", err)
+		}
+	}
+
+	err = f.Sync()
+	if err != nil {
+		return fmt.Errorf("failed to sync on %v: %v", f.Name(), err)
+	}
+
+	ferr := f.Close()
+	if ferr != nil {
+		e = fmt.Errorf("failed to close on %v: %w", f.Name(), ferr)
 	}
 
 	if len(c.Secondary.Time.Servers) != 0 {

@@ -1,7 +1,7 @@
 package config_test
 
 import (
-	"init-custom/config"
+	"init/config"
 	"testing"
 )
 
