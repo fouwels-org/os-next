@@ -10,5 +10,5 @@ if [ -f $FILE ]; then
 fi
 
 cp /root/mnt/EFI/BOOT/BOOTx64.EFI /root/usb/EFI/BOOT
-umount /root/mnt    
+umount /root/mnt
 umount /root/usb

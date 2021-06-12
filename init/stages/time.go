@@ -3,7 +3,7 @@ package stages
 import (
 	"fmt"
 	"init/config"
-	"init/util"
+	"init/shell"
 	"log"
 	"os"
 	"time"
@@ -62,10 +62,10 @@ func (n *Time) Run(c config.Config) (e error) {
 	// Run command set
 	if c.Secondary.Time.NTP {
 
-		commands := []util.Command{}
-		commands = append(commands, util.Command{Target: "/sbin/ntpd", Arguments: []string{"-q"}})
+		commands := []shell.Command{}
+		commands = append(commands, shell.Command{Executable: shell.Ntpd, Arguments: []string{"-q"}})
 
-		err := util.Shell.Execute(commands)
+		err := shell.Executor.Execute(commands)
 		if err != nil {
 			log.Printf("Error updating NTP: %v", err)
 		}
@@ -75,10 +75,10 @@ func (n *Time) Run(c config.Config) (e error) {
 
 	if c.Secondary.Time.HWClock {
 
-		commands := []util.Command{}
-		commands = append(commands, util.Command{Target: "/sbin/hwclock", Arguments: []string{"-w"}})
+		commands := []shell.Command{}
+		commands = append(commands, shell.Command{Executable: shell.Hwclock, Arguments: []string{"-w"}})
 
-		err := util.Shell.Execute(commands)
+		err := shell.Executor.Execute(commands)
 		if err != nil {
 			log.Printf("Error setting HW Clock: %v", err)
 		}

@@ -3,7 +3,7 @@ package stages
 import (
 	"fmt"
 	"init/config"
-	"init/util"
+	"init/shell"
 	"os"
 	"time"
 )
@@ -30,10 +30,10 @@ func (d *Docker) Run(c config.Config) error {
 
 	// Start Docker
 	// Set path to allow docker to find containerd
-	command := util.Command{
-		Target:    "/usr/bin/dockerd",
-		Arguments: []string{},
-		Env:       []string{"DOCKER_RAMDISK=true", "PATH=/sbin:/usr/sbin:/bin:/usr/bin"},
+	command := shell.Command{
+		Executable: shell.Dockerd,
+		Arguments:  []string{},
+		Env:        []string{"DOCKER_RAMDISK=true", "PATH=/sbin:/usr/sbin:/bin:/usr/bin"},
 	}
 
 	b, err := os.Create(_logpath)
@@ -41,7 +41,7 @@ func (d *Docker) Run(c config.Config) error {
 		return fmt.Errorf("failed to create docker log at %v: %w", _logpath, err)
 	}
 
-	err = util.Shell.ExecuteDaemon(command, b)
+	err = shell.Executor.ExecuteDaemon(command, b)
 	if err != nil {
 		return fmt.Errorf("failed to start dockerd: %w", err)
 	}
@@ -49,10 +49,10 @@ func (d *Docker) Run(c config.Config) error {
 	started := false
 	for i := 0; i < 5; i++ {
 
-		commands := []util.Command{}
-		commands = append(commands, util.Command{Target: "/usr/bin/docker", Arguments: []string{"version"}})
+		commands := []shell.Command{}
+		commands = append(commands, shell.Command{Executable: shell.Docker, Arguments: []string{"version"}})
 
-		err := util.Shell.Execute(commands)
+		err := shell.Executor.Execute(commands)
 		if err != nil {
 			time.Sleep(1 * time.Second)
 			continue

@@ -3,7 +3,7 @@ DEVFILE=/tmp/vfat.txt
 DEV="/dev/sda1" # default vfat location
 
 if [ -f "$DEVFILE" ]; then
-    DEV=`cat /tmp/vfat.txt`
+    DEV=$(cat /tmp/vfat.txt)
     echo "partition obtained from the tmp filesystem : $DEV"
 
 fi

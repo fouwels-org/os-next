@@ -3,41 +3,47 @@ package main
 import (
 	"fmt"
 	"init/config"
+	"init/console"
 	"init/contrib/u-root/libinit"
+	"init/shell"
 	"init/stages"
-	"init/static"
 	"init/util"
 	"log"
 	"os"
-
 	"syscall"
 	"time"
 )
-
-var _banner string = static.Splash
 
 const _configPrimaryPath = "/config/primary.json"
 const _configSecondaryPath = "/var/config/secondary.json"
 
 func main() {
 
-	log.SetFlags(0)
+	log.SetFlags(log.Lmicroseconds | log.LUTC)
 
 	err := run()
 	if err != nil {
 		log.Printf("exit with err: %v", err)
 	} else {
-		log.Printf("exit without error?")
+		log.Printf("exit without error")
 	}
 
-	// We need to reap all children before exiting.
-	log.Printf("all commands exited, syncing filesystems")
-	syscall.Sync()
+	// Sync file system
+	_, _, serr := syscall.Syscall(306, 0, 0, 0)
+	if serr != 0 {
+		log.Printf("failed to sync file system: %v", err)
+	}
 
-	log.Printf("rebooting in 5 seconds")
-	time.Sleep(5 * time.Second)
+	log.Printf("rebooting in 3 seconds")
+	time.Sleep(3 * time.Second)
+
+	// Reboot
+	err = syscall.Reboot(syscall.LINUX_REBOOT_CMD_RESTART)
+	log.Printf("reboot syscall failed, exiting to kernel in 3 seconds, good luck: %v", err)
+	time.Sleep(3 * time.Second)
 
 	os.Exit(1)
+
 }
 
 func run() error {
@@ -49,7 +55,12 @@ func run() error {
 	}
 
 	log.Printf("\033[2J") // Clear console
-	log.Printf("%v", _banner)
+
+	// run self tests
+	err = shell.SelfTest()
+	if err != nil {
+		return fmt.Errorf("failed shell self test: %w", err)
+	}
 
 	// creates the rootfs
 	libinit.CreateRootfs()
@@ -57,21 +68,16 @@ func run() error {
 	// run the user-defined init tasks
 	err = uinit()
 	if err != nil {
-		log.Printf("init failed: %v", err)
+		return fmt.Errorf("failed to run init: %v", err)
 	}
 
-	for {
-		commands := []util.Command{}
-
-		commands = append(commands, util.Command{Target: "/bin/login", Arguments: []string{}})
-
-		err := util.Shell.ExecuteInteractive(commands)
-		if err != nil {
-			log.Printf("error returned from shell, restarting: %v", err)
-		}
-
-		time.Sleep(500 * time.Millisecond)
+	// start the console
+	err = console.Start()
+	if err != nil {
+		return fmt.Errorf("failed to run console: %w", err)
 	}
+
+	return nil
 }
 
 // uinit loads the primary and secondary boot stages after the kernel hands over to the init process
@@ -146,6 +152,8 @@ func uinit() error {
 			log.Printf("[uinit] %v: %v", st, f)
 		}
 	}
+
+	log.Printf("[uinit] initialisation complete")
 
 	return nil
 }

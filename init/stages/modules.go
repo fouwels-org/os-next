@@ -3,7 +3,7 @@ package stages
 import (
 	"fmt"
 	"init/config"
-	"init/util"
+	"init/shell"
 )
 
 //Modules implementes IStage
@@ -28,8 +28,8 @@ func (m *Modules) Run(c config.Config) error {
 	errs := []error{}
 	for _, v := range c.Primary.Modules {
 
-		com := []util.Command{{Target: "/sbin/modprobe", Arguments: []string{v}}}
-		err := util.Shell.Execute(com)
+		com := []shell.Command{{Executable: shell.Modprobe, Arguments: []string{v}}}
+		err := shell.Executor.Execute(com)
 
 		if err != nil {
 			errs = append(errs, err)
