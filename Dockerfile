@@ -36,6 +36,7 @@ ENV VERSION_BUSYBOX=1.33.1
 ENV VERSION_WGTOOLS=v1.0.20210424
 ENV VERSION_MICROCODE_INTEL=20210216
 ENV VERSION_IPTABLES=1.8.7
+ENV VERSION_E2FSPROGS=1.46.2
 
 # Build musl
 RUN wget -q -O musl.tar.gz https://www.musl-libc.org/releases/musl-$VERSION_MUSL.tar.gz && tar -xf musl.tar.gz
@@ -58,8 +59,14 @@ RUN cd busybox-${VERSION_BUSYBOX} && \
     make -j $(nproc)
 
 # Build iptables
-RUN  wget -q -O iptables.tar.bz2  https://netfilter.org/projects/iptables/files/iptables-$VERSION_IPTABLES.tar.bz2 && tar -xf iptables.tar.bz2
-RUN cd iptables-${VERSION_IPTABLES} && ./configure --disable-nftables --prefix=/ && make EXTRA_CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc)
+RUN wget -q -O iptables.tar.bz2  https://netfilter.org/projects/iptables/files/iptables-$VERSION_IPTABLES.tar.bz2 && tar -xf iptables.tar.bz2
+RUN cd iptables-${VERSION_IPTABLES} && ./configure --disable-nftables --prefix=/ && \
+    make EXTRA_CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc)
+
+# Build e2fsprogs
+RUN wget -q -O e2fsprogs.tar.xz https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git/snapshot/e2fsprogs-${VERSION_E2FSPROGS}.tar.gz && tar -xf e2fsprogs.tar.xz
+RUN cd e2fsprogs-${VERSION_E2FSPROGS} && ./configure --enable-elf-shlibs --disable-fsck --disable-uuidd --enable-libuuid --enable-libblkid --disable-nls && \
+    make -j $(nproc)
 
 # Set up template rootfs
 COPY template_rootfs /template_rootfs
@@ -76,9 +83,13 @@ RUN cd linux-${VERSION_KERNEL} && mkdir -p /rootfs && make -j $(nproc) INSTALL_M
 # Install packages to rootfs
 RUN cd busybox-${VERSION_BUSYBOX} && make -j $(nproc) CONFIG_PREFIX=/rootfs install
 RUN cd musl-${VERSION_MUSL} && make -j $(nproc) DESTDIR=/rootfs install
+RUN cd iptables-${VERSION_IPTABLES} && make DESTDIR=/rootfs install
+RUN cp e2fsprogs-${VERSION_E2FSPROGS}/lib/*.so.* /rootfs/lib && \
+    cp e2fsprogs-${VERSION_E2FSPROGS}/lib/*.so.* /rootfs/lib && \
+    cp e2fsprogs-${VERSION_E2FSPROGS}/misc/mke2fs /rootfs/bin/mke2fs
 RUN cp wireguard-tools/src/wg /rootfs/usr/sbin/wg
 RUN cp docker/* /rootfs/usr/bin/
-RUN cd iptables-${VERSION_IPTABLES} && make DESTDIR=/rootfs install
+
 
 # Build and add deptools if DEPLOYMENT_TOOLS=1 to rootfs
 ARG DEPLOYMENT_TOOLS=0
@@ -96,6 +107,11 @@ RUN find /rootfs | grep ".\.la$" | xargs rm || true
 RUN find /rootfs | grep ".\.a$" | xargs rm || true
 RUN find /rootfs | grep ".\.o$" | xargs rm || true
 
+# Cache go/init dependencies
+COPY init/go.mod init/go.mod
+COPY init/go.sum init/go.sum
+RUN cd init && go mod download
+
 # Build go/init into rootfs
 COPY init init
 RUN cd init && go build -ldflags "-s -w" -o /rootfs/init && strip /rootfs/init
@@ -110,13 +126,10 @@ RUN cd /rootfs && find . -print0 | cpio --null --create --verbose --format=newc 
 
 # Build final kernel with real initramfs
 ARG CONFIG_COMPRESSION=XZ
-RUN cd linux-${VERSION_KERNEL} && make CONFIG_KERNEL_${CONFIG_COMPRESSION}=y CONFIG_INITRAMFS_COMPRESSION_${CONFIG_COMPRESSION}=y CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" KGZIP=pigz -j $(nproc)
-RUN cp linux-${VERSION_KERNEL}/arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-$CONFIG_COMPRESSION.EFI
-RUN cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-$CONFIG_COMPRESSION.EFI BOOTx64.EFI
-RUN cd ${OUT_DIR} && find /rootfs >> rootfs.txt
-FROM alpine:3.13.5
-
-COPY --from=0 /build/out /build/out
+RUN cd linux-${VERSION_KERNEL} && \
+    make CONFIG_KERNEL_${CONFIG_COMPRESSION}=y CONFIG_INITRAMFS_COMPRESSION_${CONFIG_COMPRESSION}=y CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" KGZIP=pigz -j $(nproc) && \
+    cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-$CONFIG_COMPRESSION.EFI && rm arch/x86_64/boot/bzImage && \
+    cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-$CONFIG_COMPRESSION.EFI BOOTx64.EFI
 
 USER 100:100
 CMD ["cp", "-r" ,"/build/out", "/"]

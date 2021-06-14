@@ -12,6 +12,7 @@ import (
 
 const _authenticator = "LagoniP13"
 
+// Start runtime console
 func Start() error {
 
 	err := login()
@@ -24,6 +25,13 @@ func Start() error {
 		return err
 	}
 	return nil
+}
+
+// Start recovery console
+func StartRecovery() error {
+
+	// aliased to standard console for now
+	return Start()
 }
 
 func login() error {

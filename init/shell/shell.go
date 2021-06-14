@@ -32,7 +32,7 @@ func (c Command) String() string {
 type ShellExecutor struct {
 }
 
-func (s *ShellExecutor) executeOne(c Command) (string, error) {
+func (s *ShellExecutor) ExecuteOne(c Command) (string, error) {
 
 	cmd := exec.Command(c.Executable.Target(), c.Arguments...)
 	out, err := cmd.CombinedOutput()
@@ -47,9 +47,9 @@ func (s *ShellExecutor) executeOne(c Command) (string, error) {
 //Execute ..
 func (s *ShellExecutor) Execute(commands []Command) error {
 	for _, c := range commands {
-		out, err := s.executeOne(c)
+		out, err := s.ExecuteOne(c)
 		if err != nil {
-			return fmt.Errorf("%v failed: %v %w", c, string(out), err)
+			return fmt.Errorf("%v: %v (%v)", c, string(out), err)
 		}
 	}
 
@@ -81,7 +81,7 @@ func (s *ShellExecutor) ExecuteDaemon(c Command, writer io.Writer) error {
 //ExecuteInteractive Execute with attached TTY
 func (s *ShellExecutor) ExecuteInteractive(commands []Command) error {
 	for _, c := range commands {
-		err := s.executeOneInteractive(c)
+		err := s.ExecuteInteractiveOne(c)
 		if err != nil {
 			return fmt.Errorf("%v failed: %w", c, err)
 		}
@@ -90,7 +90,7 @@ func (s *ShellExecutor) ExecuteInteractive(commands []Command) error {
 	return nil
 }
 
-func (s *ShellExecutor) executeOneInteractive(c Command) error {
+func (s *ShellExecutor) ExecuteInteractiveOne(c Command) error {
 
 	cmd := exec.Command(c.Executable.Target(), c.Arguments...)
 

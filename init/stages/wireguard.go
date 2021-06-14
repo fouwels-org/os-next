@@ -24,6 +24,11 @@ func (n *Wireguard) String() string {
 	return "wireguard"
 }
 
+//Policy ..
+func (n *Wireguard) Policy() Policy {
+	return PolicyHard
+}
+
 //Finalise ..
 func (n *Wireguard) Finalise() []string {
 	return n.finals

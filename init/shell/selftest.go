@@ -18,6 +18,10 @@ func SelfTest() error {
 		Docker,
 		Mkdir,
 		Mount,
+		Blkid,
+		Mke2fs,
+		Fdisk,
+		Mkdosfs,
 	}
 
 	for _, e := range es {

@@ -4,6 +4,10 @@
         "comment": ""
     },
     "secondary": {
+        "modules": [
+            "kvm",
+            "kvm-intel"
+        ],
         "networking": {
             "networks": [
                 {

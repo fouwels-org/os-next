@@ -19,6 +19,11 @@ func (n *Time) String() string {
 	return "time"
 }
 
+//Policy ..
+func (n *Time) Policy() Policy {
+	return PolicyHard
+}
+
 //Finalise ..
 func (n *Time) Finalise() []string {
 	return n.finals

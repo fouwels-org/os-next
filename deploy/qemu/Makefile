@@ -1,6 +1,4 @@
-kvm-kernel:
-	./deploy.sh kvm-kernel ./base.img ../../out/BOOTx64.EFI ./secondary.json
-kvm-vnc:
-	./deploy.sh kvm-vnc ./base.img ../../out/BOOTx64.EFI ./secondary.json
-kvm-gtk:
-	./deploy.sh kvm-gtk ./base.img ../../out/BOOTx64.EFI ./secondary.json
+clean: # Deploy with wiped disk
+	./deploy.sh clean ./base.img ../../out/BOOTx64.EFI
+persist: # Deploy and do not wipe disk
+	./deploy.sh persist ./base.img ../../out/BOOTx64.EFI

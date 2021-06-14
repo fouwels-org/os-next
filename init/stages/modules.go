@@ -16,6 +16,11 @@ func (m *Modules) String() string {
 	return "modules"
 }
 
+//Policy ..
+func (m *Modules) Policy() Policy {
+	return PolicySoft
+}
+
 //Finalise ..
 func (m *Modules) Finalise() []string {
 	return m.finals
@@ -26,7 +31,11 @@ func (m *Modules) Run(c config.Config) error {
 
 	lok := 0
 	errs := []error{}
-	for _, v := range c.Primary.Modules {
+
+	//Append secondary modules if the secondary config has been loaded
+	modules := append(c.Primary.Modules, c.Secondary.Modules...)
+
+	for _, v := range modules {
 
 		com := []shell.Command{{Executable: shell.Modprobe, Arguments: []string{v}}}
 		err := shell.Executor.Execute(com)
@@ -39,7 +48,6 @@ func (m *Modules) Run(c config.Config) error {
 	}
 
 	m.finals = append(m.finals, fmt.Sprintf("loaded %v/%v modules ok", lok, len(c.Primary.Modules)))
-	m.finals = append(m.finals, fmt.Sprintf("errors: %v", errs))
 
-	return nil
+	return fmt.Errorf("%v", errs)
 }

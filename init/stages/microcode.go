@@ -16,6 +16,11 @@ func (m *Microcode) String() string {
 	return "microcode"
 }
 
+//Policy ..
+func (m *Microcode) Policy() Policy {
+	return PolicySoft
+}
+
 //Finalise ..
 func (m *Microcode) Finalise() []string {
 	return m.finals

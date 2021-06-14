@@ -16,6 +16,11 @@ func (n *KernelConfig) String() string {
 	return "kernel config"
 }
 
+//Policy ..
+func (n *KernelConfig) Policy() Policy {
+	return PolicyHard
+}
+
 //Finalise ..
 func (n *KernelConfig) Finalise() []string {
 	return n.finals

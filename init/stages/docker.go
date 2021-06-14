@@ -18,6 +18,11 @@ func (d *Docker) String() string {
 	return "docker"
 }
 
+//Policy ..
+func (d *Docker) Policy() Policy {
+	return PolicyHard
+}
+
 //Finalise ..
 func (d *Docker) Finalise() []string {
 	return d.finals

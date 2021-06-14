@@ -1,6 +1,6 @@
 {
     "header": {
-        "site": "k300-sata",
+        "site": "sata",
         "comment": ""
     },
     "primary": {
@@ -32,29 +32,33 @@
             "nls_cp437",
             "wireguard",
             "nvme",
-            "uio_netx",
-            "kvm",
-            "kvm-intel"
+            "uio_netx"
         ],
         "filesystem": {
             "devices": [
                 {
                     "label": "BOOT",
-                    "id": "/dev/sda1",
                     "mountpoint": "/boot",
-                    "filesystem": "vfat"
+                    "filesystem": "vfat",
+                    "device": "/dev/sda",
+                    "index": 0,
+                    "size": 256
                 },
                 {
                     "label": "CONFIG",
-                    "id": "/dev/sda2",
                     "mountpoint": "/var/config",
-                    "filesystem": "ext4"
+                    "filesystem": "ext4",
+                    "device": "/dev/sda",
+                    "index": 1,
+                    "size": 512
                 },
                 {
                     "label": "DATA",
-                    "id": "/dev/sda3",
                     "mountpoint": "/var/lib/docker",
-                    "filesystem": "ext4"
+                    "filesystem": "ext4",
+                    "device": "/dev/sda",
+                    "index": 2,
+                    "size": -1
                 }
             ]
         }

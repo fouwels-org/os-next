@@ -5,9 +5,9 @@ import (
 	"init/config"
 	"init/console"
 	"init/contrib/u-root/libinit"
+	"init/kernel"
 	"init/shell"
 	"init/stages"
-	"init/util"
 	"log"
 	"os"
 	"syscall"
@@ -34,13 +34,13 @@ func main() {
 		log.Printf("failed to sync file system: %v", err)
 	}
 
-	log.Printf("rebooting in 3 seconds")
-	time.Sleep(3 * time.Second)
+	log.Printf("rebooting in 30 seconds")
+	time.Sleep(30 * time.Second)
 
 	// Reboot
 	err = syscall.Reboot(syscall.LINUX_REBOOT_CMD_RESTART)
-	log.Printf("reboot syscall failed, exiting to kernel in 3 seconds, good luck: %v", err)
-	time.Sleep(3 * time.Second)
+	log.Printf("reboot syscall failed, exiting to kernel in 5 seconds, good luck: %v", err)
+	time.Sleep(5 * time.Second)
 
 	os.Exit(1)
 
@@ -48,8 +48,7 @@ func main() {
 
 func run() error {
 
-	err := util.System.SetConsoleLogLevel(util.KLogCritical)
-
+	err := kernel.SetLogLevel(kernel.KLogCritical)
 	if err != nil {
 		return fmt.Errorf("failed to set kernel log level: %w", err)
 	}
@@ -68,7 +67,14 @@ func run() error {
 	// run the user-defined init tasks
 	err = uinit()
 	if err != nil {
-		return fmt.Errorf("failed to run init: %v", err)
+
+		log.Printf("init failed: %v", err)
+
+		err = console.StartRecovery()
+		if err != nil {
+			return fmt.Errorf("failed to run recovery console: %w", err)
+		}
+		return err
 	}
 
 	// start the console
@@ -88,11 +94,13 @@ func uinit() error {
 	primary := []stages.IStage{
 		&stages.Modules{},
 		&stages.KernelConfig{},
+		&stages.Disks{},
 		&stages.Filesystem{},
 		&stages.Microcode{},
 	}
 
 	secondary := []stages.IStage{
+		&stages.Modules{},
 		&stages.Networking{},
 		&stages.Wireguard{},
 		&stages.Time{},
@@ -111,7 +119,10 @@ func uinit() error {
 
 	log.Printf("[uinit] running primary stage")
 
-	_ = executeStages(c, primary)
+	err = executeStages(c, primary)
+	if err != nil {
+		return fmt.Errorf("primary: %w", err)
+	}
 
 	log.Printf("[uinit] messages (primary):")
 
@@ -137,7 +148,12 @@ func uinit() error {
 
 	c.Secondary = configSecondary.Secondary
 
-	_ = executeStages(c, secondary)
+	log.Printf("[uinit] running secondary stage")
+
+	err = executeStages(c, secondary)
+	if err != nil {
+		return fmt.Errorf("secondary: %w", err)
+	}
 
 	log.Printf("[uinit] messages (secondary):")
 
@@ -158,21 +174,26 @@ func uinit() error {
 	return nil
 }
 
-// function to execute the stages, returns an error if any of the stages fail
-func executeStages(c config.Config, stages []stages.IStage) []error {
+func executeStages(c config.Config, sts []stages.IStage) error {
 
-	errors := []error{}
-	for _, st := range stages {
+	for _, st := range sts {
 
 		log.Printf("[%v] starting", st)
 
 		err := st.Run(c)
 		if err != nil {
-			errors = append(errors, fmt.Errorf("%v failed: %w", st, err))
-			log.Printf("[%v] failed: %v", st, err)
+
+			switch st.Policy() {
+			case stages.PolicyHard:
+				log.Printf("[%v] failed (hard): %v", st, err)
+				return fmt.Errorf("%v failed", st)
+			case stages.PolicySoft:
+				log.Printf("[%v] failed (soft): %v", st, err)
+			}
 		} else {
 			log.Printf("[%v] succeeded", st)
 		}
 	}
-	return errors
+
+	return nil
 }

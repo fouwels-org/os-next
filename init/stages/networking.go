@@ -17,6 +17,11 @@ func (n *Networking) String() string {
 	return "networking"
 }
 
+//Policy ..
+func (m *Networking) Policy() Policy {
+	return PolicyHard
+}
+
 //Finalise ..
 func (n *Networking) Finalise() []string {
 	return n.finals

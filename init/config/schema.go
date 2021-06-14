@@ -14,6 +14,7 @@ type Primary struct {
 
 //Secondary ..
 type Secondary struct {
+	Modules    []string
 	Networking Networking
 	Wireguard  []Wireguard
 	Time       Time
@@ -49,10 +50,12 @@ type Filesystem struct {
 
 //FilesystemDevice ..
 type FilesystemDevice struct {
-	ID         string
 	Label      string
 	MountPoint string
 	FileSystem string
+	Device     string
+	Index      int
+	Size       int
 }
 
 //Wireguard ..

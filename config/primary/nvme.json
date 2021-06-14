@@ -1,6 +1,6 @@
 {
     "header": {
-        "site": "k700",
+        "site": "nvme",
         "comment": ""
     },
     "primary": {
@@ -32,29 +32,33 @@
             "nls_cp437",
             "wireguard",
             "nvme",
-            "uio_netx",
-            "kvm",
-            "kvm-intel"
+            "uio_netx"
         ],
         "filesystem": {
             "devices": [
                 {
                     "label": "BOOT",
-                    "id": "/dev/nvme0n1p1",
                     "mountpoint": "/boot",
-                    "filesystem": "vfat"
+                    "filesystem": "vfat",
+                    "device": "/dev/nvme0n1",
+                    "index": 0,
+                    "size": 256
                 },
                 {
                     "label": "CONFIG",
-                    "id": "/dev/nvme0n1p2",
                     "mountpoint": "/var/config",
-                    "filesystem": "ext4"
+                    "filesystem": "ext4",
+                    "device": "/dev/nvme0n1",
+                    "index": 1,
+                    "size": 512
                 },
                 {
                     "label": "DATA",
-                    "id": "/dev/nvme0n1p3",
                     "mountpoint": "/var/lib/docker",
-                    "filesystem": "ext4"
+                    "filesystem": "ext4",
+                    "device": "/dev/nvme0n1",
+                    "index": 2,
+                    "size": -1
                 }
             ]
         }

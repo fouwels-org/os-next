@@ -11,6 +11,10 @@ const Docker Executable = "/bin/docker"
 const Mkdir Executable = "/bin/mkdir"
 const Mount Executable = "/bin/mount"
 const Ash Executable = "/bin/ash"
+const Blkid Executable = "/bin/blkid"
+const Fdisk Executable = "/bin/fdisk"
+const Mke2fs Executable = "/bin/mke2fs"
+const Mkdosfs Executable = "/bin/mkdosfs"
 
 //IExecutable exists to force use of defined Excutable const, disable naked strings being acceptable as arguments to shell.Executor
 type IExecutable interface {

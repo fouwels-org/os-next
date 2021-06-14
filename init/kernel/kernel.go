@@ -1,11 +1,10 @@
-package util
+package kernel
 
-//SystemUtil ..
-type SystemUtil struct {
-}
+import (
+	"fmt"
 
-//System static instance of SystemUtil
-var System = SystemUtil{}
+	"golang.org/x/sys/unix"
+)
 
 //KLogLevel are the log levels used by printk.
 type KLogLevel uintptr
@@ -21,3 +20,11 @@ const (
 	KLogInfo      KLogLevel = 6
 	KLogDebug     KLogLevel = 7
 )
+
+//SetLogLevel sets the kernel level with
+func SetLogLevel(level KLogLevel) error {
+	if _, _, err := unix.Syscall(unix.SYS_SYSLOG, unix.SYSLOG_ACTION_CONSOLE_LEVEL, 0, uintptr(level)); err != 0 {
+		return fmt.Errorf("failed to set kernel kog level to %d: %v", level, err)
+	}
+	return nil
+}

@@ -1,6 +1,6 @@
 {
     "header": {
-        "site": "reference",
+        "site": "sata",
         "comment": ""
     },
     "primary": {
@@ -11,6 +11,7 @@
             "sd_mod",
             "scsi_mod",
             "igb",
+            "e1000e",
             "ipv6",
             "btrfs",
             "usbhid",
@@ -29,28 +30,35 @@
             "fat",
             "nls_utf8",
             "nls_cp437",
-            "wireguard",
-            "nvme"
+            "nvme",
+            "uio_netx",
+            "wireguard"
         ],
         "filesystem": {
             "devices": [
                 {
                     "label": "BOOT",
-                    "id": "/dev/sda1",
                     "mountpoint": "/boot",
-                    "filesystem": "ext4"
+                    "filesystem": "vfat",
+                    "device": "/dev/sda",
+                    "index": 0,
+                    "size": 500
                 },
                 {
                     "label": "CONFIG",
-                    "id": "/dev/sda2",
                     "mountpoint": "/var/config",
-                    "filesystem": "ext4"
+                    "filesystem": "ext4",
+                    "device": "/dev/sda",
+                    "index": 1,
+                    "size": 1000
                 },
                 {
                     "label": "DATA",
-                    "id": "/dev/sda3",
                     "mountpoint": "/var/lib/docker",
-                    "filesystem": "ext4"
+                    "filesystem": "ext4",
+                    "device": "/dev/sda",
+                    "index": 2,
+                    "size": 0
                 }
             ]
         }
