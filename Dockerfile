@@ -1,9 +1,9 @@
-FROM alpine:3.13.5
+FROM alpine:3.14.0
 
 RUN apk --no-cache add \
     wget bc build-base gawk xorriso elfutils-dev openssl openssl-dev bison flex ncurses-dev xz autoconf automake docbook2x alpine-sdk libtool asciidoc readline-dev gmp-dev linux-headers perl rsync git argp-standalone \
     xz-dev libmnl-dev libnftnl-dev cmake libnfnetlink-dev gzip ccache diffutils util-linux libuuid util-linux-dev lvm2-dev popt popt-dev json-c json-c-dev libaio-dev upx gettext-dev openssl-libs-static lvm2-static device-mapper-static \
-    cryptsetup e2fsprogs libpciaccess-dev popt go tree lz4 lzo pigz
+    cryptsetup e2fsprogs libpciaccess-dev popt go tree lz4 lzo pigz tpm2-tss tpm2-tss-dev tpm2-tss-esys tpm2-tss-fapi tpm2-tss-mu tpm2-tss-sys
 RUN git config --global advice.detachedHead false bash
 SHELL ["/bin/bash", "-c"]
 
@@ -36,7 +36,6 @@ ENV VERSION_BUSYBOX=1.33.1
 ENV VERSION_WGTOOLS=v1.0.20210424
 ENV VERSION_MICROCODE_INTEL=20210216
 ENV VERSION_IPTABLES=1.8.7
-ENV VERSION_E2FSPROGS=1.46.2
 
 # Build musl
 RUN wget -q -O musl.tar.gz https://www.musl-libc.org/releases/musl-$VERSION_MUSL.tar.gz && tar -xf musl.tar.gz
@@ -60,13 +59,8 @@ RUN cd busybox-${VERSION_BUSYBOX} && \
 
 # Build iptables
 RUN wget -q -O iptables.tar.bz2  https://netfilter.org/projects/iptables/files/iptables-$VERSION_IPTABLES.tar.bz2 && tar -xf iptables.tar.bz2
-RUN cd iptables-${VERSION_IPTABLES} && ./configure --disable-nftables --prefix=/ && \
+RUN cd iptables-${VERSION_IPTABLES} && ./configure --prefix=/ --mandir=/tmp --disable-nftables && \
     make EXTRA_CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc)
-
-# Build e2fsprogs
-RUN wget -q -O e2fsprogs.tar.xz https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git/snapshot/e2fsprogs-${VERSION_E2FSPROGS}.tar.gz && tar -xf e2fsprogs.tar.xz
-RUN cd e2fsprogs-${VERSION_E2FSPROGS} && ./configure --enable-elf-shlibs --disable-fsck --disable-uuidd --enable-libuuid --enable-libblkid --disable-nls && \
-    make -j $(nproc)
 
 # Set up template rootfs
 COPY template_rootfs /template_rootfs
@@ -84,17 +78,16 @@ RUN cd linux-${VERSION_KERNEL} && mkdir -p /rootfs && make -j $(nproc) INSTALL_M
 RUN cd busybox-${VERSION_BUSYBOX} && make -j $(nproc) CONFIG_PREFIX=/rootfs install
 RUN cd musl-${VERSION_MUSL} && make -j $(nproc) DESTDIR=/rootfs install
 RUN cd iptables-${VERSION_IPTABLES} && make DESTDIR=/rootfs install
-RUN cp e2fsprogs-${VERSION_E2FSPROGS}/lib/*.so.* /rootfs/lib && \
-    cp e2fsprogs-${VERSION_E2FSPROGS}/lib/*.so.* /rootfs/lib && \
-    cp e2fsprogs-${VERSION_E2FSPROGS}/misc/mke2fs /rootfs/bin/mke2fs
 RUN cp wireguard-tools/src/wg /rootfs/usr/sbin/wg
 RUN cp docker/* /rootfs/usr/bin/
 
-
-# Build and add deptools if DEPLOYMENT_TOOLS=1 to rootfs
-ARG DEPLOYMENT_TOOLS=0
-COPY scripts/build-deptools.sh .
-RUN ./build-deptools.sh /rootfs ${DEPLOYMENT_TOOLS}
+# Add alpine packages
+RUN apk add --no-cache coreutils
+RUN cd /bin && cp -t /rootfs/bin lsblk 
+RUN cd /sbin && cp -t /rootfs/bin mke2fs
+RUN cd /lib && cp -t /rootfs/lib libext2fs.so.* libcom_err.so.* libblkid.so.* libuuid.so.* libe2p.so.* libsmartcols.so.* libmount.so.* libfdisk.so.*
+RUN cd /usr/lib && cp -t /rootfs/usr/lib libncursesw.so.*
+RUN cp /sbin/fdisk /rootfs/bin/fdisk2 # Alias GPT aware fdisk to fdisk2 to prevent clash with busybox fdisk.
 
 # Strip modules if specified
 ARG CONFIG_MODULES=all
@@ -116,9 +109,11 @@ RUN cd init && go mod download
 COPY init init
 RUN cd init && go build -ldflags "-s -w" -o /rootfs/init && strip /rootfs/init
 
-# Copy in primary config to rootfs
+# Copy in primary config, and default secondary config to rootfs
 ARG CONFIG_PRIMARY=CONFIG_PRIMARY_UNSET
 COPY /config/primary/$CONFIG_PRIMARY /rootfs/config/primary.json
+COPY /config/secondary/default.json /rootfs/config/secondary.json
+RUN tree /rootfs > ${OUT_DIR}/rootfs.txt
 
 # Build initramfs
 RUN if [ -f "/initramfs.cpio" ]; then rm /initramfs.cpio; fi

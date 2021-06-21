@@ -20,8 +20,8 @@ func SelfTest() error {
 		Mount,
 		Blkid,
 		Mke2fs,
-		Fdisk,
 		Mkdosfs,
+		Lsblk,
 	}
 
 	for _, e := range es {

@@ -14,15 +14,3 @@ func TestGetBlkid(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 }
-
-func TestGetBlkidMap(t *testing.T) {
-	b, err := GetBlkid("")
-
-	bmap := b.LabelMap()
-
-	log.Printf("%+v", bmap)
-
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-}

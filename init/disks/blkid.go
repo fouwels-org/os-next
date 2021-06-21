@@ -15,23 +15,10 @@ type Blkid struct {
 	PARTUUID string
 }
 
-type Blkids []Blkid
-
-func (b Blkids) LabelMap() map[string]Blkid {
-
-	m := map[string]Blkid{}
-
-	for _, v := range b {
-		m[v.LABEL] = v
-	}
-
-	return m
-}
-
 //GetBlkids get BLKID of target device, or all devices is passed blank
-func GetBlkid(target string) (Blkids, error) {
+func GetBlkid(target string) ([]Blkid, error) {
 
-	blkidList := Blkids{}
+	blkidList := []Blkid{}
 
 	args := []string{}
 	if target != "" {

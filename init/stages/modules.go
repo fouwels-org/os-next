@@ -49,5 +49,9 @@ func (m *Modules) Run(c config.Config) error {
 
 	m.finals = append(m.finals, fmt.Sprintf("loaded %v/%v modules ok", lok, len(c.Primary.Modules)))
 
-	return fmt.Errorf("%v", errs)
+	if len(errs) != 0 {
+		return fmt.Errorf("%v", errs)
+	}
+
+	return nil
 }

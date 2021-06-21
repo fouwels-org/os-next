@@ -34,8 +34,8 @@ func main() {
 		log.Printf("failed to sync file system: %v", err)
 	}
 
-	log.Printf("rebooting in 30 seconds")
-	time.Sleep(30 * time.Second)
+	log.Printf("rebooting in 5 seconds")
+	time.Sleep(5 * time.Second)
 
 	// Reboot
 	err = syscall.Reboot(syscall.LINUX_REBOOT_CMD_RESTART)
@@ -94,7 +94,6 @@ func uinit() error {
 	primary := []stages.IStage{
 		&stages.Modules{},
 		&stages.KernelConfig{},
-		&stages.Disks{},
 		&stages.Filesystem{},
 		&stages.Microcode{},
 	}
@@ -181,6 +180,11 @@ func executeStages(c config.Config, sts []stages.IStage) error {
 		log.Printf("[%v] starting", st)
 
 		err := st.Run(c)
+		_, _, serr := syscall.Syscall(306, 0, 0, 0) //SYNC_FS
+		if serr != 0 {
+			log.Printf("failed to sync file system: %v", err)
+		}
+
 		if err != nil {
 
 			switch st.Policy() {

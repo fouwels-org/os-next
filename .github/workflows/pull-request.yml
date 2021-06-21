@@ -6,7 +6,7 @@ env:
   REGISTRY: registry2.lagoni.co.uk
   ARCH: linux_amd64
 jobs:
-   build-and-scan:
+  build-and-scan:
     runs-on: self-hosted
     name: Build and Scan (CVE)
     steps:
@@ -23,7 +23,7 @@ jobs:
           lfs: true
 
       - name: Docker build
-        run: docker build --build-arg CONFIG_COMPRESSION=XZ --build-arg CONFIG_PRIMARY=nvme.json --build-arg CONFIG_MODULES=ALL  -t ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} .
+        run: docker build --build-arg CONFIG_COMPRESSION=XZ --build-arg CONFIG_PRIMARY=standard.json --build-arg CONFIG_MODULES=ALL  -t ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} .
 
       - name: Run container scan
         uses: azure/container-scan@v0

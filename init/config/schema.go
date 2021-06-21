@@ -53,9 +53,6 @@ type FilesystemDevice struct {
 	Label      string
 	MountPoint string
 	FileSystem string
-	Device     string
-	Index      int
-	Size       int
 }
 
 //Wireguard ..

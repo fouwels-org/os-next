@@ -35,11 +35,15 @@ The image is copied out of the container when the build is successfully complete
 
 To deploy this onto a physical hardware device, this hardware needs to support UEFI boot, which is a modern boot loader, which is suported in most new BIOS implementaitons. 
 
-To make this work, first format a drive (can be USB or HDD) with FAT32. Then create a directory structure on this device /EFI/BOOT and simply copy the BOOTx64.EFI into the folder. The BIOS will identify this path and boot.
+To install, format a drive with the labels and filesystems stated in the primary config.
+
+Then create a directory structure on this device <partition 1>/EFI/BOOT and simply copy the BOOTx64.EFI into the folder. The UEFI will identify this path and boot.
+
+The OS will use the LABEL fields to map devices to mount points specified in the primary config. Device IDs (eg. /dev/sda1) are not used to allow common operation across disk types (eg. /dev/nvme0n1) 
 
 See `deploy/qemu` for a software deployment. This will automatically format and set up a drive, before starting with QEMU/KVM.
 
-Unless specified, run `make qemu-kernel` within, to build and start the kernel and connect stdin/stdout over virtual IO.
+Unless specified, run `make deploy-clean` within, to build and start the kernel and connect stdin/stdout over virtual IO.
 
 ## CHECKS
 

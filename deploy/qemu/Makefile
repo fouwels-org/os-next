@@ -1,4 +1,15 @@
-clean: # Deploy with wiped disk
-	./deploy.sh clean ./base.img ../../out/BOOTx64.EFI
-persist: # Deploy and do not wipe disk
-	./deploy.sh persist ./base.img ../../out/BOOTx64.EFI
+deploy: deploy-kernel
+
+deploy-kernel: # Deploy and do not wipe disk
+	./qemu.sh kernel persist ./base.img ../../out/BOOTx64.EFI
+deploy-kernel-clean: # Deploy with wiped disk
+	./qemu.sh kernel clean ./base.img ../../out/BOOTx64.EFI
+deploy-disk:
+	./qemu.sh disk persist ./base.img ../../out/BOOTx64.EFI
+deploy-disk-clean:
+	./qemu.sh disk clean ./base.img ../../out/BOOTx64.EFI
+
+	
+# Service commands
+tpm:
+	./qemu.sh startTPM

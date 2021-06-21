@@ -1,20 +1,20 @@
 package shell
 
 const Login Executable = "/bin/login"
-const Ntpd Executable = "/bin/ntpd"
-const Modprobe Executable = "/bin/modprobe"
-const Hwclock Executable = "/bin/hwclock"
-const IP Executable = "/bin/ip"
-const Udhcp Executable = "/bin/udhcpc"
-const Dockerd Executable = "/bin/dockerd"
-const Docker Executable = "/bin/docker"
+const Ntpd Executable = "/sbin/ntpd"
+const Modprobe Executable = "/sbin/modprobe"
+const Hwclock Executable = "/sbin/hwclock"
+const IP Executable = "/sbin/ip"
+const Udhcp Executable = "/sbin/udhcpc"
+const Dockerd Executable = "/usr/bin/dockerd"
+const Docker Executable = "/usr/bin/docker"
 const Mkdir Executable = "/bin/mkdir"
 const Mount Executable = "/bin/mount"
 const Ash Executable = "/bin/ash"
-const Blkid Executable = "/bin/blkid"
-const Fdisk Executable = "/bin/fdisk"
+const Blkid Executable = "/sbin/blkid"
+const Mkdosfs Executable = "/sbin/mkdosfs"
+const Lsblk Executable = "/bin/lsblk"
 const Mke2fs Executable = "/bin/mke2fs"
-const Mkdosfs Executable = "/bin/mkdosfs"
 
 //IExecutable exists to force use of defined Excutable const, disable naked strings being acceptable as arguments to shell.Executor
 type IExecutable interface {
