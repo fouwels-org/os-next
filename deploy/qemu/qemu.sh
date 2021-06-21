@@ -42,25 +42,25 @@ EOF
         sudo mkdosfs -n "BOOT" ${LOOPDEV}p1
         sudo mke2fs -t "ext4" -L "CONFIG" ${LOOPDEV}p2
         sudo mke2fs -t "ext4" -L "DATA" ${LOOPDEV}p3
-
-        if [ "$COMMAND" = "disk" ]; then
-            # insert EFI
-
-            mkdir -p /tmp/a
-            sudo mount ${LOOPDEV}p1 /tmp/a
-            sudo mkdir -p /tmp/a/EFI/BOOT/
-            sudo cp $EFI /tmp/a/EFI/BOOT/BOOTx64.EFI
-            sudo umount /tmp/a
-            rm -rf /tmp/a 
-
-        fi
-
         sudo losetup -d ${LOOPDEV}
     fi
 
     if [ ! -f $EFI ]; then
         echo "Error: EFI $EFI does not exist"
         exit
+    fi
+
+    if [ "$COMMAND" = "disk" ]; then
+        # insert EFI
+        LOOPDEV=$(sudo losetup --find --show $TARGET)
+        sudo partprobe ${LOOPDEV}
+        mkdir -p /tmp/a
+        sudo mount ${LOOPDEV}p1 /tmp/a
+        sudo mkdir -p /tmp/a/EFI/BOOT/
+        sudo cp $EFI /tmp/a/EFI/BOOT/BOOTx64.EFI
+        sudo umount /tmp/a
+        rm -rf /tmp/a
+        sudo losetup -d ${LOOPDEV}
     fi
 
     if [ "$(uname)" = "Linux" ]; then

@@ -1,0 +1,1 @@
+check the target configuration is not a symlink of another (reference set), before modifying

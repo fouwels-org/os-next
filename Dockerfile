@@ -90,9 +90,11 @@ RUN cd /usr/lib && cp -t /rootfs/usr/lib libncursesw.so.*
 RUN cp /sbin/fdisk /rootfs/bin/fdisk2 # Alias GPT aware fdisk to fdisk2 to prevent clash with busybox fdisk.
 
 # Strip modules if specified
-ARG CONFIG_MODULES=all
-COPY /config/modules .
-RUN if [ $CONFIG_MODULES -neq "ALL" ]; then find /rootfs/lib/modules | grep "\.ko$" | grep -v -f ${CONFIG_MODULES} | xargs rm; fi;
+ARG CONFIG_MODULES=ALL
+COPY config/modules .
+RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/modules.txt
+RUN if [ "${CONFIG_MODULES}" != "ALL" ]; then find /rootfs/lib/modules | grep "\.ko$" | grep -v -f ${CONFIG_MODULES} | xargs rm; fi;
+RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/modules_selected.txt
 
 # Optimise rootfs
 RUN find /rootfs -executable -type f | xargs strip || true
@@ -120,7 +122,7 @@ RUN if [ -f "/initramfs.cpio" ]; then rm /initramfs.cpio; fi
 RUN cd /rootfs && find . -print0 | cpio --null --create --verbose --format=newc > /initramfs.cpio
 
 # Build final kernel with real initramfs
-ARG CONFIG_COMPRESSION=XZ
+ARG CONFIG_COMPRESSION=GZIP
 RUN cd linux-${VERSION_KERNEL} && \
     make CONFIG_KERNEL_${CONFIG_COMPRESSION}=y CONFIG_INITRAMFS_COMPRESSION_${CONFIG_COMPRESSION}=y CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" KGZIP=pigz -j $(nproc) && \
     cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-$CONFIG_COMPRESSION.EFI && rm arch/x86_64/boot/bzImage && \
