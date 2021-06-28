@@ -1,6 +1,5 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 
 Files: template_rootfs/*
-Copyright: 2020 Lagoni Engineering
 Copyright: 2021 Belcan Advanced Solutions
 License: Apache-2.0

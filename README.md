@@ -1,5 +1,4 @@
 <!--
-SPDX-FileCopyrightText: 2019 Lagoni Engineering
 SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
 
 SPDX-License-Identifier: Apache-2.0
