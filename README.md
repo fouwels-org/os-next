@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2019 Lagoni Engineering
+SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # IIoT OS Mjolnir Build (Thor's Hammer)
 This is a real-time IIoT OS made for Docker. All is build from within a container using musl rather than libc. The Dockerfile included is used to create the toolchain image. 
 

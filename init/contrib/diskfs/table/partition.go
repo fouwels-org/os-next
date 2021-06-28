@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2017 Avi Deitcher
+// SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+//
+// SPDX-License-Identifier: MIT
+
 package table
 
 import (

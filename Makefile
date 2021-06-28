@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2021 Lagoni Engineering
+# SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+#
+# SPDX-License-Identifier: Apache-2.0
+
 all: # Generic target with fast compression for development
 	docker build --build-arg CONFIG_COMPRESSION=GZIP --build-arg CONFIG_PRIMARY=standard.json --build-arg CONFIG_MODULES=ALL -t registry2.lagoni.co.uk/os-builder:local .
 

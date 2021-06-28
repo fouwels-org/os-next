@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2017 Avi Deitcher
+// SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+//
+// SPDX-License-Identifier: MIT
+
 package diskfs
 
 // when we use a disk image with a GPT, we cannot get the logical sector size from the disk via the kernel

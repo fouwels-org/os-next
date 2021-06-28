@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# SPDX-FileCopyrightText: 2021 Lagoni Engineering
+# SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+#
+# SPDX-License-Identifier: Apache-2.0
+
 set -ex
 
 COMMAND="$1"
@@ -19,7 +25,7 @@ startTPM() {
     echo ""
 }
 
-deploy() {   
+deploy() {
 
     if [ "$MODE" = "clean" ]; then
         rm -rf $TARGET || true
@@ -94,10 +100,10 @@ EOF
         -device virtio-rng-pci \
         -device e1000e,netdev=n1 \
         -device nvme,drive=os2,serial=nvme-1 \
-        -netdev user,id=n1 
-#       -device tpm-tis,tpmdev=tpm0 \
-#       -chardev socket,id=chrtpm,path=$TPM_PATH/socket \
-#       -tpmdev emulator,id=tpm0,chardev=chrtpm
+        -netdev user,id=n1
+    #       -device tpm-tis,tpmdev=tpm0 \
+    #       -chardev socket,id=chrtpm,path=$TPM_PATH/socket \
+    #       -tpmdev emulator,id=tpm0,chardev=chrtpm
 
 }
 
