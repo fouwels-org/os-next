@@ -1,4 +1,5 @@
 // SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+// SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -44,7 +45,7 @@ type NetworkingNetwork struct {
 	IPV6           bool
 	Type           string
 	Addresses      []string
-	DefaultGateway string
+	DefaultGateway string `yaml:"default-gateway"`
 }
 
 //Filesystem ..
@@ -62,16 +63,16 @@ type FilesystemDevice struct {
 //Wireguard ..
 type Wireguard struct {
 	Device     string
-	ListenPort int
+	ListenPort int `yaml:"listen-port"`
 	Peers      []WireguardPeer
 }
 
 //WireguardPeer ..
 type WireguardPeer struct {
-	PublicKey           string
+	PublicKey           string `yaml:"public-key"`
 	Endpoint            string
-	AllowedIps          []string `json:"allowed-ips"`
-	PersistentKeepalive int      `json:"persistent-keepalive"`
+	AllowedIps          []string `yaml:"allowed-ips"`
+	PersistentKeepalive int      `yaml:"persistent-keepalive"`
 }
 
 //Route ..

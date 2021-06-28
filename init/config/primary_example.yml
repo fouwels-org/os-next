@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+header:
+  site: example
+  comment: example primary config
+primary:
+  modules:
+    - ahci
+    - xhci_pci
+    - xhci_hcd
+    - sd_mod
+    - scsi_mod
+    - igb
+    - e1000e
+    - ipv6
+    - btrfs
+    - usbhid
+    - hid_generic
+    - hid
+    - usbserial
+    - dm_mod
+    - dm_crypt
+    - aes
+    - tpm_tis_core
+    - tpm_tis
+    - tpm_crb
+    - tpm
+    - uas
+    - vfat
+    - fat
+    - nls_utf8
+    - nls_cp437
+    - nvme
+    - uio_netx
+    - wireguard
+  filesystem:
+    devices:
+      - label: BOOT
+        mountpoint: "/boot"
+        filesystem: vfat
+      - label: CONFIG
+        mountpoint: "/var/config"
+        filesystem: ext4
+      - label: DATA
+        mountpoint: "/var/lib/docker"
+        filesystem: ext4

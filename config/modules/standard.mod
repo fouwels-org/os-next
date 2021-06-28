@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-
 /kernel/arch/x86/crypto/aesni-intel.ko
 /kernel/arch/x86/crypto/blake2s-x86_64.ko
 /kernel/arch/x86/crypto/chacha-x86_64.ko

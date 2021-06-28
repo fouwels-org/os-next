@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
-
 CONFIG_ZSTD_DECOMPRESS=y
 CONFIG_ZSTD_COMPRESS=m
 CONFIG_ZSMALLOC=y
@@ -2460,6 +2460,7 @@ CONFIG_KEYBOARD_ATKBD=y
 CONFIG_KEYBOARD_APPLESPI=m
 CONFIG_KEY_DH_OPERATIONS=y
 CONFIG_KERNFS=y
+CONFIG_KERNEL_GZIP=y
 CONFIG_KALLSYMS=y
 CONFIG_KALLSYMS_BASE_RELATIVE=y
 CONFIG_KALLSYMS_ALL=y
@@ -2775,6 +2776,7 @@ CONFIG_INOTIFY_USER=y
 CONFIG_INITRAMFS_SOURCE="/initramfs.cpio"
 CONFIG_INITRAMFS_ROOT_UID=0
 CONFIG_INITRAMFS_ROOT_GID=0
+CONFIG_INITRAMFS_COMPRESSION_NONE=y
 CONFIG_INIT_STACK_NONE=y
 CONFIG_INIT_ON_ALLOC_DEFAULT_ON=y
 CONFIG_INIT_ENV_ARG_LIMIT=32
@@ -3600,9 +3602,9 @@ CONFIG_DEFAULT_HOSTNAME="phoenix"
 CONFIG_DEFAULT_CUBIC=y
 CONFIG_DECOMPRESS_ZSTD=y
 CONFIG_DECOMPRESS_XZ=y
-CONFIG_DECOMPRESS_GZIP=y
-CONFIG_DECOMPRESS_LZ4=y
 CONFIG_DECOMPRESS_LZO=y
+CONFIG_DECOMPRESS_LZ4=y
+CONFIG_DECOMPRESS_GZIP=y
 CONFIG_DECNET=m
 CONFIG_DECNET_ROUTER=y
 CONFIG_DECNET_NF_GRABULATOR=m
@@ -3832,7 +3834,7 @@ CONFIG_COMMON_CLK=y
 CONFIG_COMMON_CLK_SI544=m
 CONFIG_CODA_FS=m
 CONFIG_CNIC=m
-CONFIG_CMDLINE="isolcpus=3 irqaffinity=0,1,2 rcu-nocbs=3 idle=poll"
+CONFIG_CMDLINE="isolcpus=3 irqaffinity=0,1,2 rcu-nocbs=3 idle=poll console=ttyS0"
 CONFIG_CMDLINE_BOOL=y
 CONFIG_CLZ_TAB=y
 CONFIG_CLS_U32_PERF=y
@@ -4416,424 +4418,6 @@ CONFIG_6LOWPAN_GHC_EXT_HDR_FRAG=m
 CONFIG_6LOWPAN_GHC_EXT_HDR_DEST=m
 CONFIG_64BIT=y
 CONFIG_60XX_WDT=m
-# Xtables targets
-# Xtables matches
-# Xtables combined modules
-# Xilinx SoC drivers
-# Xen driver support
-# x86 Debugging
-# WiMAX Wireless Broadband devices
-# Watchdog Pretimeout Governors
-# Watchdog Device Drivers
-# Userland interfaces
-# User Modules And Translation Layers
-# USB-based Watchdog Cards
-# USB Type-C Multiplexer/DeMultiplexer Switch support
-# USB Type-C Alternate Mode drivers
-# USB port drivers
-# USB Physical Layer drivers
-# USB Miscellaneous drivers
-# USB Imaging devices
-# USB Host Controller Drivers
-# USB HID support
-# USB HID Boot Protocol drivers
-# USB GPIO expanders
-# USB Device Class drivers
-# Triggers - standalone
-# Timers subsystem
-# Texas Instruments shared transport line discipline
-# Temperature sensors
-# Tegra firmware driver
-# SSP Sensor Common
-# SPI RTC drivers
-# SPI Protocol Masters
-# SPI Multiplexer support
-# SPI Master Controller Drivers
-# SPI GPIO expanders
-# SPI and I2C RTC drivers
-# Special HID drivers
-# Speakup console speech
-# SOC (System On Chip) specific Drivers
-# shared options
-# SFF controllers with custom DMA interface
-# Serial drivers
-# Self-contained MTD device drivers
-# Security options
-# SCSI Transports
-# SCSI support type (disk, tape, CD-ROM)
-# SCSI device support
-# Scheduler features
-# Scheduler Debugging
-# SATA SFF controllers with BMDMA
-# RTC interfaces
-# Rpmsg drivers
-# Resolver to digital converters
-# Resolver to digital converters
-# Renesas pinctrl drivers
-# Remoteproc drivers
-# RCU Subsystem
-# RCU Debugging
-# Random Number Generation
-# RAM/ROM/Flash chip drivers
-# Queueing/Scheduling
-# Qualcomm SoC drivers
-# Public-key cryptography
-# PTP clock support
-# Pseudo filesystems
-# Proximity and distance sensors
-# Protocols
-# Processor type and features
-# printk and dmesg options
-# Pressure sensors
-# PPS generators support
-# PPS clients support
-# Power management and ACPI options
-# Port-mapped I/O GPIO drivers
-# Platform RTC drivers
-# PIO-only SFF controllers
-# PHY Subsystem
-# Phase-Locked Loop (PLL) frequency synthesizers
-# Performance monitoring
-# Performance monitor support
-# PCS device drivers
-# PCI-based Watchdog Cards
-# PCI switch controller drivers
-# PCI GPIO expanders
-# PCI Endpoint
-# PCI controller drivers
-# PC SMBus host controller drivers
-# PATA SFF controllers with BMDMA
-# Partition Types
-# Partition parsers
-# Other I2C/SMBus bus drivers
-# on-CPU RTC drivers
-# NXP/Freescale QorIQ SoC drivers
-# NVME Support
-# NOTE: USB_STORAGE depends on SCSI but BLK_DEV_SD may
-# Non-8250 serial port support
-# Networking options
-# Network testing
-# Network Analyzer, Impedance Converters
-# Near Field Communication (NFC) devices
-# Native drivers
-# NAND
-# Multiplexers
-# Multiplexer I2C Chip support
-# Multifunction device drivers
-# Mobiveil PCIe Core Support
-# MMC/SD/SDIO Host Controller Drivers
-# mISDN hardware drivers
-# Miscellaneous USB options
-# Misc devices
-# MII PHY device drivers
-# Microsoft Hyper-V guest support
-# MFD GPIO expanders
-# Memory mapped GPIO drivers
-# Memory Management options
-# Memory initialization
-# Memory Debugging
-# MDIO Multiplexers
-# Mapping drivers for chip access
-# Magnetometer sensors
-# LPDDR & LPDDR2 PCM memory drivers
-# Lock Debugging (spinlocks, mutexes, etc...)
-# Linux/x86 5.10.1 Kernel Configuration
-# Linear and angular position sensors
-# Lightning sensors
-# Light sensors
-# Library routines
-# LED Triggers
-# LED drivers
-# LED driver for blink(1) USB RGB LED is under Special HID drivers (HID_THINGM)
-# KVM Modules - KF
-# Kernel Testing and Coverage
-# Kernel Performance Events And Counters
-# Kernel hardening options
-# Kernel hacking
-# iwl3945 / iwl4965 Debugging Options
-# IRQ subsystem
-# IRQ chip support
-# IPVS transport protocol load balancing support
-# IPVS SH scheduler
-# IPVS scheduler
-# IPVS MH scheduler
-# IPVS application helper
-# IPv6: Netfilter Configuration
-# iptables trigger is under Netfilter config (LED target)
-# IP: Netfilter Configuration
-# IO Schedulers
-# Intel thermal drivers
-# Intel Speed Select Technology interface support
-# Intel ISH HID support
-# Input device support
-# Input Device Drivers
-# Inertial measurement units
-# Inclinometer sensors
-# IIO staging drivers
-# IIO dummy driver
-# IEEE 1394 (FireWire) support
-# I2C system bus drivers (mostly embedded / system-on-chip)
-# I2C support
-# I2C RTC drivers
-# I2C HID support
-# I2C Hardware Bus support
-# I2C GPIO expanders
-# I2C encoder or helper chips
-# i.MX SoC drivers
-# HW tracing support
-# Humidity sensors
-# Host-side USB support is needed for USB Network Adapter support
-# HID support
-# HID Sensor RTC drivers
-# Hid Sensor IIO Common
-# Heart Rate Monitors
-# Health Sensors
-# Hash modes
-# Hardware I/O ports
-# Graphics support
-# Generic Kernel Debugging Instruments
-# Generic IOMMU Pagetable Support
-# Generic fallback / legacy drivers
-# Generic Driver Options
-# General setup
-# General architecture-dependent options
-# GCOV-based kernel profiling
-# Gasket devices
-# Frequency Synthesizers DDS/PLL
-# Frame buffer hardware drivers
-# Frame buffer Devices
-# Firmware loader
-# Firmware Drivers
-# File systems
-# External I2C/SMBus adapter drivers
-# Extcon Device Drivers
-# Executable file formats
-# end of Xilinx SoC drivers
-# end of Xen driver support
-# end of x86 Debugging
-# end of WiMAX Wireless Broadband devices
-# end of USB Type-C Multiplexer/DeMultiplexer Switch support
-# end of USB Type-C Alternate Mode drivers
-# end of USB Physical Layer drivers
-# end of USB HID support
-# end of USB HID Boot Protocol drivers
-# end of USB GPIO expanders
-# end of Triggers - standalone
-# end of Timers subsystem
-# end of Texas Instruments shared transport line discipline
-# end of Temperature sensors
-# end of Tegra firmware driver
-# end of SSP Sensor Common
-# end of SPI GPIO expanders
-# end of Special HID drivers
-# end of Speakup console speech
-# end of SOC (System On Chip) specific Drivers
-# end of Serial drivers
-# end of Self-contained MTD device drivers
-# end of Security options
-# end of SCSI Transports
-# end of SCSI device support
-# end of Scheduler features
-# end of Scheduler Debugging
-# end of Rpmsg drivers
-# end of Resolver to digital converters
-# end of Resolver to digital converters
-# end of Renesas pinctrl drivers
-# end of Remoteproc drivers
-# end of RCU Subsystem
-# end of RCU Debugging
-# end of RAM/ROM/Flash chip drivers
-# end of Qualcomm SoC drivers
-# end of PTP clock support
-# end of Pseudo filesystems
-# end of Proximity and distance sensors
-# end of Processor type and features
-# end of printk and dmesg options
-# end of Pressure sensors
-# end of Power management and ACPI options
-# end of Port-mapped I/O GPIO drivers
-# end of PHY Subsystem
-# end of Phase-Locked Loop (PLL) frequency synthesizers
-# end of Performance monitoring
-# end of Performance monitor support
-# end of PCS device drivers
-# end of PCI switch controller drivers
-# end of PCI GPIO expanders
-# end of PCI Endpoint
-# end of PCI controller drivers
-# end of Partition Types
-# end of Partition parsers
-# end of NXP/Freescale QorIQ SoC drivers
-# end of NVME Support
-# end of Networking options
-# end of Network testing
-# end of Network Analyzer, Impedance Converters
-# end of Near Field Communication (NFC) devices
-# end of NAND
-# end of Multiplexers
-# end of Multiplexer I2C Chip support
-# end of Multifunction device drivers
-# end of Mobiveil PCIe Core Support
-# end of Misc devices
-# end of Microsoft Hyper-V guest support
-# end of MFD GPIO expanders
-# end of Memory mapped GPIO drivers
-# end of Memory Management options
-# end of Memory initialization
-# end of Memory Debugging
-# end of Mapping drivers for chip access
-# end of Magnetometer sensors
-# end of LPDDR & LPDDR2 PCM memory drivers
-# end of Lock Debugging (spinlocks, mutexes, etc...)
-# end of Linear and angular position sensors
-# end of Lightning sensors
-# end of Light sensors
-# end of Library routines
-# end of Kernel Testing and Coverage
-# end of Kernel Performance Events And Counters
-# end of Kernel hardening options
-# end of Kernel hacking
-# end of iwl3945 / iwl4965 Debugging Options
-# end of IRQ subsystem
-# end of IRQ chip support
-# end of IPv6: Netfilter Configuration
-# end of IP: Netfilter Configuration
-# end of IO Schedulers
-# end of Intel thermal drivers
-# end of Intel Speed Select Technology interface support
-# end of Intel ISH HID support
-# end of Input device support
-# end of Inertial measurement units
-# end of Inclinometer sensors
-# end of IIO staging drivers
-# end of IIO dummy driver
-# end of IEEE 1394 (FireWire) support
-# end of I2C support
-# end of I2C HID support
-# end of I2C Hardware Bus support
-# end of I2C GPIO expanders
-# end of I2C encoder or helper chips
-# end of i.MX SoC drivers
-# end of HW tracing support
-# end of Humidity sensors
-# end of HID support
-# end of Hid Sensor IIO Common
-# end of Heart Rate Monitors
-# end of Health Sensors
-# end of Hardware I/O ports
-# end of Graphics support
-# end of Generic Kernel Debugging Instruments
-# end of Generic IOMMU Pagetable Support
-# end of Generic Driver Options
-# end of General setup
-# end of General architecture-dependent options
-# end of GCOV-based kernel profiling
-# end of Gasket devices
-# end of Frequency Synthesizers DDS/PLL
-# end of Frame buffer Devices
-# end of Firmware loader
-# end of Firmware Drivers
-# end of File systems
-# end of Executable file formats
-# end of EFI (Extensible Firmware Interface) Support
-# end of EEPROM support
-# end of ECC engine support
-# end of drm/i915 Profile Guided Optimisation
-# end of drm/i915 Debugging
-# end of DOS/FAT/EXFAT/NT Filesystems
-# end of DMABUF options
-# end of Distributed Switch Architecture drivers
-# end of Display Panels
-# end of Display Interface Bridges
-# end of Display Engine Configuration
-# end of Direct Digital Synthesis
-# end of Digital to analog converters
-# end of Digital potentiostats
-# end of Digital potentiometers
-# end of Digital gyroscope sensors
-# end of Device Drivers
-# end of DesignWare PCI Core Support
-# end of DECnet: Netfilter Configuration
-# end of Debugging Options
-# end of Debug Oops, Lockups and Hangs
-# end of Debug kernel data structures
-# end of DCCP Kernel Hacking
-# end of DCCP CCIDs Configuration
-# end of CPU/Task time and stats accounting
-# end of CPU Idle
-# end of CPU Frequency scaling
-# end of Core Netfilter Configuration
-# end of Console display driver support
-# end of Compile-time checks and compiler options
-# end of Clock Source drivers
-# end of Clock Generator/Distribution
-# end of Chemical Sensors
-# end of Character devices
-# end of Certificates for signature checking
-# end of CD-ROM/DVD Filesystems
-# end of Capacitance to digital converters
-# end of Cadence PCIe controllers support
-# end of Caches
-# end of Bus options (PCI etc.)
-# end of Bus devices
-# end of Broadcom SoC drivers
-# end of Bluetooth device drivers
-# end of Binary Emulations
-# end of Backlight & LCD device support
-# end of Aspeed SoC drivers
-# end of ARM devices
-# end of Android
-# end of Android
-# end of Analog to digital converters
-# end of Analog to digital converters
-# end of Analog Front Ends
-# end of Analog digital bi-direction converters
-# end of Amplifiers
-# end of Amlogic SoC drivers
-# end of Active energy metering IC
-# end of ACPI INT340X thermal drivers
-# end of ACP (Audio CoProcessor) Configuration
-# end of Accelerometers
-# end of Accelerometers
-# EFI (Extensible Firmware Interface) Support
-# EEPROM support
-# ECC engine support
-# drm/i915 Profile Guided Optimisation
-# drm/i915 Debugging
-# DOS/FAT/EXFAT/NT Filesystems
-# DMABUF options
-# DMA Devices
-# DMA Clients
-# Distributed Switch Architecture drivers
-# Display Panels
-# Display Interface Bridges
-# Display Engine Configuration
-# Disk-On-Chip Device Drivers
-# Direct Digital Synthesis
-# Digital to analog converters
-# Digital potentiostats
-# Digital potentiometers
-# Digital gyroscope sensors
-# Digest
-# Device Drivers
-# DEVFREQ Governors
-# DEVFREQ Drivers
-# DesignWare PCI Core Support
-# DECnet: Netfilter Configuration
-# Debugging Options
-# Debug Oops, Lockups and Hangs
-# Debug kernel data structures
-# DCCP Kernel Hacking
-# DCCP CCIDs Configuration
-# Crypto library routines
-# Crypto core or helper
-# CPU/Task time and stats accounting
-# CPU Idle
-# CPU frequency scaling drivers
-# CPU Frequency scaling
-# Core Netfilter Configuration
-# Controllers with non-SFF native interface
-# Console display driver support
 # CONFIG_ZSMALLOC_STAT is not set
 # CONFIG_ZRAM_WRITEBACK is not set
 # CONFIG_ZRAM_MEMORY_TRACKING is not set
@@ -5927,7 +5511,6 @@ CONFIG_60XX_WDT=m
 # CONFIG_KERNEL_LZO is not set
 # CONFIG_KERNEL_LZMA is not set
 # CONFIG_KERNEL_LZ4 is not set
-# CONFIG_KERNEL_GZIP is not set
 # CONFIG_KERNEL_BZIP2 is not set
 # CONFIG_KCOV is not set
 # CONFIG_KASAN is not set
@@ -6054,8 +5637,8 @@ CONFIG_60XX_WDT=m
 # CONFIG_INPUT_BMA150 is not set
 # CONFIG_INITRAMFS_COMPRESSION_ZSTD is not set
 # CONFIG_INITRAMFS_COMPRESSION_XZ is not set
-# CONFIG_INITRAMFS_COMPRESSION_NONE is not set
 # CONFIG_INITRAMFS_COMPRESSION_GZIP is not set
+# CONFIG_INITRAMFS_COMPRESSION_BZIP2 is not set
 # CONFIG_INIT_ON_FREE_DEFAULT_ON is not set
 # CONFIG_INFINIBAND_VMWARE_PVRDMA is not set
 # CONFIG_INFINIBAND_USNIC is not set

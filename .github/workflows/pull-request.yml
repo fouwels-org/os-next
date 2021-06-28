@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -7,7 +8,7 @@ on:
   pull_request:
 env:
   REPO: ${{github.repository}}
-  REGISTRY: registry2.lagoni.co.uk
+  REGISTRY: containers.fouwels.app
   ARCH: linux_amd64
 jobs:
   build-and-scan:
@@ -27,7 +28,7 @@ jobs:
           lfs: true
 
       - name: Docker build
-        run: docker build --build-arg CONFIG_COMPRESSION=XZ --build-arg CONFIG_PRIMARY=standard.json --build-arg CONFIG_MODULES=ALL  -t ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} .
+        run: docker build --build-arg CONFIG_PRIMARY=standard.yml --build-arg CONFIG_MODULES=ALL  -t ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} .
 
       - name: Run container scan
         uses: azure/container-scan@v0

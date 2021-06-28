@@ -1,4 +1,5 @@
 // SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+// SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -18,8 +19,8 @@ import (
 	"time"
 )
 
-const _configPrimaryPath = "/config/primary.json"
-const _configSecondaryPath = "/var/config/secondary.json"
+const _configPrimaryPath = "/config/primary.yml"
+const _configSecondaryPath = "/var/config/secondary.yml"
 
 func main() {
 
@@ -68,7 +69,7 @@ func run() error {
 	// creates the rootfs
 	libinit.CreateRootfs()
 
-	// run the user-defined init tasks
+	// run the user defined init tasks
 	err = uinit()
 	if err != nil {
 
@@ -98,6 +99,7 @@ func uinit() error {
 	primary := []stages.IStage{
 		&stages.Modules{},
 		&stages.KernelConfig{},
+		&stages.TPM{},
 		&stages.Filesystem{},
 		&stages.Microcode{},
 	}

@@ -1,10 +1,11 @@
 <!--
 SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# IIoT OS Mjolnir Build (Thor's Hammer)
+# os-next
 This is a real-time IIoT OS made for Docker. All is build from within a container using musl rather than libc. The Dockerfile included is used to create the toolchain image. 
 
 It is a EFI based boot system.
@@ -19,19 +20,19 @@ Ensure docker is compiling with buildkit for a layer based build log (highly rec
 
 Build the kernel EFI (`make <target> # make fast|k300|schneider|...`)
 
-    docker build -t <build arguments> registry2.lagoni.co.uk/os_build_env:local .
+    docker build -t <build arguments> os-next
 
 The following build arguments are specified.
 
 _Included for documentatin, see Makefile for existing targets, makefile should be used instead of direct calling_
 
-    --build-arg CONFIG_COMPRESSION=XZ # Kernel/Initramfs compression scheme. (LZ4 for fast, XZ for small)
-    --build-arg CONFIG_PRIMARY=nvme.json # One of config/primary
+    --build-arg CONFIG_COMPRESSION=GZIP # Kernel/Initramfs compression scheme. (GZIP for fast, XZ for small)
+    --build-arg CONFIG_PRIMARY=standard.yml # One of config/primary
     --build-arg CONFIG_MODULES=ALL # ALL or One of config/modules
 
 Copy the kernel EFI from the built image to ./out (`make run`)
 
-    docker run -it --rm -v $(PWD)/out:/out registry2.lagoni.co.uk/os_build_env:local
+    docker run -it --rm -v $(PWD)/out:/out os-next
 
 The dockerfile is constructed to cache layers between builds, if required files have not been modified. There is no need to preserve files on a volume.
 
@@ -51,10 +52,6 @@ See `deploy/qemu` for a software deployment. This will automatically format and 
 
 Unless specified, run `make deploy-clean` within, to build and start the kernel and connect stdin/stdout over virtual IO.
 
-## CHECKS
-
-`registry2.lagoni.co.uk/kernel-check:latest`
-
 ## TIPS and TRICKS
 
 In the container you can find the linux source directory under /build/src/linux... 
@@ -64,6 +61,3 @@ Use `menuconfig` to setup the kernel then copy the .config to /build/out
     `cp .config /build/out`
 
 This will copy the .config to the host machine.
-
-## License
-APACHE 2.0
