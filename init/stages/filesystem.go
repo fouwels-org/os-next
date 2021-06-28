@@ -1,4 +1,5 @@
 // SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+// SPDX-FileCopyrightText: 2021 K. Fouwels <k@fouwels.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -78,14 +79,14 @@ func (n *Filesystem) Run(c config.Config) error {
 	}
 
 	// Deploy default secondary config if one does not exist
-	_, err = os.Stat("/var/config/secondary.json")
+	_, err = os.Stat("/var/config/secondary.yml")
 	if errors.Is(err, os.ErrNotExist) {
 
-		secondary, err := ioutil.ReadFile("/config/secondary.json")
+		secondary, err := ioutil.ReadFile("/config/secondary.yml")
 		if err != nil {
 			return fmt.Errorf("failed to copy secondary config: %w", err)
 		}
-		err = ioutil.WriteFile("/var/config/secondary.json", secondary, 0644)
+		err = ioutil.WriteFile("/var/config/secondary.yml", secondary, 0644)
 		if err != nil {
 			return fmt.Errorf("failed to copy secondary config: %w", err)
 		}
@@ -93,7 +94,7 @@ func (n *Filesystem) Run(c config.Config) error {
 			return fmt.Errorf("failed to symlink default secondary config: %w", err)
 		}
 
-		n.finals = append(n.finals, "default secondary configuration was written to /var/config/secondary.json")
+		n.finals = append(n.finals, "default secondary configuration was written to /var/config/secondary.yml")
 
 	} else if err != nil {
 		return fmt.Errorf("error checking if secondary config file exists: %w", err)

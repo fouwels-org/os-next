@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+# SPDX-FileCopyrightText: 2021 K. Fouwels <k@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -7,7 +8,7 @@ on:
   push:
 env:
   REPO: ${{github.repository}}
-  REGISTRY: registry2.lagoni.co.uk
+  REGISTRY: containers.fouwels.app
   GOSEC_VERSION: 2.8.0
   STATICCHECK_VERSION: 2021.1
   ARCH: linux_amd64
@@ -22,7 +23,7 @@ jobs:
       - name: Print headers
         run: echo "Running for target ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} in ${GITHUB_WORKSPACE}"
 
-      - name: Checkout repo 
+      - name: Checkout repo
         uses: actions/checkout@master
         with:
           lfs: true
@@ -45,7 +46,7 @@ jobs:
       - name: Print headers
         run: echo "Running for target ${{env.REGISTRY}}/${{env.REPO}}:${{steps.vars.outputs.TAG}} in ${GITHUB_WORKSPACE}"
 
-      - name: Checkout repo 
+      - name: Checkout repo
         uses: actions/checkout@master
         with:
           lfs: true
@@ -57,5 +58,3 @@ jobs:
 
       - name: Run static checks (init)
         run: cd ${GITHUB_WORKSPACE}/init && ${GITHUB_WORKSPACE}/staticcheck/staticcheck ./...
-
-
