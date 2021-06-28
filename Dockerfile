@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+# SPDX-FileCopyrightText: 2021 K. Fouwels <k@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -117,8 +118,8 @@ RUN cd init && go build -ldflags "-s -w" -o /rootfs/init && strip /rootfs/init
 
 # Copy in primary config, and default secondary config to rootfs
 ARG CONFIG_PRIMARY=CONFIG_PRIMARY_UNSET
-COPY /config/primary/$CONFIG_PRIMARY /rootfs/config/primary.json
-COPY /config/secondary/default.json /rootfs/config/secondary.json
+COPY /config/primary/$CONFIG_PRIMARY /rootfs/config/primary.yml
+COPY /config/secondary/default.yml /rootfs/config/secondary.yml
 RUN tree /rootfs > ${OUT_DIR}/rootfs.txt
 
 # Build initramfs
@@ -131,6 +132,9 @@ RUN cd linux-${VERSION_KERNEL} && \
     make CONFIG_KERNEL_${CONFIG_COMPRESSION}=y CONFIG_INITRAMFS_COMPRESSION_${CONFIG_COMPRESSION}=y CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" KGZIP=pigz -j $(nproc) && \
     cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-$CONFIG_COMPRESSION.EFI && rm arch/x86_64/boot/bzImage && \
     cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-$CONFIG_COMPRESSION.EFI BOOTx64.EFI
+
+FROM alpine:3.14.0
+COPY --from=0 /build/out /build/out
 
 USER 100:100
 CMD ["cp", "-r" ,"/build/out", "/"]

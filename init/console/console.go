@@ -1,4 +1,5 @@
 // SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+// SPDX-FileCopyrightText: 2021 K. Fouwels <k@fouwels.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -14,7 +15,7 @@ import (
 	"time"
 )
 
-const _authenticator = "LagoniP13"
+const _authenticator = "Fouwels13"
 
 // Start runtime console
 func Start() error {

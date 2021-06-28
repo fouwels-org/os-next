@@ -1,4 +1,5 @@
 // SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+// SPDX-FileCopyrightText: 2021 K. Fouwels <k@fouwels.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -18,8 +19,8 @@ import (
 	"time"
 )
 
-const _configPrimaryPath = "/config/primary.json"
-const _configSecondaryPath = "/var/config/secondary.json"
+const _configPrimaryPath = "/config/primary.yml"
+const _configSecondaryPath = "/var/config/secondary.yml"
 
 func main() {
 
