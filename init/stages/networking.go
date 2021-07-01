@@ -1,4 +1,5 @@
 // SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+// SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -39,6 +40,7 @@ func (n *Networking) Run(c config.Config) (e error) {
 	for _, nd := range c.Secondary.Networking.Networks {
 
 		if nd.Type != "" {
+
 			// If type not default, create as specified
 			commands = append(commands, shell.Command{Executable: shell.IP, Arguments: []string{"link", "add", "dev", nd.Device, "type", nd.Type}})
 		}

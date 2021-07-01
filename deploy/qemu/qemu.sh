@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -99,10 +100,10 @@ EOF
         -device virtio-rng-pci \
         -device e1000e,netdev=n1 \
         -device nvme,drive=os2,serial=nvme-1 \
-        -netdev user,id=n1
-    #       -device tpm-tis,tpmdev=tpm0 \
-    #       -chardev socket,id=chrtpm,path=$TPM_PATH/socket \
-    #       -tpmdev emulator,id=tpm0,chardev=chrtpm
+        -device tpm-tis,tpmdev=tpm0 \
+        -netdev user,id=n1 \
+        -chardev socket,id=chrtpm,path=$TPM_PATH/socket \
+        -tpmdev emulator,id=tpm0,chardev=chrtpm
 
 }
 
