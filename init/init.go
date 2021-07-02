@@ -69,7 +69,7 @@ func run() error {
 	// creates the rootfs
 	libinit.CreateRootfs()
 
-	// run the user-defined init tasks
+	// run the user defined init tasks
 	err = uinit()
 	if err != nil {
 

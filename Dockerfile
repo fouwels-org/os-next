@@ -6,13 +6,12 @@
 FROM alpine:3.14.0
 
 RUN apk --no-cache add \
-    alpine-sdk argp-standalone asciidoc autoconf automake bc bison build-base ccache clang cmake cryptsetup \
-    device-mapper-static diffutils docbook2x e2fsprogs elfutils-dev flex gawk gettext-dev git gmp-dev go \
+    alpine-sdk argp-standalone asciidoc autoconf automake bc bison build-base ccache clang cmake cryptsetup coreutils \
+    device-mapper-static diffutils docbook2x e2fsprogs elfutils-dev flex gawk gettext-dev git gmp-dev go gnupg \
     gzip json-c json-c-dev libaio-dev libmnl-dev libnfnetlink-dev libnftnl-dev libpciaccess-dev libtool \
     libuuid linux-headers llvm llvm-dev lld lvm2-dev lvm2-static lz4 lzo ncurses-dev openssl openssl-dev openssl-libs-static \
-    perl pigz popt popt popt-dev readline-dev rsync tpm2-tss tpm2-tss-dev tpm2-tss-esys tpm2-tss-fapi tpm2-tss-mu \
-    tpm2-tss-sys tree upx util-linux util-linux-dev wget xorriso xz
-RUN apk --no-cache add -X http://dl-cdn.alpinelinux.org/alpine/edge/testing pixz=1.0.7-r0
+    perl pzstd pigz popt popt popt-dev readline-dev rsync tpm2-tss tpm2-tss-dev tpm2-tss-esys tpm2-tss-fapi tpm2-tss-mu \
+    tpm2-tss-sys tree upx util-linux util-linux-dev wget xorriso xz zstd 
 
 RUN git config --global advice.detachedHead false
 SHELL ["/bin/bash", "-c"]
@@ -24,12 +23,12 @@ RUN mkdir -p ${OUT_DIR} && mkdir -p ${SRC_DIR} && mkdir -p /rootfs
 WORKDIR ${SRC_DIR}
 
 # Kernel versions
-ENV VERSION_KERNEL=5.10.1
-ENV VERSION_RT=5.10.1-rt20
+ENV VERSION_KERNEL=5.10.41
+ENV VERSION_RT=5.10.41-rt42
 ENV CONFIG_KERNEL=5.10.1-rt20
 
 # Flags
-ENV KERNEL_FLAGS="CC=clang LLVM=1 ARCH=x86_64 KGZIP=pigz KXZ=pixz CFLAGS=-Oz"
+ENV KERNEL_FLAGS="CC=clang LLVM=1 ARCH=x86_64 KGZIP=pigz CFLAGS=-Oz"
 
 # Download and patch kernel
 RUN wget -q -O kernel.tar.xz https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-${VERSION_KERNEL}.tar.xz && tar -xf kernel.tar.xz
@@ -44,10 +43,10 @@ RUN cd linux-${VERSION_KERNEL} && make ${KERNEL_FLAGS} -j $(nproc)
 
 # Package versions
 ENV VERSION_MUSL=1.2.2
-ENV VERSION_DOCKER=20.10.6
+ENV VERSION_DOCKER=20.10.7
 ENV VERSION_BUSYBOX=1.33.1
 ENV VERSION_WGTOOLS=v1.0.20210424
-ENV VERSION_MICROCODE_INTEL=20210216
+ENV VERSION_MICROCODE_INTEL=20210608
 ENV VERSION_IPTABLES=1.8.7
 
 # Build musl
@@ -95,7 +94,6 @@ RUN cp wireguard-tools/src/wg /rootfs/usr/sbin/wg
 RUN cp docker/* /rootfs/usr/bin/
 
 # Add alpine packages
-RUN apk add --no-cache coreutils
 RUN cd /bin && cp -t /rootfs/bin lsblk 
 RUN cd /lib && cp -t /rootfs/lib libblkid.so.* libsmartcols.so.* libmount.so.*
 
@@ -132,11 +130,10 @@ RUN if [ -f "/initramfs.cpio" ]; then rm /initramfs.cpio; fi
 RUN cd /rootfs && find . -print0 | cpio --null --create --verbose --format=newc > /initramfs.cpio
 
 # Build final kernel with real initramfs
-ARG KERNEL_CMDLINE=""
 RUN cd linux-${VERSION_KERNEL} && \
-    make CONFIG_CMDLINE=${KERNEL_CMDLINE} ${KERNEL_FLAGS} -j $(nproc) && \
-    cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-CLANG.EFI && rm arch/x86_64/boot/bzImage && \
-    cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-CLANG.EFI BOOTx64.EFI
+    make ${KERNEL_FLAGS} -j $(nproc) && \
+    cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.GZIP.EFI && rm arch/x86_64/boot/bzImage && \
+    cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.GZIP.EFI BOOTx64.EFI
 
 FROM alpine:3.14.0
 COPY --from=0 /build/out /build/out
