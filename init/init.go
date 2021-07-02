@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
-// SPDX-FileCopyrightText: 2021 K. Fouwels <k@fouwels.com>
+// SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -69,7 +69,7 @@ func run() error {
 	// creates the rootfs
 	libinit.CreateRootfs()
 
-	// run the user-defined init tasks
+	// run the user defined init tasks
 	err = uinit()
 	if err != nil {
 
@@ -99,6 +99,7 @@ func uinit() error {
 	primary := []stages.IStage{
 		&stages.Modules{},
 		&stages.KernelConfig{},
+		&stages.TPM{},
 		&stages.Filesystem{},
 		&stages.Microcode{},
 	}

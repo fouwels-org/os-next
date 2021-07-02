@@ -1,15 +1,19 @@
 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
-# SPDX-FileCopyrightText: 2021 K. Fouwels <k@fouwels.com>
+# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 
 FROM alpine:3.14.0
 
 RUN apk --no-cache add \
-    wget bc build-base gawk xorriso elfutils-dev openssl openssl-dev bison flex ncurses-dev xz autoconf automake docbook2x alpine-sdk libtool asciidoc readline-dev gmp-dev linux-headers perl rsync git argp-standalone \
-    xz-dev libmnl-dev libnftnl-dev cmake libnfnetlink-dev gzip ccache diffutils util-linux libuuid util-linux-dev lvm2-dev popt popt-dev json-c json-c-dev libaio-dev upx gettext-dev openssl-libs-static lvm2-static device-mapper-static \
-    cryptsetup e2fsprogs libpciaccess-dev popt go tree lz4 lzo pigz tpm2-tss tpm2-tss-dev tpm2-tss-esys tpm2-tss-fapi tpm2-tss-mu tpm2-tss-sys
-RUN git config --global advice.detachedHead false bash
+    alpine-sdk argp-standalone asciidoc autoconf automake bc bison build-base ccache clang cmake cryptsetup coreutils \
+    device-mapper-static diffutils docbook2x e2fsprogs elfutils-dev flex gawk gettext-dev git gmp-dev go gnupg \
+    gzip json-c json-c-dev libaio-dev libmnl-dev libnfnetlink-dev libnftnl-dev libpciaccess-dev libtool \
+    libuuid linux-headers llvm llvm-dev lld lvm2-dev lvm2-static lz4 lzo ncurses-dev openssl openssl-dev openssl-libs-static \
+    perl pzstd pigz popt popt popt-dev readline-dev rsync tpm2-tss tpm2-tss-dev tpm2-tss-esys tpm2-tss-fapi tpm2-tss-mu \
+    tpm2-tss-sys tree upx util-linux util-linux-dev wget xorriso xz zstd 
+
+RUN git config --global advice.detachedHead false
 SHELL ["/bin/bash", "-c"]
 
 # Dirs
@@ -19,9 +23,12 @@ RUN mkdir -p ${OUT_DIR} && mkdir -p ${SRC_DIR} && mkdir -p /rootfs
 WORKDIR ${SRC_DIR}
 
 # Kernel versions
-ENV VERSION_KERNEL=5.10.1
-ENV VERSION_RT=5.10.1-rt20
+ENV VERSION_KERNEL=5.10.41
+ENV VERSION_RT=5.10.41-rt42
 ENV CONFIG_KERNEL=5.10.1-rt20
+
+# Flags
+ENV KERNEL_FLAGS="CC=clang LLVM=1 ARCH=x86_64 KGZIP=pigz CFLAGS=-Oz"
 
 # Download and patch kernel
 RUN wget -q -O kernel.tar.xz https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-${VERSION_KERNEL}.tar.xz && tar -xf kernel.tar.xz
@@ -31,15 +38,15 @@ RUN cd linux-${VERSION_KERNEL} && xzcat ../patch-$KERNEL_RT.patch.xz | patch -p1
 # Build kernel with custom config
 RUN touch /initramfs.cpio
 COPY config/config-${CONFIG_KERNEL} linux-${VERSION_KERNEL}/.config
-RUN cd linux-${VERSION_KERNEL} && make oldconfig -j $(nproc)
-RUN cd linux-${VERSION_KERNEL} && make CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc)
+RUN cd linux-${VERSION_KERNEL} && make ${KERNEL_FLAGS} oldconfig -j $(nproc)
+RUN cd linux-${VERSION_KERNEL} && make ${KERNEL_FLAGS} -j $(nproc)
 
 # Package versions
 ENV VERSION_MUSL=1.2.2
-ENV VERSION_DOCKER=20.10.6
+ENV VERSION_DOCKER=20.10.7
 ENV VERSION_BUSYBOX=1.33.1
 ENV VERSION_WGTOOLS=v1.0.20210424
-ENV VERSION_MICROCODE_INTEL=20210216
+ENV VERSION_MICROCODE_INTEL=20210608
 ENV VERSION_IPTABLES=1.8.7
 
 # Build musl
@@ -87,12 +94,8 @@ RUN cp wireguard-tools/src/wg /rootfs/usr/sbin/wg
 RUN cp docker/* /rootfs/usr/bin/
 
 # Add alpine packages
-RUN apk add --no-cache coreutils
 RUN cd /bin && cp -t /rootfs/bin lsblk 
-RUN cd /sbin && cp -t /rootfs/bin mke2fs
-RUN cd /lib && cp -t /rootfs/lib libext2fs.so.* libcom_err.so.* libblkid.so.* libuuid.so.* libe2p.so.* libsmartcols.so.* libmount.so.* libfdisk.so.*
-RUN cd /usr/lib && cp -t /rootfs/usr/lib libncursesw.so.*
-RUN cp /sbin/fdisk /rootfs/bin/fdisk2 # Alias GPT aware fdisk to fdisk2 to prevent clash with busybox fdisk.
+RUN cd /lib && cp -t /rootfs/lib libblkid.so.* libsmartcols.so.* libmount.so.*
 
 # Strip modules if specified
 ARG CONFIG_MODULES=ALL
@@ -120,18 +123,17 @@ RUN cd init && go build -ldflags "-s -w" -o /rootfs/init && strip /rootfs/init
 ARG CONFIG_PRIMARY=CONFIG_PRIMARY_UNSET
 COPY /config/primary/$CONFIG_PRIMARY /rootfs/config/primary.yml
 COPY /config/secondary/default.yml /rootfs/config/secondary.yml
-RUN tree /rootfs > ${OUT_DIR}/rootfs.txt
+RUN find /rootfs > ${OUT_DIR}/rootfs.txt
 
 # Build initramfs
 RUN if [ -f "/initramfs.cpio" ]; then rm /initramfs.cpio; fi
 RUN cd /rootfs && find . -print0 | cpio --null --create --verbose --format=newc > /initramfs.cpio
 
 # Build final kernel with real initramfs
-ARG CONFIG_COMPRESSION=GZIP
 RUN cd linux-${VERSION_KERNEL} && \
-    make CONFIG_KERNEL_${CONFIG_COMPRESSION}=y CONFIG_INITRAMFS_COMPRESSION_${CONFIG_COMPRESSION}=y CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" KGZIP=pigz -j $(nproc) && \
-    cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-$CONFIG_COMPRESSION.EFI && rm arch/x86_64/boot/bzImage && \
-    cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY-$CONFIG_COMPRESSION.EFI BOOTx64.EFI
+    make ${KERNEL_FLAGS} -j $(nproc) && \
+    cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.GZIP.EFI && rm arch/x86_64/boot/bzImage && \
+    cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.GZIP.EFI BOOTx64.EFI
 
 FROM alpine:3.14.0
 COPY --from=0 /build/out /build/out
