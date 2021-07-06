@@ -13,8 +13,9 @@ RUN apk --no-cache add \
     perl pzstd pigz popt popt popt-dev readline-dev rsync tpm2-tss tpm2-tss-dev tpm2-tss-esys tpm2-tss-fapi tpm2-tss-mu \
     tpm2-tss-sys tree upx util-linux util-linux-dev wget xorriso xz zstd 
 
-RUN git config --global advice.detachedHead false
 SHELL ["/bin/bash", "-c"]
+RUN git config --global advice.detachedHead false
+ENV CC=/usr/bin/gcc CXX=/usr/bin/g++
 
 # Dirs
 ENV SRC_DIR=/build/src
@@ -51,28 +52,26 @@ ENV VERSION_IPTABLES=1.8.7
 
 # Build musl
 RUN wget -q -O musl.tar.gz https://www.musl-libc.org/releases/musl-$VERSION_MUSL.tar.gz && tar -xf musl.tar.gz
-RUN cd musl-${VERSION_MUSL} && ./configure --prefix=/usr && \
-    make -j $(nproc)
+RUN cd musl-${VERSION_MUSL} && ./configure --prefix=/usr
+RUN cd musl-${VERSION_MUSL} && make -j $(nproc)
 
 # Build docker
 RUN wget -q -O docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VERSION_DOCKER.tgz && tar -xf docker.tgz
 
 # Build wg-tools
 RUN git clone --depth 1 -b $VERSION_WGTOOLS https://git.zx2c4.com/wireguard-tools
-RUN cd wireguard-tools/src && \
-    make -j $(nproc)
+RUN cd wireguard-tools/src && make -j $(nproc)
 
 # Build busybox
 RUN wget -q -O busybox.tar.bz2 https://busybox.net/downloads/busybox-$VERSION_BUSYBOX.tar.bz2 && tar -xf busybox.tar.bz2
 COPY config/busybox-config busybox-${VERSION_BUSYBOX}/.config
 RUN cd busybox-${VERSION_BUSYBOX} && make oldconfig
-RUN cd busybox-${VERSION_BUSYBOX} && \
-    make -j $(nproc)
+RUN cd busybox-${VERSION_BUSYBOX} && make -j $(nproc)
 
 # Build iptables
 RUN wget -q -O iptables.tar.bz2  https://netfilter.org/projects/iptables/files/iptables-$VERSION_IPTABLES.tar.bz2 && tar -xf iptables.tar.bz2
-RUN cd iptables-${VERSION_IPTABLES} && ./configure --prefix=/ --mandir=/tmp --disable-nftables && \
-    make EXTRA_CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc)
+RUN cd iptables-${VERSION_IPTABLES} && ./configure --prefix=/ --mandir=/tmp --disable-nftables
+RUN cd iptables-${VERSION_IPTABLES} && make EXTRA_CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc)
 
 # Set up template rootfs
 COPY template_rootfs /template_rootfs
@@ -131,9 +130,11 @@ RUN cd /rootfs && find . -print0 | cpio --null --create --verbose --format=newc 
 
 # Build final kernel with real initramfs
 RUN cd linux-${VERSION_KERNEL} && \
-    make ${KERNEL_FLAGS} -j $(nproc) && \
-    cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.GZIP.EFI && rm arch/x86_64/boot/bzImage && \
-    cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.GZIP.EFI BOOTx64.EFI
+    make CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" KGZIP=pigz -j $(nproc) && \
+    cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.GZIP.EFI && rm arch/x86_64/boot/bzImage
+
+# Create BOOTx64.EFI symlink
+RUN cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.GZIP.EFI BOOTx64.EFI
 
 FROM alpine:3.14.0
 COPY --from=0 /build/out /build/out
