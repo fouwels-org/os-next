@@ -1,7 +1,7 @@
-# SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
-# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
-#
-# SPDX-License-Identifier: Apache-2.0
+Z9 # SPDX-License-Identifier: Apache-2.0
+Z8 # SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
+Z7 #
+Z6 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
 CONFIG_ZSTD_DECOMPRESS=y
 CONFIG_ZSTD_COMPRESS=m
 CONFIG_ZSMALLOC=y
@@ -2460,7 +2460,7 @@ CONFIG_KEYBOARD_ATKBD=y
 CONFIG_KEYBOARD_APPLESPI=m
 CONFIG_KEY_DH_OPERATIONS=y
 CONFIG_KERNFS=y
-CONFIG_KERNEL_GZIP=y
+CONFIG_KERNEL_XZ=y
 CONFIG_KALLSYMS=y
 CONFIG_KALLSYMS_BASE_RELATIVE=y
 CONFIG_KALLSYMS_ALL=y
@@ -5507,10 +5507,10 @@ CONFIG_60XX_WDT=m
 # CONFIG_KEXEC_FILE is not set
 # CONFIG_KEXEC is not set
 # CONFIG_KERNEL_ZSTD is not set
-# CONFIG_KERNEL_XZ is not set
 # CONFIG_KERNEL_LZO is not set
 # CONFIG_KERNEL_LZMA is not set
 # CONFIG_KERNEL_LZ4 is not set
+# CONFIG_KERNEL_GZIP is not set
 # CONFIG_KERNEL_BZIP2 is not set
 # CONFIG_KCOV is not set
 # CONFIG_KASAN is not set
