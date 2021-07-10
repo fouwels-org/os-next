@@ -7,7 +7,7 @@ default: k300
 
 turbo: # fast target for development/qemu
 	docker build \
-	--build-arg COMPRESSION_LEVEL=2 \
+	--build-arg COMPRESSION_LEVEL=9 \
 	--build-arg CONFIG_PRIMARY=standard.yml \
 	--build-arg CONFIG_MODULES=standard.mod \
 	-t containers.fouwels.app/os-next:local .

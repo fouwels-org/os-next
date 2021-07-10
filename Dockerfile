@@ -145,16 +145,15 @@ RUN if [ -f "/initramfs.cpio" ]; then rm /initramfs.cpio; fi
 RUN cd /rootfs && find . -print0 | cpio --null --create --verbose --format=newc > /initramfs.cpio
 
 # Optionally patch compression ratio to speed up build
-ARG COMPRESSION_LEVEL="9"
-RUN cd linux-${VERSION_KERNEL} && sed -i -e 's/$XZ --check=crc32 $BCJ --lzma2=$LZMA2OPTS,dict=32MiB/$XZ --check=crc32 $BCJ -T0 -${COMPRESSION_LEVEL}/g' scripts/xz_wrap.sh
+ARG COMPRESSION_LEVEL="22"
+RUN cd linux-${VERSION_KERNEL} && sed -i -e 's/$(ZSTD) -22 --ultra/$(ZSTD) -T0 -${COMPRESSION_LEVEL} --ultra/g' scripts/Makefile.lib 
 
 # Build final kernel with real initramfs
-RUN cd linux-${VERSION_KERNEL} && \
-    make CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc) 
-RUN cd linux-${VERSION_KERNEL} && cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.XZ.$COMPRESSION_LEVEL.EFI
+RUN cd linux-${VERSION_KERNEL} && make CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc) 
+RUN cd linux-${VERSION_KERNEL} && cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.ZSTD.$COMPRESSION_LEVEL.EFI
 
 # Create BOOTx64.EFI symlink
-RUN cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.XZ.$COMPRESSION_LEVEL.EFI BOOTx64.EFI
+RUN cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.ZSTD.$COMPRESSION_LEVEL.EFI BOOTx64.EFI
 
 FROM alpine:3.14.0
 COPY --from=0 /build/out /build/out
