@@ -18,7 +18,7 @@ Ensure docker is compiling with buildkit for a layer based build log (highly rec
 
     export DOCKER_BUILDKIT=1 
 
-Build the kernel EFI (`make <target> # make fast|k300|schneider|...`)
+Build the kernel EFI (`make <target> # make k300|schneider|...`)
 
     docker build -t <build arguments> os-next
 
@@ -26,9 +26,9 @@ The following build arguments are specified.
 
 _Included for documentatin, see Makefile for existing targets, makefile should be used instead of direct calling_
 
-    --build-arg CONFIG_COMPRESSION=GZIP # Kernel/Initramfs compression scheme. (GZIP for fast, XZ for small)
     --build-arg CONFIG_PRIMARY=standard.yml # One of config/primary
     --build-arg CONFIG_MODULES=ALL # ALL or One of config/modules
+    --build-arg COMPRESSION_LEVEL=9 # (optionally) override the default kernel ZSTD compression level (9 for fast, 22 for maximum)
 
 Copy the kernel EFI from the built image to ./out (`make run`)
 
