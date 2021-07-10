@@ -4,7 +4,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 default: k300
-	
+
+turbo: # fast target for development/qemu
+	docker build \
+	--build-arg COMPRESSION_LEVEL=2 \
+	--build-arg CONFIG_PRIMARY=standard.yml \
+	--build-arg CONFIG_MODULES=standard.mod \
+	-t containers.fouwels.app/os-next:local .
+
 k300: # OnLogic K300 target
 	docker build \
 	--build-arg CONFIG_PRIMARY=standard.yml \
