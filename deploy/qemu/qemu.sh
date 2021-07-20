@@ -79,7 +79,7 @@ EOF
     QEMU_DISPLAY="-display vnc=:0"
 
     if [ "$COMMAND" = "kernel" ]; then
-        QEMU_DISK="-kernel $EFI -nographic"
+        QEMU_DISK="-kernel $EFI --append console=ttyS0 -nographic"
     fi
     if [ "$COMMAND" = "disk" ]; then
         QEMU_DISK="-serial mon:stdio -boot menu=on\
