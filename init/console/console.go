@@ -7,8 +7,7 @@ package console
 
 import (
 	"bufio"
-	"crypto"
-	_ "crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"init/config"
 	"init/shell"
@@ -16,6 +15,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Start runtime console
@@ -51,7 +52,7 @@ func login(auth config.Authenticators) error {
 
 		santext := strings.TrimSuffix(text, "\n")
 
-		if checkPasswordHash(auth.Root, santext) {
+		if checkAuthenticator(auth.Root, santext) {
 			success = true
 			log.Printf("user succeeded to authenticate")
 		} else {
@@ -64,21 +65,42 @@ func login(auth config.Authenticators) error {
 	return nil
 }
 
-func checkPasswordHash(hash string, text string) bool {
+func generateAuthenticator(text string) (string, error) {
+	const _bcryptCost = 10
 
-	hasher := crypto.SHA256.New()
-	_, err := hasher.Write([]byte(text))
+	bytes, err := bcrypt.GenerateFromPassword([]byte(text), _bcryptCost)
 	if err != nil {
-		log.Printf("failed to write hash for login: %v", err)
-		return false
+		return "", err
 	}
-	textHash := fmt.Sprintf("%x", hasher.Sum(nil))
 
-	if textHash == hash {
-		return true
-	} else {
+	return base64.StdEncoding.EncodeToString(bytes), nil
+}
+
+func checkAuthenticator(hash string, text string) bool {
+
+	if hash == "" || text == "" {
 		return false
 	}
+
+	bts, err := base64.StdEncoding.DecodeString(hash)
+	if err != nil {
+		log.Printf("failed to decode base64 authenticator hash: %v", err)
+		return false
+	}
+
+	if len(bts) == 0 {
+		log.Printf("authenticator hash decoded to 0 length?")
+		return false
+	}
+
+	err = bcrypt.CompareHashAndPassword(bts, []byte(text))
+
+	//lint:ignore S1008 clearer flow being verbose
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 func bash() error {
