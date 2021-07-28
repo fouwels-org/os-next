@@ -17,6 +17,7 @@ secondary:
         ipv6: false
         addresses: []
         default-gateway: ""
+
       - device: eth1
         type: ""
         dhcp: false
@@ -24,6 +25,7 @@ secondary:
         addresses:
           - 192.168.0.195/24
         default-gateway: ""
+
       - device: wg0
         type: wireguard
         dhcp: false
@@ -31,12 +33,15 @@ secondary:
         addresses:
           - 10.200.4.99/32
         default-gateway: ""
+
     routes:
       - address: 10.200.4.0/24
         device: wg0
+
     nameservers:
       - 1.1.1.1
       - 8.8.8.8
+
   wireguard:
     - device: wg0
       listen-port: 51820
@@ -46,6 +51,7 @@ secondary:
           allowed-ips:
             - 10.200.4.0/24
           persistent-keepalive: 5
+
   time:
     ntp: true
     hwclock: true
