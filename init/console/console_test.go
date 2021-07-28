@@ -5,33 +5,44 @@
 package console
 
 import (
+	"log"
 	"testing"
 )
 
-func TestCheckPasswordHash(t *testing.T) {
+func TestGenerateAuthenticator(t *testing.T) {
 
-	ok := checkPasswordHash("42be3e081457a3ff83372d810c6b84de70aeb57336e24f8715b7903e9ab8f1a2", "super-secure")
-	if !ok {
+	hash, err := generateAuthenticator("super-secure")
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	log.Printf("%v", hash)
+}
+
+func TestCheckAuthenticator(t *testing.T) {
+
+	err := checkAuthenticator("JDJhJDEwJFpDamNuZzVGMGFOZ0NwYlRYUVdSWnVaUkh5WmdSUXIvOXFtbzYySGJ2dEFTbnIzTm9DazhT", "super-secure")
+	if err != true {
 		t.Fatalf("ok check failed")
 	}
 
-	nok := checkPasswordHash("42be3e081457a3ff83372d810c6b84de70aeb57336e24f8715b7903e9ab8f1a2", "supr-secure")
-	if nok {
+	err = checkAuthenticator("JDJhJDEwJFpDamNuZzVGMGFOZ0NwYlRYUVdSWnVaUkh5WmdSUXIvOXFtbzYySGJ2dEFTbnIzTm9DazhT", "supr-secure")
+	if err != false {
 		t.Fatalf("not ok check failed")
 	}
 
-	none := checkPasswordHash("42be3e081457a3ff83372d810c6b84de70aeb57336e24f8715b7903e9ab8f1a2", "")
-	if none {
+	err = checkAuthenticator("JDJhJDEwJFpDamNuZzVGMGFOZ0NwYlRYUVdSWnVaUkh5WmdSUXIvOXFtbzYySGJ2dEFTbnIzTm9DazhT", "")
+	if err != false {
 		t.Fatalf("none check failed")
 	}
 
-	none2 := checkPasswordHash("", "super-secure")
-	if none2 {
+	err = checkAuthenticator("", "super-secure")
+	if err != false {
 		t.Fatalf("none2 check failed")
 	}
 
-	none3 := checkPasswordHash("", "")
-	if none3 {
+	err = checkAuthenticator("", "")
+	if err != false {
 		t.Fatalf("none3 check failed")
 	}
 
