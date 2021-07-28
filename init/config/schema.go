@@ -19,10 +19,11 @@ type Primary struct {
 
 //Secondary ..
 type Secondary struct {
-	Modules    []string
-	Networking Networking
-	Wireguard  []Wireguard
-	Time       Time
+	Modules        []string
+	Networking     Networking
+	Wireguard      []Wireguard
+	Time           Time
+	Authenticators Authenticators
 }
 
 //Header ..
@@ -86,4 +87,9 @@ type Time struct {
 	NTP     bool
 	HWClock bool
 	Servers []string
+}
+
+//Authenticator
+type Authenticators struct {
+	Root string
 }

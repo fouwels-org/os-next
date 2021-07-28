@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"init/config"
+	"init/filesystem"
 	"io/ioutil"
 	"net"
 	"path/filepath"
@@ -65,7 +66,7 @@ func (n *Wireguard) Run(c config.Config) error {
 				return fmt.Errorf("failed to generate private key: %v", err)
 			}
 
-			err = ioutil.WriteFile(filepath.Clean(keypath+".private"), []byte(wgkey.String()), 0600)
+			err = filesystem.WriteSync(filepath.Clean(keypath+".private"), []byte(wgkey.String()))
 			if err != nil {
 				return fmt.Errorf("failed to save wg key: %v", err)
 			}
@@ -79,7 +80,7 @@ func (n *Wireguard) Run(c config.Config) error {
 			n.finals = append(n.finals, "private key Loaded")
 		}
 
-		err = ioutil.WriteFile(filepath.Clean(keypath+".pub.qr"), []byte(n.writeQR(wgkey.PublicKey())), 0644)
+		err = filesystem.WriteSync(filepath.Clean(keypath+".pub.qr"), []byte(n.writeQR(wgkey.PublicKey())))
 		if err != nil {
 			return fmt.Errorf("failed to write public key QR: %v", err)
 		}

@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
-# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
+# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels<kaelan.thijs@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 /kernel/arch/x86/crypto/aesni-intel.ko
@@ -9,20 +9,28 @@
 /kernel/arch/x86/crypto/curve25519-x86_64.ko
 /kernel/arch/x86/crypto/glue_helper.ko
 /kernel/arch/x86/crypto/poly1305-x86_64.ko
+/kernel/arch/x86/kvm/kvm-intel.ko
+/kernel/arch/x86/kvm/kvm.ko
 /kernel/block/t10-pi.ko
 /kernel/crypto/crc32c_generic.ko
 /kernel/crypto/cryptd.ko
 /kernel/crypto/crypto_simd.ko
 /kernel/crypto/xor.ko
+/kernel/drivers/acpi/video.ko
 /kernel/drivers/ata/ahci.ko
 /kernel/drivers/ata/libahci.ko
 /kernel/drivers/ata/libata.ko
+/kernel/drivers/char/agp/agpgart.ko
+/kernel/drivers/char/agp/intel-gtt.ko
 /kernel/drivers/char/hw_random/rng-core.ko
-/kernel/drivers/char/tpm/tpm.ko
 /kernel/drivers/char/tpm/tpm_crb.ko
-/kernel/drivers/char/tpm/tpm_tis.ko
 /kernel/drivers/char/tpm/tpm_tis_core.ko
+/kernel/drivers/char/tpm/tpm_tis.ko
+/kernel/drivers/char/tpm/tpm.ko
 /kernel/drivers/dca/dca.ko
+/kernel/drivers/gpu/drm/drm_kms_helper.ko
+/kernel/drivers/gpu/drm/drm.ko
+/kernel/drivers/gpu/drm/i915/i915.ko
 /kernel/drivers/hid/hid-generic.ko
 /kernel/drivers/hid/hid.ko
 /kernel/drivers/hid/usbhid/usbhid.ko
@@ -31,6 +39,7 @@
 /kernel/drivers/i2c/i2c-core.ko
 /kernel/drivers/md/dm-crypt.ko
 /kernel/drivers/md/dm-mod.ko
+/kernel/drivers/media/cec/core/cec.ko
 /kernel/drivers/net/ethernet/intel/e1000e/e1000e.ko
 /kernel/drivers/net/ethernet/intel/igb/igb.ko
 /kernel/drivers/net/veth.ko
@@ -39,15 +48,18 @@
 /kernel/drivers/nvme/host/nvme.ko
 /kernel/drivers/scsi/scsi_mod.ko
 /kernel/drivers/scsi/sd_mod.ko
-/kernel/drivers/uio/uio.ko
 /kernel/drivers/uio/uio_netx.ko
+/kernel/drivers/uio/uio.ko
 /kernel/drivers/usb/core/usbcore.ko
 /kernel/drivers/usb/host/xhci-hcd.ko
 /kernel/drivers/usb/host/xhci-pci.ko
 /kernel/drivers/usb/serial/usbserial.ko
 /kernel/drivers/usb/storage/uas.ko
 /kernel/drivers/usb/storage/usb-storage.ko
-/kernel/fs/btrfs/btrfs.ko
+/kernel/drivers/video/fbdev/core/fb_sys_fops.ko
+/kernel/drivers/video/fbdev/core/syscopyarea.ko
+/kernel/drivers/video/fbdev/core/sysfillrect.ko
+/kernel/drivers/video/fbdev/core/sysimgblt.ko
 /kernel/fs/ext4/ext4.ko
 /kernel/fs/fat/fat.ko
 /kernel/fs/fat/vfat.ko
@@ -63,8 +75,6 @@
 /kernel/lib/crypto/libchacha20poly1305.ko
 /kernel/lib/crypto/libcurve25519-generic.ko
 /kernel/lib/libcrc32c.ko
-/kernel/lib/raid6/raid6_pq.ko
-/kernel/lib/zstd/zstd_compress.ko
 /kernel/net/802/stp.ko
 /kernel/net/bridge/br_netfilter.ko
 /kernel/net/bridge/bridge.ko
@@ -77,16 +87,17 @@
 /kernel/net/ipv6/ipv6.ko
 /kernel/net/ipv6/netfilter/nf_defrag_ipv6.ko
 /kernel/net/llc/llc.ko
-/kernel/net/netfilter/nf_conntrack.ko
 /kernel/net/netfilter/nf_conntrack_netlink.ko
+/kernel/net/netfilter/nf_conntrack.ko
 /kernel/net/netfilter/nf_nat.ko
 /kernel/net/netfilter/nfnetlink.ko
 /kernel/net/netfilter/x_tables.ko
-/kernel/net/netfilter/xt_MASQUERADE.ko
 /kernel/net/netfilter/xt_addrtype.ko
 /kernel/net/netfilter/xt_conntrack.ko
+/kernel/net/netfilter/xt_MASQUERADE.ko
 /kernel/net/packet/af_packet.ko
 /kernel/net/xfrm/xfrm_algo.ko
 /kernel/net/xfrm/xfrm_user.ko
 /kernel/security/keys/encrypted-keys/encrypted-keys.ko
 /kernel/security/keys/trusted-keys/trusted.ko
+/kernel/virt/lib/irqbypass.ko

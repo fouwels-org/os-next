@@ -34,7 +34,7 @@ func main() {
 	}
 
 	// Sync file system
-	_, _, serr := syscall.Syscall(306, 0, 0, 0)
+	_, _, serr := syscall.Syscall(syscall.SYS_SYNC, 0, 0, 0)
 	if serr != 0 {
 		log.Printf("failed to sync file system: %v", err)
 	}
@@ -70,20 +70,13 @@ func run() error {
 	libinit.CreateRootfs()
 
 	// run the user defined init tasks
-	err = uinit()
+	cfg, err := uinit()
 	if err != nil {
-
-		log.Printf("init failed: %v", err)
-
-		err = console.StartRecovery()
-		if err != nil {
-			return fmt.Errorf("failed to run recovery console: %w", err)
-		}
-		return err
+		return fmt.Errorf("init failed: %v", err)
 	}
 
 	// start the console
-	err = console.Start()
+	err = console.Start(cfg.Secondary.Authenticators)
 	if err != nil {
 		return fmt.Errorf("failed to run console: %w", err)
 	}
@@ -93,7 +86,7 @@ func run() error {
 
 // uinit loads the primary and secondary boot stages after the kernel hands over to the init process
 // Returns nil if both stages loads successfully, otherwise error
-func uinit() error {
+func uinit() (config.Config, error) {
 	c := config.Config{}
 
 	primary := []stages.IStage{
@@ -118,7 +111,7 @@ func uinit() error {
 
 	err := config.LoadConfig(_configPrimaryPath, &configPrimary)
 	if err != nil {
-		return fmt.Errorf("failed to load primary config from %v: %v", _configPrimaryPath, err)
+		return config.Config{}, fmt.Errorf("failed to load primary config from %v: %v", _configPrimaryPath, err)
 	}
 	c.Primary = configPrimary.Primary
 
@@ -126,7 +119,7 @@ func uinit() error {
 
 	err = executeStages(c, primary)
 	if err != nil {
-		return fmt.Errorf("primary: %w", err)
+		return config.Config{}, fmt.Errorf("primary: %w", err)
 	}
 
 	log.Printf("[uinit] messages (primary):")
@@ -148,7 +141,7 @@ func uinit() error {
 	configSecondary := config.SecondaryFile{}
 	err = config.LoadConfig(_configSecondaryPath, &configSecondary)
 	if err != nil {
-		return fmt.Errorf("failed to find secondary config, not running second stage: %v", err)
+		return config.Config{}, fmt.Errorf("failed to find secondary config, not running second stage: %v", err)
 	}
 
 	c.Secondary = configSecondary.Secondary
@@ -157,7 +150,7 @@ func uinit() error {
 
 	err = executeStages(c, secondary)
 	if err != nil {
-		return fmt.Errorf("secondary: %w", err)
+		return config.Config{}, fmt.Errorf("secondary: %w", err)
 	}
 
 	log.Printf("[uinit] messages (secondary):")
@@ -176,7 +169,7 @@ func uinit() error {
 
 	log.Printf("[uinit] initialisation complete")
 
-	return nil
+	return c, nil
 }
 
 func executeStages(c config.Config, sts []stages.IStage) error {
@@ -186,11 +179,6 @@ func executeStages(c config.Config, sts []stages.IStage) error {
 		log.Printf("[%v] starting", st)
 
 		err := st.Run(c)
-		_, _, serr := syscall.Syscall(306, 0, 0, 0) //SYNC_FS
-		if serr != 0 {
-			log.Printf("failed to sync file system: %v", err)
-		}
-
 		if err != nil {
 
 			switch st.Policy() {
@@ -200,8 +188,15 @@ func executeStages(c config.Config, sts []stages.IStage) error {
 			case stages.PolicySoft:
 				log.Printf("[%v] failed (soft): %v", st, err)
 			}
+
 		} else {
 			log.Printf("[%v] succeeded", st)
+		}
+
+		// Sync file system
+		_, _, serr := syscall.Syscall(syscall.SYS_SYNC, 0, 0, 0)
+		if serr != 0 {
+			log.Printf("failed to sync file system after %v: %v", st, err)
 		}
 	}
 

@@ -7,7 +7,10 @@ package console
 
 import (
 	"bufio"
+	"crypto"
+	_ "crypto/sha256"
 	"fmt"
+	"init/config"
 	"init/shell"
 	"log"
 	"os"
@@ -15,12 +18,10 @@ import (
 	"time"
 )
 
-const _authenticator = "Fouwels13"
-
 // Start runtime console
-func Start() error {
+func Start(auth config.Authenticators) error {
 
-	err := login()
+	err := login(auth)
 	if err != nil {
 		return err
 	}
@@ -32,14 +33,7 @@ func Start() error {
 	return nil
 }
 
-// Start recovery console
-func StartRecovery() error {
-
-	// aliased to standard console for now
-	return Start()
-}
-
-func login() error {
+func login(auth config.Authenticators) error {
 
 	success := false
 	reader := bufio.NewReader(os.Stdin)
@@ -51,12 +45,13 @@ func login() error {
 	for !success {
 		fmt.Printf("enter authenticator for shell\n> ")
 		text, err := reader.ReadString('\n')
-
 		if err != nil {
 			return fmt.Errorf("failed to read stdin: %w", err)
 		}
 
-		if strings.TrimSuffix(text, "\n") == _authenticator {
+		santext := strings.TrimSuffix(text, "\n")
+
+		if checkPasswordHash(auth.Root, santext) {
 			success = true
 			log.Printf("user succeeded to authenticate")
 		} else {
@@ -67,6 +62,23 @@ func login() error {
 	}
 
 	return nil
+}
+
+func checkPasswordHash(hash string, text string) bool {
+
+	hasher := crypto.SHA256.New()
+	_, err := hasher.Write([]byte(text))
+	if err != nil {
+		log.Printf("failed to write hash for login: %v", err)
+		return false
+	}
+	textHash := fmt.Sprintf("%x", hasher.Sum(nil))
+
+	if textHash == hash {
+		return true
+	} else {
+		return false
+	}
 }
 
 func bash() error {

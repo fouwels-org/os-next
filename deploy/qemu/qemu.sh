@@ -100,10 +100,10 @@ EOF
         -device virtio-rng-pci \
         -device e1000e,netdev=n1 \
         -device nvme,drive=os2,serial=nvme-1 \
-        -device tpm-tis,tpmdev=tpm0 \
-        -netdev user,id=n1 \
-        -chardev socket,id=chrtpm,path=$TPM_PATH/socket \
-        -tpmdev emulator,id=tpm0,chardev=chrtpm
+        -netdev user,id=n1 
+        #-chardev socket,id=chrtpm,path=$TPM_PATH/socket 
+        #-tpmdev emulator,id=tpm0,chardev=chrtpm
+        #-device tpm-tis,tpmdev=tpm0 \
 
 }
 

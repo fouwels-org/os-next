@@ -6,7 +6,9 @@ header:
   site: default
   comment: default secondary configuration installed during provisioning
 secondary:
-  modules: []
+  modules: 
+    - kvm
+    - kvm-intel
   networking:
     networks:
       - device: eth0
@@ -26,3 +28,5 @@ secondary:
     servers:
       - 0.uk.pool.ntp.org
       - 1.uk.pool.ntp.org
+  authenticators:
+    root: c244288d0bbe1cc172790ca16505c3758c2a288bd701df8644cf24fd016f2193

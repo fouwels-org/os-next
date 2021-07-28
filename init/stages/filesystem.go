@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"init/config"
 	"init/disks"
+	"init/filesystem"
 	"init/shell"
 	"io/ioutil"
 	"log"
@@ -86,12 +87,10 @@ func (n *Filesystem) Run(c config.Config) error {
 		if err != nil {
 			return fmt.Errorf("failed to copy secondary config: %w", err)
 		}
-		err = ioutil.WriteFile("/var/config/secondary.yml", secondary, 0644)
+
+		err = filesystem.WriteSync("/var/config/secondary.yml", secondary)
 		if err != nil {
-			return fmt.Errorf("failed to copy secondary config: %w", err)
-		}
-		if err != nil {
-			return fmt.Errorf("failed to symlink default secondary config: %w", err)
+			return fmt.Errorf("failed to install secondary config: %w", err)
 		}
 
 		n.finals = append(n.finals, "default secondary configuration was written to /var/config/secondary.yml")

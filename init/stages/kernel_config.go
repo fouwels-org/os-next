@@ -7,7 +7,7 @@ package stages
 import (
 	"fmt"
 	"init/config"
-	"io/ioutil"
+	"init/filesystem"
 )
 
 //KernelConfig implements IStage
@@ -33,7 +33,7 @@ func (n *KernelConfig) Finalise() []string {
 //Run ..
 func (n *KernelConfig) Run(c config.Config) error {
 
-	err := ioutil.WriteFile("/sys/fs/cgroup/memory/memory.use_hierarchy", []byte("1"), 0644)
+	err := filesystem.WriteSync("/sys/fs/cgroup/memory/memory.use_hierarchy", []byte("1"))
 	if err != nil {
 		return fmt.Errorf("failed to set file: %w", err)
 	}

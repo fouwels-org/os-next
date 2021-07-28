@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"init/config"
 	"init/tpm"
-	"log"
 )
 
 //TPM implements IStage
@@ -18,12 +17,12 @@ type TPM struct {
 
 //String ..
 func (n *TPM) String() string {
-	return "time"
+	return "TPM"
 }
 
 //Policy ..
 func (n *TPM) Policy() Policy {
-	return PolicyHard
+	return PolicySoft
 }
 
 //Finalise ..
@@ -39,8 +38,13 @@ func (n *TPM) Run(c config.Config) (e error) {
 		return fmt.Errorf("failed to read TPM PCRs: %w", err)
 	}
 
+	str := ""
+
 	for _, v := range values {
-		log.Printf("%v 0x%X (%X)", v.ID, v.Value, v.Value[len(v.Value)-3:])
+		str = str + fmt.Sprintf("%X", v.Value[len(v.Value)-2:]) + "-"
 	}
+
+	n.finals = append(n.finals, str[:len(str)-1])
+
 	return nil
 }

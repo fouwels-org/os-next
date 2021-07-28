@@ -7,7 +7,7 @@ package stages
 import (
 	"fmt"
 	"init/config"
-	"io/ioutil"
+	"init/filesystem"
 )
 
 //Microcode implementes IStage
@@ -33,7 +33,7 @@ func (m *Microcode) Finalise() []string {
 //Run ..
 func (m *Microcode) Run(c config.Config) error {
 
-	err := ioutil.WriteFile("/sys/devices/system/cpu/microcode/reload", []byte("1"), 0644)
+	err := filesystem.WriteSync("/sys/devices/system/cpu/microcode/reload", []byte("1"))
 	if err != nil {
 		return fmt.Errorf("failed to trigger microcode load: %w", err)
 	}

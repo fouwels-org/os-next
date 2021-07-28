@@ -15,7 +15,6 @@ primary:
     - igb
     - e1000e
     - ipv6
-    - btrfs
     - usbhid
     - hid_generic
     - hid
@@ -34,9 +33,9 @@ primary:
     - nls_cp437
     - wireguard
     - uio_netx
-    - tpm_tis
-    - tpm_tis_core
     - nvme
+    - video
+    - i915
   filesystem:
     devices:
       - label: BOOT
