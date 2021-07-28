@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
-# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
+# SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels<kaelan.thijs@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 /kernel/arch/x86/crypto/aesni-intel.ko
@@ -9,6 +9,8 @@
 /kernel/arch/x86/crypto/curve25519-x86_64.ko
 /kernel/arch/x86/crypto/glue_helper.ko
 /kernel/arch/x86/crypto/poly1305-x86_64.ko
+/kernel/arch/x86/kvm/kvm-intel.ko
+/kernel/arch/x86/kvm/kvm.ko
 /kernel/block/t10-pi.ko
 /kernel/crypto/crc32c_generic.ko
 /kernel/crypto/cryptd.ko
@@ -104,3 +106,4 @@
 /kernel/net/xfrm/xfrm_user.ko
 /kernel/security/keys/encrypted-keys/encrypted-keys.ko
 /kernel/security/keys/trusted-keys/trusted.ko
+/kernel/virt/lib/irqbypass.ko

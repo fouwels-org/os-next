@@ -118,6 +118,7 @@ COPY config/modules .
 RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/modules.txt
 RUN if [ "${CONFIG_MODULES}" != "ALL" ]; then find /rootfs/lib/modules | grep "\.ko$" | grep -v -f ${CONFIG_MODULES} | xargs rm; fi;
 RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/modules_selected.txt
+RUN find /rootfs/lib/modules | grep "\.ko$" | xargs du -sh | sort -rh > ${OUT_DIR}/modules_selected_size.txt
 
 # Optimise rootfs
 RUN find /rootfs -executable -type f | xargs strip || true
@@ -150,10 +151,10 @@ RUN cd linux-${VERSION_KERNEL} && sed -i -e 's/$(ZSTD) -22 --ultra/$(ZSTD) -T0 -
 
 # Build final kernel with real initramfs
 RUN cd linux-${VERSION_KERNEL} && make CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc) 
-RUN cd linux-${VERSION_KERNEL} && cp arch/x86_64/boot/bzImage ${OUT_DIR}/BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.ZSTD.$COMPRESSION_LEVEL.EFI
 
-# Create BOOTx64.EFI symlink
-RUN cd ${OUT_DIR} && ln -s BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.ZSTD.$COMPRESSION_LEVEL.EFI BOOTx64.EFI
+# Create BOOTx64.EFI symlink. MD5 is fine as this is not for security, only for a 128 bit hash filename
+RUN HASH=($(md5sum linux-${VERSION_KERNEL}/arch/x86_64/boot/bzImage)) && cp linux-${VERSION_KERNEL}/arch/x86_64/boot/bzImage ${OUT_DIR}/${HASH}.EFI && \
+    cd ${OUT_DIR} && ln -s ${HASH}.EFI BOOTx64.EFI && ln -s ${HASH}.EFI BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.ZSTD$COMPRESSION_LEVEL.EFI
 
 FROM alpine:3.14.0
 COPY --from=0 /build/out /build/out
