@@ -37,6 +37,8 @@ primary:
     - tpm_tis
     - tpm_tis_core
     - nvme
+    - video
+    - i915
   filesystem:
     devices:
       - label: BOOT
