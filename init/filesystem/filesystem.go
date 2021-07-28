@@ -7,11 +7,12 @@ package filesystem
 import (
 	"fmt"
 	"os"
+	"path"
 )
 
 func WriteSync(filename string, content []byte) error {
 
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(path.Clean(filename), os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to create: %v", err)
 	}

@@ -67,7 +67,11 @@ func login(auth config.Authenticators) error {
 func checkPasswordHash(hash string, text string) bool {
 
 	hasher := crypto.SHA256.New()
-	hasher.Write([]byte(text))
+	_, err := hasher.Write([]byte(text))
+	if err != nil {
+		log.Printf("failed to write hash for login: %v", err)
+		return false
+	}
 	textHash := fmt.Sprintf("%x", hasher.Sum(nil))
 
 	if textHash == hash {
