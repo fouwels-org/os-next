@@ -73,8 +73,10 @@ func (s *ShellExecutor) ExecuteDaemon(c Command, writer io.Writer) error {
 	go func(cmd *exec.Cmd, writer io.Writer) {
 		for {
 			err := cmd.Run()
-			_, err = writer.Write([]byte(fmt.Sprintf("daemon exit with err! Restarting after 5s!: %v\n", err)))
-			log.Printf("failed to write to writer for daemon %v: %v", c, err)
+			_, err = writer.Write([]byte(fmt.Sprintf("**daemon exit with err - restarting**: %v\n", err)))
+			if err != nil {
+				log.Printf("failed to write to writer for daemon %v: %v", c, err)
+			}
 			time.Sleep(5 * time.Second)
 		}
 	}(cmd, writer)

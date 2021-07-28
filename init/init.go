@@ -72,7 +72,6 @@ func run() error {
 	// run the user defined init tasks
 	cfg, err := uinit()
 	if err != nil {
-
 		return fmt.Errorf("init failed: %v", err)
 	}
 

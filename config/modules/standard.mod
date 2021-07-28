@@ -17,7 +17,6 @@
 /kernel/crypto/crypto_simd.ko
 /kernel/crypto/xor.ko
 /kernel/drivers/acpi/video.ko
-/kernel/drivers/acpi/video.ko
 /kernel/drivers/ata/ahci.ko
 /kernel/drivers/ata/libahci.ko
 /kernel/drivers/ata/libata.ko
@@ -37,8 +36,6 @@
 /kernel/drivers/hid/usbhid/usbhid.ko
 /kernel/drivers/hwmon/hwmon.ko
 /kernel/drivers/i2c/algos/i2c-algo-bit.ko
-/kernel/drivers/i2c/algos/i2c-algo-bit.ko
-/kernel/drivers/i2c/i2c-core.ko
 /kernel/drivers/i2c/i2c-core.ko
 /kernel/drivers/md/dm-crypt.ko
 /kernel/drivers/md/dm-mod.ko
@@ -63,7 +60,6 @@
 /kernel/drivers/video/fbdev/core/syscopyarea.ko
 /kernel/drivers/video/fbdev/core/sysfillrect.ko
 /kernel/drivers/video/fbdev/core/sysimgblt.ko
-/kernel/fs/btrfs/btrfs.ko
 /kernel/fs/ext4/ext4.ko
 /kernel/fs/fat/fat.ko
 /kernel/fs/fat/vfat.ko
@@ -79,8 +75,6 @@
 /kernel/lib/crypto/libchacha20poly1305.ko
 /kernel/lib/crypto/libcurve25519-generic.ko
 /kernel/lib/libcrc32c.ko
-/kernel/lib/raid6/raid6_pq.ko
-/kernel/lib/zstd/zstd_compress.ko
 /kernel/net/802/stp.ko
 /kernel/net/bridge/br_netfilter.ko
 /kernel/net/bridge/bridge.ko

@@ -22,7 +22,7 @@ func (n *TPM) String() string {
 
 //Policy ..
 func (n *TPM) Policy() Policy {
-	return PolicyHard
+	return PolicySoft
 }
 
 //Finalise ..
