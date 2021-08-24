@@ -24,7 +24,7 @@ Build the kernel EFI (`make <target> # make k300|schneider|...`)
 
 The following build arguments are specified.
 
-_Included for documentatin, see Makefile for existing targets, makefile should be used instead of direct calling_
+_Included for documentation, see Makefile for existing targets, makefile should be used instead of direct calling_
 
     --build-arg CONFIG_PRIMARY=standard.yml # One of config/primary
     --build-arg CONFIG_MODULES=ALL # ALL or One of config/modules
