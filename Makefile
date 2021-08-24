@@ -12,19 +12,13 @@ turbo: # fast target for development/qemu
 	--build-arg CONFIG_MODULES=standard.mod \
 	-t containers.fouwels.app/os-next:local .
 
-k300: # OnLogic K300 target
+standard: # standard target
 	docker build \
 	--build-arg CONFIG_PRIMARY=standard.yml \
 	--build-arg CONFIG_MODULES=standard.mod \
 	-t containers.fouwels.app/os-next:local .
 
-magellis: # Schneider Magellis target
-	docker build \
-	--build-arg CONFIG_PRIMARY=standard.yml \
-	--build-arg CONFIG_MODULES=standard.mod \
-	-t containers.fouwels.app/os-next:local .
-
-all: # Generic fat target with all modules
+all: # fat target with all modules
 	docker build \
 	--build-arg CONFIG_PRIMARY=standard.yml \
 	--build-arg CONFIG_MODULES=ALL \

@@ -13,15 +13,12 @@ import (
 //SelfTest tests defined executables to ensure they exist
 func SelfTest() error {
 	es := []Executable{
-		Login,
-		Ntpd,
+		Sntp,
 		Modprobe,
 		Hwclock,
-		IP,
-		Udhcp,
+		DHCP,
 		Dockerd,
 		Docker,
-		Mkdir,
 		Mount,
 		Blkid,
 	}

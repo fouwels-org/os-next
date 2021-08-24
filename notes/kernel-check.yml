@@ -6,7 +6,7 @@
 version: "2"
 services:
   kernel-check:
-    image: containers.fouwels.app/kernel-check:dev
+    image: containers.fouwels.app/fouwels/kernel-check:dev
     container_name: kernel-check
     build:
       dockerfile: Dockerfile.check

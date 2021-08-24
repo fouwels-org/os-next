@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 )
 
 //Filesystem implements IStage
@@ -66,14 +67,17 @@ func (n *Filesystem) Run(c config.Config) error {
 			return fmt.Errorf("device %v label %v does not match expected %v, will not mount filesystem", blk.Device, v.Label, blk.LABEL)
 		}
 
-		// Mount it
-		commands := []shell.Command{
-			{Executable: shell.Mkdir, Arguments: []string{"-p", v.MountPoint}},
-			{Executable: shell.Mount, Arguments: []string{"-t", v.FileSystem, blk.Device, v.MountPoint}},
+		err := os.MkdirAll(path.Clean(v.MountPoint), 0755)
+		if err != nil {
+			return fmt.Errorf("failed to create mountpoint %s: %w", v.MountPoint, err)
 		}
 
+		// Mount it
+		commands := []shell.Command{
+			{Executable: shell.Mount, Arguments: []string{"-t", v.FileSystem, blk.Device, v.MountPoint}},
+		}
 		// If cannot mount, return with err
-		err := shell.Executor.Execute(commands)
+		err = shell.Executor.Execute(commands)
 		if err != nil {
 			log.Printf("failed to mount: %v", err)
 		}

@@ -1,7 +1,7 @@
 Z9 # SPDX-License-Identifier: Apache-2.0
-Z8 # SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
-Z7 #
-Z6 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+Z8 #
+Z7 # SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+Z6 # SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 CONFIG_ZSTD_DECOMPRESS=y
 CONFIG_ZSTD_COMPRESS=m
 CONFIG_ZSMALLOC=y

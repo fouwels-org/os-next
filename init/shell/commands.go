@@ -5,15 +5,12 @@
 
 package shell
 
-const Login Executable = "/bin/login"
-const Ntpd Executable = "/sbin/ntpd"
+const Sntp Executable = "/usr/bin/sntp"
 const Modprobe Executable = "/sbin/modprobe"
 const Hwclock Executable = "/sbin/hwclock"
-const IP Executable = "/sbin/ip"
-const Udhcp Executable = "/sbin/udhcpc"
+const DHCP Executable = "/sbin/dhcp"
 const Dockerd Executable = "/usr/bin/dockerd"
 const Docker Executable = "/usr/bin/docker"
-const Mkdir Executable = "/bin/mkdir"
 const Mount Executable = "/bin/mount"
 const Ash Executable = "/bin/ash"
 const Blkid Executable = "/sbin/blkid"

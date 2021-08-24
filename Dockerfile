@@ -32,6 +32,7 @@ ENV VERSION_BUSYBOX=1.33.1
 ENV VERSION_WGTOOLS=v1.0.20210424
 ENV VERSION_MICROCODE_INTEL=20210608
 ENV VERSION_IPTABLES=1.8.7
+ENV VERSION_TOYBOX=0.8.5
 
 # Flags
 ENV CONFIG_KERNEL=5.10.1-rt20
@@ -43,7 +44,7 @@ RUN wget -q -O musl.tar.gz https://www.musl-libc.org/releases/musl-${VERSION_MUS
 RUN wget -q -O docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-${VERSION_DOCKER}.tgz
 RUN wget -q -O wireguard.tar.xz https://git.zx2c4.com/wireguard-tools/snapshot/wireguard-tools-${VERSION_WGTOOLS}.tar.xz
 RUN wget -q -O iptables.tar.bz2  https://netfilter.org/projects/iptables/files/iptables-${VERSION_IPTABLES}.tar.bz2
-RUN wget -q -O busybox.tar.bz2 https://busybox.net/downloads/busybox-${VERSION_BUSYBOX}.tar.bz2
+RUN wget -q -O toybox.tar.gz https://github.com/landley/toybox/archive/refs/tags/${VERSION_TOYBOX}.tar.gz
 RUN wget -q -O microcode.tar.gz https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/refs/tags/microcode-${VERSION_MICROCODE_INTEL}.tar.gz 
 
 # Verify sources
@@ -53,7 +54,7 @@ RUN echo "9b969322012d796dc23dda27a35866034fa67d8fb67e0e2c45c913c3d43219dd musl.
 RUN echo "34ad50146fce29b28e5115a1e8510dd5232459c9a4a9f28f65909f92cca314d9 docker.tgz" | sha256sum -c -
 RUN echo "98140aa91ea04018ebd874c14ab9b6994f48cdaf9a219ccf7c0cd3e513c7428a wireguard.tar.xz" | sha256sum -c -
 RUN echo "c109c96bb04998cd44156622d36f8e04b140701ec60531a10668cfdff5e8d8f0 iptables.tar.bz2" | sha256sum -c -
-RUN echo "12cec6bd2b16d8a9446dd16130f2b92982f1819f6e1c5f5887b6db03f5660d28 busybox.tar.bz2" | sha256sum -c -
+RUN echo "27cc073222f3b726ee10d96c4f32ac2c4c936b07ea195227736755971e6d90c9 toybox.tar.gz" | sha256sum -c -
 RUN echo "fd85b6b769efd029dec6a2c07106fd18fb4dcb548b7bc4cde09295a8344ef6d7 microcode.tar.gz" | sha256sum -c -
 
 # Patch kernel
@@ -71,18 +72,18 @@ RUN tar -xf musl.tar.gz
 RUN cd musl-${VERSION_MUSL} && ./configure --prefix=/usr
 RUN cd musl-${VERSION_MUSL} && make -j $(nproc)
 
-# Build docker
+# "Build" docker
 RUN tar -xf docker.tgz
 
 # Build wg-tools
 RUN tar -xf wireguard.tar.xz
 RUN cd wireguard-tools-${VERSION_WGTOOLS}/src && make -j $(nproc)
 
-# Build busybox
-RUN tar -xf busybox.tar.bz2
-COPY config/busybox-config busybox-${VERSION_BUSYBOX}/.config
-RUN cd busybox-${VERSION_BUSYBOX} && make oldconfig
-RUN cd busybox-${VERSION_BUSYBOX} && make -j $(nproc)
+# Build toybox
+RUN tar -xf toybox.tar.gz
+COPY config/toybox-config toybox-${VERSION_TOYBOX}/.config
+RUN cd toybox-${VERSION_TOYBOX} && ./configure --prefix=/
+RUN cd toybox-${VERSION_TOYBOX} && LDFLAGS="--static" make -j $(nproc)
 
 # Build iptables
 RUN tar -xf iptables.tar.bz2
@@ -102,15 +103,16 @@ RUN mkdir -p /lib/firmware/intel-ucode && cp -r Intel-Linux-Processor-Microcode-
 RUN cd linux-${VERSION_KERNEL} && mkdir -p /rootfs && make -j $(nproc) INSTALL_MOD_PATH=/rootfs modules_install
 
 # Install packages to rootfs
-RUN cd busybox-${VERSION_BUSYBOX} && make -j $(nproc) CONFIG_PREFIX=/rootfs install
+RUN cd toybox-${VERSION_TOYBOX} && make -j $(nproc) PREFIX=/rootfs/tb install
 RUN cd musl-${VERSION_MUSL} && make -j $(nproc) DESTDIR=/rootfs install
 RUN cd iptables-${VERSION_IPTABLES} && make DESTDIR=/rootfs install
 RUN cp wireguard-tools-${VERSION_WGTOOLS}/src/wg /rootfs/usr/sbin/wg
 RUN cp docker/* /rootfs/usr/bin/
 
 # Add alpine packages
-RUN cd /bin && cp -t /rootfs/bin lsblk 
+RUN cd /bin && cp -t /rootfs/bin lsblk
 RUN cd /lib && cp -t /rootfs/lib libblkid.so.* libsmartcols.so.* libmount.so.*
+
 
 # Strip modules if specified
 ARG CONFIG_MODULES=ALL

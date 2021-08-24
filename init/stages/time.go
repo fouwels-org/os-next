@@ -1,4 +1,5 @@
 // SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+// SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,8 +9,6 @@ import (
 	"fmt"
 	"init/config"
 	"init/shell"
-	"log"
-	"os"
 	"time"
 )
 
@@ -36,52 +35,22 @@ func (n *Time) Finalise() []string {
 //Run ..
 func (n *Time) Run(c config.Config) (e error) {
 
-	// Configure NTP
-	f, err := os.OpenFile("/etc/ntp.conf", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to open file to write ntp settings: %v", err)
-	}
-	defer f.Close()
-
-	for _, ns := range c.Secondary.Time.Servers {
-		_, err = fmt.Fprintf(f, "server %v\n", ns)
-		if err != nil {
-			return fmt.Errorf("failed to write ntp server: %v", err)
-		}
-	}
-
-	err = f.Sync()
-	if err != nil {
-		return fmt.Errorf("failed to sync on %v: %v", f.Name(), err)
-	}
-
-	ferr := f.Close()
-	if ferr != nil {
-		e = fmt.Errorf("failed to close on %v: %w", f.Name(), ferr)
-	}
-
-	if len(c.Secondary.Time.Servers) != 0 {
-		n.finals = append(n.finals, fmt.Sprintf("NTP servers set to %v", c.Secondary.Time.Servers))
-	} else {
-		if c.Secondary.Time.NTP {
-			n.finals = append(n.finals, "warning: NTP enabled, but no NTP servers have been configured")
-		}
-	}
-
-	// Run command set
 	if c.Secondary.Time.NTP {
 
+		if len(c.Secondary.Time.Servers) == 0 {
+			return fmt.Errorf("NTP is enabled, but no NTP servers have been specified")
+		}
+
 		commands := []shell.Command{}
-		commands = append(commands, shell.Command{Executable: shell.Ntpd, Arguments: []string{"-q"}})
+		commands = append(commands, shell.Command{Executable: shell.Sntp, Arguments: []string{"-q", c.Secondary.Time.Servers[0]}})
 
 		err := shell.Executor.Execute(commands)
 		if err != nil {
-			log.Printf("Error updating NTP: %v", err)
+			n.finals = append(n.finals, fmt.Sprintf("warning: failed to update NTP from %v: %v", c.Secondary.Time.Servers[0], err))
 		}
 	} else {
-		n.finals = append(n.finals, "notice: NTP Disabled")
+		n.finals = append(n.finals, "notice: NTP is not enabled")
 	}
-
 	if c.Secondary.Time.HWClock {
 
 		commands := []shell.Command{}
@@ -89,7 +58,7 @@ func (n *Time) Run(c config.Config) (e error) {
 
 		err := shell.Executor.Execute(commands)
 		if err != nil {
-			log.Printf("Error setting HW Clock: %v", err)
+			n.finals = append(n.finals, fmt.Sprintf("warning: failed to set HW clock: %v", err))
 		}
 	} else {
 		n.finals = append(n.finals, "notice: HW Clock Disabled")

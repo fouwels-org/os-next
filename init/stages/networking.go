@@ -9,7 +9,10 @@ import (
 	"fmt"
 	"init/config"
 	"init/shell"
+	"net"
 	"os"
+
+	"github.com/vishvananda/netlink"
 )
 
 //Networking implements IStage
@@ -35,51 +38,111 @@ func (n *Networking) Finalise() []string {
 //Run ..
 func (n *Networking) Run(c config.Config) (e error) {
 
-	commands := []shell.Command{}
-	commands = append(commands, shell.Command{Executable: shell.IP, Arguments: []string{"link", "set", "dev", "lo", "up"}})
+	lo, err := netlink.LinkByName("lo")
+	if err != nil {
+		return fmt.Errorf("failed to get link lo: %w", err)
+	}
+	err = netlink.LinkSetUp(lo)
+	if err != nil {
+		return fmt.Errorf("failed to set link lo up: %w", err)
+	}
+
 	for _, nd := range c.Secondary.Networking.Networks {
 
 		if nd.Type != "" {
 
-			// If type not default, create as specified
-			commands = append(commands, shell.Command{Executable: shell.IP, Arguments: []string{"link", "add", "dev", nd.Device, "type", nd.Type}})
+			la := netlink.NewLinkAttrs()
+			la.Name = nd.Device
+
+			err := netlink.LinkAdd(&netlink.GenericLink{
+				LinkAttrs: la,
+				LinkType:  nd.Type,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to create link %v or type %v: %w", nd.Device, nd.Type, err)
+			}
+		}
+
+		link, err := netlink.LinkByName(nd.Device)
+		if err != nil {
+			return fmt.Errorf("failed to get link %v: %w", nd.Device, err)
+		}
+		err = netlink.LinkSetUp(link)
+		if err != nil {
+			return fmt.Errorf("failed to set link %v up: %w", nd.Device, err)
 		}
 
 		if nd.DHCP {
-			if nd.IPV6 {
-				commands = append(commands, shell.Command{Executable: shell.IP, Arguments: []string{"link", "set", "dev", nd.Device, "up"}})
-				commands = append(commands, shell.Command{Executable: shell.Udhcp, Arguments: []string{"-b", "-i", nd.Device, "-p", "/var/run/udhcpc.pid"}})
-			} else {
-				commands = append(commands, shell.Command{Executable: shell.IP, Arguments: []string{"link", "set", "dev", nd.Device, "up"}})
-				commands = append(commands, shell.Command{Executable: shell.Udhcp, Arguments: []string{"-b", "-i", nd.Device, "-p", "/var/run/udhcpc.pid"}})
+
+			com := []shell.Command{
+				// -i: interface
+				// -t: send up to n discover packets
+				// -T: pause between packets
+				// -f: run in foreground
+				// -n: exit if no lease
+				// -q: exit if lease
+				{Executable: shell.DHCP, Arguments: []string{"-i", nd.Device, "-t", "5", "-T", "3", "-f", "-n", "-q", "-p", "/var/run/dhcp.pid"}},
 			}
+
+			err = shell.Executor.Execute(com)
+			if err != nil {
+				return fmt.Errorf("failed to start udhcpc: %w", err)
+			}
+
 		} else {
 
-			commands = append(commands, shell.Command{Executable: shell.IP, Arguments: []string{"link", "set", "dev", nd.Device, "up"}})
-
 			for _, v := range nd.Addresses {
-				commands = append(commands, shell.Command{Executable: shell.IP, Arguments: []string{"addr", "add", v, "dev", nd.Device}})
+
+				addr, err := netlink.ParseAddr(v)
+				if err != nil {
+					return fmt.Errorf("failed to parse address %v: %w", v, err)
+				}
+				err = netlink.AddrAdd(link, addr)
+				if err != nil {
+					return fmt.Errorf("failed to add address %v to %v: %w", v, nd.Device, err)
+				}
 			}
 
 			if nd.DefaultGateway != "" {
-				commands = append(commands, shell.Command{Executable: shell.IP, Arguments: []string{"route", "add", "default", "via", nd.DefaultGateway, "dev", nd.Device}})
+
+				gatewayIP, err := netlink.ParseAddr(nd.DefaultGateway)
+				if err != nil {
+					return fmt.Errorf("failed to parse default gateway %v: %w", nd.DefaultGateway, err)
+				}
+
+				err = netlink.RouteAdd(&netlink.Route{
+					Scope:     netlink.SCOPE_UNIVERSE,
+					LinkIndex: link.Attrs().Index,
+					Dst:       &net.IPNet{IP: gatewayIP.IP, Mask: gatewayIP.Mask},
+				})
+				if err != nil {
+					return fmt.Errorf("failed to set default gateway for %v: %w", nd.Device, err)
+				}
 			}
 		}
 	}
 
-	err := shell.Executor.Execute(commands)
-	if err != nil {
-		return err
-	}
-
-	commands = []shell.Command{}
 	for _, rt := range c.Secondary.Networking.Routes {
-		commands = append(commands, shell.Command{Executable: shell.IP, Arguments: []string{"route", "add", rt.Address, "dev", rt.Device}})
-	}
 
-	err = shell.Executor.Execute(commands)
-	if err != nil {
-		return err
+		link, err := netlink.LinkByName(rt.Device)
+		if err != nil {
+			return fmt.Errorf("failed to get link %v: %w", rt.Device, err)
+		}
+
+		ip, err := netlink.ParseAddr(rt.Address)
+		if err != nil {
+			return fmt.Errorf("failed to parse link address %v: %w", rt, err)
+		}
+
+		err = netlink.RouteAdd(&netlink.Route{
+			Scope:     netlink.SCOPE_UNIVERSE,
+			LinkIndex: link.Attrs().Index,
+			Dst:       &net.IPNet{IP: ip.IP, Mask: ip.Mask},
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to set link %v: %w", rt, err)
+		}
 	}
 
 	if len(c.Secondary.Networking.Nameservers) != 0 {
