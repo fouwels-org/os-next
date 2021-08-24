@@ -6,10 +6,10 @@
 package diskfs_test
 
 import (
-	"init/contrib/diskfs"
-	"init/contrib/diskfs/table"
 	"log"
 	"os"
+	"os-next/third_party/diskfs"
+	"os-next/third_party/diskfs/table"
 	"testing"
 
 	"github.com/google/uuid"

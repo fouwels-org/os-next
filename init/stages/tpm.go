@@ -6,8 +6,8 @@ package stages
 
 import (
 	"fmt"
-	"init/config"
-	"init/tpm"
+	"os-next/init/config"
+	"os-next/init/tpm"
 )
 
 //TPM implements IStage

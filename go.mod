@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module init
+module os-next
 
-go 1.15
+go 1.16
 
 require (
 	github.com/google/go-tpm v0.3.2

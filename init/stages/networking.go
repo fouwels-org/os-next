@@ -7,9 +7,9 @@ package stages
 
 import (
 	"fmt"
-	"init/config"
-	"init/shell"
 	"os"
+	"os-next/init/config"
+	"os-next/init/shell"
 )
 
 //Networking implements IStage

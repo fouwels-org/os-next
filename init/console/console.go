@@ -9,10 +9,10 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
-	"init/config"
-	"init/shell"
 	"log"
 	"os"
+	"os-next/init/config"
+	"os-next/init/shell"
 	"strings"
 	"time"
 

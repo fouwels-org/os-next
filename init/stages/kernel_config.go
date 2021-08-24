@@ -6,8 +6,8 @@ package stages
 
 import (
 	"fmt"
-	"init/config"
-	"init/filesystem"
+	"os-next/init/config"
+	"os-next/init/filesystem"
 )
 
 //KernelConfig implements IStage

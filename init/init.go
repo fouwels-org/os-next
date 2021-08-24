@@ -7,14 +7,14 @@ package main
 
 import (
 	"fmt"
-	"init/config"
-	"init/console"
-	"init/contrib/u-root/libinit"
-	"init/kernel"
-	"init/shell"
-	"init/stages"
 	"log"
 	"os"
+	"os-next/init/config"
+	"os-next/init/console"
+	"os-next/init/kernel"
+	"os-next/init/shell"
+	"os-next/init/stages"
+	"os-next/third_party/u-root/libinit"
 	"syscall"
 	"time"
 )

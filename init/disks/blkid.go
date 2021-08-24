@@ -6,8 +6,8 @@ package disks
 
 import (
 	"fmt"
-	"init/shell"
 	"log"
+	"os-next/init/shell"
 	"strings"
 )
 
