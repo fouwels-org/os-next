@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os-next/contrib/u-root/libinit"
 	"os-next/init/config"
 	"os-next/init/console"
 	"os-next/init/kernel"
 	"os-next/init/shell"
 	"os-next/init/stages"
-	"os-next/third_party/u-root/libinit"
 	"syscall"
 	"time"
 )

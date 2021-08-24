@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"os-next/third_party/diskfs/table"
+	"os-next/contrib/diskfs/table"
 
 	"golang.org/x/sys/unix"
 )
