@@ -8,8 +8,8 @@ package diskfs_test
 import (
 	"log"
 	"os"
-	"os-next/contrib/diskfs"
-	"os-next/contrib/diskfs/table"
+	"os-next/init/external/diskfs"
+	"os-next/init/external/diskfs/table"
 	"testing"
 
 	"github.com/google/uuid"
