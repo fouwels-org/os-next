@@ -101,9 +101,9 @@ EOF
         -device e1000e,netdev=n1 \
         -device nvme,drive=os2,serial=nvme-1 \
         -netdev user,id=n1 
-        #-chardev socket,id=chrtpm,path=$TPM_PATH/socket 
-        #-tpmdev emulator,id=tpm0,chardev=chrtpm
-        #-device tpm-tis,tpmdev=tpm0 \
+        -chardev socket,id=chrtpm,path=$TPM_PATH/socket 
+        -tpmdev emulator,id=tpm0,chardev=chrtpm
+        -device tpm-tis,tpmdev=tpm0 \
 
 }
 

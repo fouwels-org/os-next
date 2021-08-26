@@ -8,13 +8,13 @@ package stages
 import (
 	"errors"
 	"fmt"
-	"init/config"
-	"init/disks"
-	"init/filesystem"
-	"init/shell"
 	"io/ioutil"
 	"log"
 	"os"
+	"os-next/init/config"
+	"os-next/init/disks"
+	"os-next/init/filesystem"
+	"os-next/init/shell"
 )
 
 //Filesystem implements IStage

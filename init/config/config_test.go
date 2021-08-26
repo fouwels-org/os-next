@@ -6,7 +6,7 @@
 package config_test
 
 import (
-	"init/config"
+	"os-next/init/config"
 	"testing"
 )
 

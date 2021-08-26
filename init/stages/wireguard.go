@@ -7,10 +7,10 @@ package stages
 import (
 	"bytes"
 	"fmt"
-	"init/config"
-	"init/filesystem"
 	"io/ioutil"
 	"net"
+	"os-next/init/config"
+	"os-next/init/filesystem"
 	"path/filepath"
 	"time"
 

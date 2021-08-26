@@ -127,13 +127,13 @@ RUN find /rootfs | grep ".\.a$" | xargs rm || true
 RUN find /rootfs | grep ".\.o$" | xargs rm || true
 
 # Cache go/init dependencies
-COPY init/go.mod init/go.mod
-COPY init/go.sum init/go.sum
-RUN cd init && go mod download
+COPY go.mod go.mod
+COPY go.sum go.sum
+RUN go mod download
 
 # Build go/init into rootfs
 COPY init init
-RUN cd init && go build -ldflags "-s -w" -o /rootfs/init && strip /rootfs/init
+RUN go build -ldflags "-s -w" -o /rootfs/init ./init && strip /rootfs/init
 
 # Copy in primary config, and default secondary config to rootfs
 ARG CONFIG_PRIMARY=CONFIG_PRIMARY_UNSET

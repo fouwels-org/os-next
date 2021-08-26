@@ -1,10 +1,11 @@
 // SPDX-FileCopyrightText: 2021 Belcan Advanced Solutions
+// SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module init
+module os-next
 
-go 1.15
+go 1.16
 
 require (
 	github.com/google/go-tpm v0.3.2

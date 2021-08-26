@@ -6,8 +6,8 @@ package stages
 
 import (
 	"fmt"
-	"init/config"
-	"init/shell"
+	"os-next/init/config"
+	"os-next/init/shell"
 )
 
 //Modules implementes IStage

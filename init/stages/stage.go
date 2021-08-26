@@ -4,7 +4,7 @@
 
 package stages
 
-import "init/config"
+import "os-next/init/config"
 
 type Policy int
 
