@@ -133,7 +133,7 @@ RUN go mod download
 
 # Build go/init into rootfs
 COPY init init
-RUN go build -ldflags "-s -w" -o /rootfs/init init && strip /rootfs/init
+RUN go build -ldflags "-s -w" -o /rootfs/init ./init && strip /rootfs/init
 
 # Copy in primary config, and default secondary config to rootfs
 ARG CONFIG_PRIMARY=CONFIG_PRIMARY_UNSET
