@@ -69,7 +69,7 @@ func (n *Filesystem) Run(c config.Config) error {
 		// Mount it
 		commands := []shell.Command{
 			{Executable: shell.Mkdir, Arguments: []string{"-p", v.MountPoint}},
-			{Executable: shell.Mount, Arguments: []string{"-t", v.FileSystem, blk.Device, v.MountPoint}},
+			{Executable: shell.Mount, Arguments: []string{"-o", "sync", "-t", v.FileSystem, blk.Device, v.MountPoint}},
 		}
 
 		// If cannot mount, return with err

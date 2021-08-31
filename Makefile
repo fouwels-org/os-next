@@ -3,7 +3,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-default: k300
+default: 	standard
+DRPC-230: 	standard # IMI DRPC-230 target
+k300: 		standard # OnLogic K300 target
+k700: 		standard # OnLogic K700 target
+magellis: 	standard # Schneider Magellis target
+
+standard: # Standard build configuration
+	docker build \
+	--build-arg CONFIG_PRIMARY=standard.yml \
+	--build-arg CONFIG_MODULES=standard.mod \
+	-t containers.fouwels.app/fouwels/os-next:local .
 
 turbo: # fast target for development/qemu
 	docker build \
@@ -12,19 +22,7 @@ turbo: # fast target for development/qemu
 	--build-arg CONFIG_MODULES=standard.mod \
 	-t containers.fouwels.app/fouwels/os-next:local .
 
-k300: # OnLogic K300 target
-	docker build \
-	--build-arg CONFIG_PRIMARY=standard.yml \
-	--build-arg CONFIG_MODULES=standard.mod \
-	-t containers.fouwels.app/fouwels/os-next:local .
-
-magellis: # Schneider Magellis target
-	docker build \
-	--build-arg CONFIG_PRIMARY=standard.yml \
-	--build-arg CONFIG_MODULES=standard.mod \
-	-t containers.fouwels.app/fouwels/os-next:local .
-
-all: # Generic fat target with all modules
+all: # Generic fat target with all modules available to be loaded
 	docker build \
 	--build-arg CONFIG_PRIMARY=standard.yml \
 	--build-arg CONFIG_MODULES=ALL \
