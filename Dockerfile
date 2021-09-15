@@ -116,8 +116,8 @@ RUN cp wireguard-tools-${VERSION_WGTOOLS}/src/wg /rootfs/usr/sbin/wg
 RUN cp docker/* /rootfs/usr/bin/
 
 # Install compose plugin
-RUN mkdir -p /rootfs/.docker/cli-plugins 
-RUN cd compose-${VERSION_COMPOSE} && cp docker-compose /rootfs/.docker/cli-plugins/docker-compose
+# RUN mkdir -p /rootfs/.docker/cli-plugins 
+# RUN cd compose-${VERSION_COMPOSE} && cp docker-compose /rootfs/.docker/cli-plugins/docker-compose
 
 # Add alpine packages
 RUN cd /bin && cp -t /rootfs/bin lsblk

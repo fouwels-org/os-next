@@ -11,7 +11,7 @@ build: standard
 standard: 	# Standard build configuration
 	docker build -t $(IMAGE):$(TAG) .
 
-turbo: 		# fast target for development/qemu
+fast: 		# fast target for development/qemu
 	docker build --build-arg COMPRESSION_LEVEL=9 -t $(IMAGE):$(TAG) .
 
 fat: 		# fat target with all modules packed and available to be loaded
