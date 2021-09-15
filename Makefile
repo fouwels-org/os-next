@@ -6,6 +6,8 @@
 IMAGE = containers.fouwels.app/fouwels/os-next
 TAG = local
 
+build: standard
+
 standard: 	# Standard build configuration
 	docker build -t $(IMAGE):$(TAG) .
 
