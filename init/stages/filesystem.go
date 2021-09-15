@@ -83,7 +83,7 @@ func (n *Filesystem) Run(c config.Config) error {
 	_, err = os.Stat("/var/config/secondary.yml")
 	if errors.Is(err, os.ErrNotExist) {
 
-		secondary, err := ioutil.ReadFile("/config/secondary.yml")
+		secondary, err := ioutil.ReadFile("/config/default_secondary.yml")
 		if err != nil {
 			return fmt.Errorf("failed to copy secondary config: %w", err)
 		}

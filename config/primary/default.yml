@@ -2,9 +2,10 @@
 # SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 header:
-  site: standard
-  comment: standard configuration
+  site: default
+  comment: default primary configuration baked into the EFI image
 primary:
   modules:
     - ahci

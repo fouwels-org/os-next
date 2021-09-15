@@ -2,9 +2,10 @@
 # SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 header:
   site: default
-  comment: default secondary configuration installed during provisioning
+  comment: default secondary configuration copied to the filesystem during auto-provisioning
 secondary:
   modules: 
     - kvm

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM alpine:3.14.0
+FROM alpine:3.14.1
 
 RUN apk --no-cache add \
     alpine-sdk argp-standalone asciidoc autoconf automake bc bison build-base ccache clang cmake cryptsetup coreutils \
@@ -32,6 +32,7 @@ ENV VERSION_BUSYBOX=1.33.1
 ENV VERSION_WGTOOLS=v1.0.20210424
 ENV VERSION_MICROCODE_INTEL=20210608
 ENV VERSION_IPTABLES=1.8.7
+ENV VERSION_COMPOSE=2.0.0-rc.3
 
 # Flags
 ENV CONFIG_KERNEL=5.10.1-rt20
@@ -45,6 +46,7 @@ RUN wget -q -O wireguard.tar.xz https://git.zx2c4.com/wireguard-tools/snapshot/w
 RUN wget -q -O iptables.tar.bz2  https://netfilter.org/projects/iptables/files/iptables-${VERSION_IPTABLES}.tar.bz2
 RUN wget -q -O busybox.tar.bz2 https://busybox.net/downloads/busybox-${VERSION_BUSYBOX}.tar.bz2
 RUN wget -q -O microcode.tar.gz https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/refs/tags/microcode-${VERSION_MICROCODE_INTEL}.tar.gz 
+RUN wget -q -O compose.tar.gz https://github.com/docker/compose/archive/refs/tags/v${VERSION_COMPOSE}.tar.gz
 
 # Verify sources
 RUN echo "f604759de80767c4f8bdc500eec730dc161bc914a48bd366b748c176701a6771 kernel.tar.xz" | sha256sum -c -
@@ -55,6 +57,7 @@ RUN echo "98140aa91ea04018ebd874c14ab9b6994f48cdaf9a219ccf7c0cd3e513c7428a wireg
 RUN echo "c109c96bb04998cd44156622d36f8e04b140701ec60531a10668cfdff5e8d8f0 iptables.tar.bz2" | sha256sum -c -
 RUN echo "12cec6bd2b16d8a9446dd16130f2b92982f1819f6e1c5f5887b6db03f5660d28 busybox.tar.bz2" | sha256sum -c -
 RUN echo "fd85b6b769efd029dec6a2c07106fd18fb4dcb548b7bc4cde09295a8344ef6d7 microcode.tar.gz" | sha256sum -c -
+RUN echo "4484a8f7bdb9a2ab697a1edbaa264718d1c3fd752e8cf0cea0494ae4d263c1b5 compose.tar.gz" | sha256sum -c -
 
 # Patch kernel
 RUN tar -xf kernel.tar.xz
@@ -89,6 +92,10 @@ RUN tar -xf iptables.tar.bz2
 RUN cd iptables-${VERSION_IPTABLES} && ./configure --prefix=/ --mandir=/tmp --disable-nftables
 RUN cd iptables-${VERSION_IPTABLES} && make EXTRA_CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc)
 
+# Build compose
+RUN tar -xf compose.tar.gz
+RUN cd compose-${VERSION_COMPOSE} && go build -o docker-compose ./cmd
+
 # Set up template rootfs
 COPY template_rootfs /template_rootfs
 COPY scripts/build-rootfs.sh .
@@ -108,13 +115,17 @@ RUN cd iptables-${VERSION_IPTABLES} && make DESTDIR=/rootfs install
 RUN cp wireguard-tools-${VERSION_WGTOOLS}/src/wg /rootfs/usr/sbin/wg
 RUN cp docker/* /rootfs/usr/bin/
 
+# Install compose plugin
+RUN mkdir -p /rootfs/root/.docker/cli-plugins 
+RUN cd compose-${VERSION_COMPOSE} && cp docker-compose /rootfs/root/.docker/cli-plugins/docker-compose
+
 # Add alpine packages
-RUN cd /bin && cp -t /rootfs/bin lsblk 
+RUN cd /bin && cp -t /rootfs/bin lsblk
 RUN cd /lib && cp -t /rootfs/lib libblkid.so.* libsmartcols.so.* libmount.so.*
 
 # Strip modules if specified
-ARG CONFIG_MODULES=ALL
-COPY config/modules .
+ARG CONFIG_MODULES=standard.mod
+COPY config/modules/${CONFIG_MODULES} .
 RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/modules.txt
 RUN if [ "${CONFIG_MODULES}" != "ALL" ]; then find /rootfs/lib/modules | grep "\.ko$" | grep -v -f ${CONFIG_MODULES} | xargs rm; fi;
 RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/modules_selected.txt
@@ -136,9 +147,10 @@ COPY init init
 RUN go build -ldflags "-s -w" -o /rootfs/init ./init && strip /rootfs/init
 
 # Copy in primary config, and default secondary config to rootfs
-ARG CONFIG_PRIMARY=CONFIG_PRIMARY_UNSET
+ARG CONFIG_PRIMARY=default.yml
 COPY config/primary/$CONFIG_PRIMARY /rootfs/config/primary.yml
-COPY config/secondary/default.yml /rootfs/config/secondary.yml
+ARG CONFIG_SECONDARY=default.yml
+COPY config/secondary/$CONFIG_SECONDARY /rootfs/config/default_secondary.yml
 RUN find /rootfs > ${OUT_DIR}/rootfs.txt
 
 # Build initramfs
