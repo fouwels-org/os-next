@@ -9,11 +9,12 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
+
 	"os-next/init/config"
 	"os-next/init/disks"
 	"os-next/init/filesystem"
+	"os-next/init/journal"
 	"os-next/init/shell"
 )
 
@@ -75,7 +76,7 @@ func (n *Filesystem) Run(c config.Config) error {
 		// If cannot mount, return with err
 		err := shell.Executor.Execute(commands)
 		if err != nil {
-			log.Printf("failed to mount: %v", err)
+			journal.Logfln("failed to mount: %v", err)
 		}
 	}
 

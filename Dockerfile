@@ -24,8 +24,8 @@ RUN mkdir -p ${OUT_DIR} && mkdir -p ${SRC_DIR} && mkdir -p /rootfs
 WORKDIR ${SRC_DIR}
 
 # Package versions
-ENV VERSION_KERNEL=5.10.41
-ENV VERSION_RT=5.10.41-rt42
+ENV VERSION_KERNEL=5.10.65
+ENV VERSION_RT=5.10.65-rt53
 ENV VERSION_MUSL=1.2.2
 ENV VERSION_DOCKER=20.10.7
 ENV VERSION_BUSYBOX=1.33.1
@@ -46,18 +46,16 @@ RUN wget -q -O wireguard.tar.xz https://git.zx2c4.com/wireguard-tools/snapshot/w
 RUN wget -q -O iptables.tar.bz2  https://netfilter.org/projects/iptables/files/iptables-${VERSION_IPTABLES}.tar.bz2
 RUN wget -q -O busybox.tar.bz2 https://busybox.net/downloads/busybox-${VERSION_BUSYBOX}.tar.bz2
 RUN wget -q -O microcode.tar.gz https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/refs/tags/microcode-${VERSION_MICROCODE_INTEL}.tar.gz 
-RUN wget -q -O compose.tar.gz https://github.com/docker/compose/archive/refs/tags/v${VERSION_COMPOSE}.tar.gz
 
 # Verify sources
-RUN echo "f604759de80767c4f8bdc500eec730dc161bc914a48bd366b748c176701a6771 kernel.tar.xz" | sha256sum -c -
-RUN echo "03a1be966680c3fc8853d8b1d08fca3dd1303961e471d5bb41e44d57b07e12fd patch-rt.xz" | sha256sum -c -
+RUN echo "edd3dedbce5bcaa5ba7cde62f8f3fd58b2ab21e2ec427b9d200685da5ec03e66 kernel.tar.xz" | sha256sum -c -
+RUN echo "a355068c2802a52705f00c0a61afc73ced4ecb8d712976fa80ac9584068bbeeb patch-rt.xz" | sha256sum -c -
 RUN echo "9b969322012d796dc23dda27a35866034fa67d8fb67e0e2c45c913c3d43219dd musl.tar.gz" | sha256sum -c -
 RUN echo "34ad50146fce29b28e5115a1e8510dd5232459c9a4a9f28f65909f92cca314d9 docker.tgz" | sha256sum -c -
 RUN echo "98140aa91ea04018ebd874c14ab9b6994f48cdaf9a219ccf7c0cd3e513c7428a wireguard.tar.xz" | sha256sum -c -
 RUN echo "c109c96bb04998cd44156622d36f8e04b140701ec60531a10668cfdff5e8d8f0 iptables.tar.bz2" | sha256sum -c -
 RUN echo "12cec6bd2b16d8a9446dd16130f2b92982f1819f6e1c5f5887b6db03f5660d28 busybox.tar.bz2" | sha256sum -c -
 RUN echo "fd85b6b769efd029dec6a2c07106fd18fb4dcb548b7bc4cde09295a8344ef6d7 microcode.tar.gz" | sha256sum -c -
-RUN echo "4484a8f7bdb9a2ab697a1edbaa264718d1c3fd752e8cf0cea0494ae4d263c1b5 compose.tar.gz" | sha256sum -c -
 
 # Patch kernel
 RUN tar -xf kernel.tar.xz
@@ -92,10 +90,6 @@ RUN tar -xf iptables.tar.bz2
 RUN cd iptables-${VERSION_IPTABLES} && ./configure --prefix=/ --mandir=/tmp --disable-nftables
 RUN cd iptables-${VERSION_IPTABLES} && make EXTRA_CFLAGS="-pipe -Os -s -fno-stack-protector -U_FORTIFY_SOURCE" -j $(nproc)
 
-# Build compose
-RUN tar -xf compose.tar.gz
-RUN cd compose-${VERSION_COMPOSE} && go build -o docker-compose ./cmd
-
 # Set up template rootfs
 COPY template_rootfs /template_rootfs
 COPY scripts/build-rootfs.sh .
@@ -114,10 +108,6 @@ RUN cd musl-${VERSION_MUSL} && make -j $(nproc) DESTDIR=/rootfs install
 RUN cd iptables-${VERSION_IPTABLES} && make DESTDIR=/rootfs install
 RUN cp wireguard-tools-${VERSION_WGTOOLS}/src/wg /rootfs/usr/sbin/wg
 RUN cp docker/* /rootfs/usr/bin/
-
-# Install compose plugin
-# RUN mkdir -p /rootfs/.docker/cli-plugins 
-# RUN cd compose-${VERSION_COMPOSE} && cp docker-compose /rootfs/.docker/cli-plugins/docker-compose
 
 # Add alpine packages
 RUN cd /bin && cp -t /rootfs/bin lsblk

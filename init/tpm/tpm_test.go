@@ -6,8 +6,9 @@ package tpm
 
 import (
 	"crypto/sha256"
-	"log"
 	"testing"
+
+	"os-next/init/journal"
 )
 
 func TestReadPCR(t *testing.T) {
@@ -18,7 +19,7 @@ func TestReadPCR(t *testing.T) {
 	}
 
 	for _, v := range values {
-		log.Printf("%v 0x%X (%X)", v.ID, v.Value, v.Value[len(v.Value)-3:])
+		journal.Logfln("%v 0x%X (%X)", v.ID, v.Value, v.Value[len(v.Value)-3:])
 	}
 
 }
@@ -30,7 +31,7 @@ func TestPCRExtend(t *testing.T) {
 
 	sha := sha256.Sum256(value)
 
-	log.Printf("hash: %v", sha[:])
+	journal.Logfln("hash: %v", sha[:])
 
 	err := PCRExtend(PCR{
 		ID:    _id,
@@ -53,7 +54,7 @@ func TestPCRChainExtend(t *testing.T) {
 	}
 
 	for _, v := range values {
-		log.Printf("%v 0x%X (%X)", v.ID, v.Value, v.Value[len(v.Value)-3:])
+		journal.Logfln("%v 0x%X (%X)", v.ID, v.Value, v.Value[len(v.Value)-3:])
 	}
 
 	err = PCRExtend(PCR{

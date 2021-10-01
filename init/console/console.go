@@ -7,34 +7,17 @@ package console
 
 import (
 	"bufio"
-	"encoding/base64"
 	"fmt"
-	"log"
 	"os"
-	"os-next/init/config"
-	"os-next/init/shell"
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
+	"os-next/init/config"
+	"os-next/init/journal"
+	"os-next/init/shell"
 )
 
-// Start runtime console
-func Start(auth config.Authenticators) error {
-
-	err := login(auth)
-	if err != nil {
-		return err
-	}
-
-	err = bash()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func login(auth config.Authenticators) error {
+func Login(auth config.Authenticators) error {
 
 	success := false
 	reader := bufio.NewReader(os.Stdin)
@@ -44,7 +27,7 @@ func login(auth config.Authenticators) error {
 	}
 
 	for !success {
-		fmt.Printf("enter authenticator for shell\n> ")
+		fmt.Printf("enter authenticator for shell (mode: %v)\n> ", auth.Root.Mode)
 		text, err := reader.ReadString('\n')
 		if err != nil {
 			return fmt.Errorf("failed to read stdin: %w", err)
@@ -52,58 +35,34 @@ func login(auth config.Authenticators) error {
 
 		santext := strings.TrimSuffix(text, "\n")
 
-		if checkAuthenticator(auth.Root, santext) {
-			success = true
-			log.Printf("user succeeded to authenticate")
-		} else {
-			fmt.Printf("authenticator incorrect\n")
-			log.Printf("user failed to authenticate")
+		switch auth.Root.Mode {
+		case config.AuthenticatorsModeHash:
+			result := checkAuthenticator(auth.Root.Value, santext)
+			if result {
+				success = true
+			}
+		case config.AuthenticatorsModeTOTP:
+			result, err := checkTotp(auth.Root.Value, santext)
+			if err != nil {
+				return fmt.Errorf("totp failed: %w", err)
+			}
+			if result {
+				success = true
+			}
+		}
+
+		if !success {
+			journal.Logfln("user failed to authenticate")
 			time.Sleep(2 * time.Second)
+		} else {
+			journal.Logfln("user succeeded to authenticate")
 		}
 	}
 
 	return nil
 }
 
-func generateAuthenticator(text string) (string, error) {
-	const _bcryptCost = 10
-
-	bytes, err := bcrypt.GenerateFromPassword([]byte(text), _bcryptCost)
-	if err != nil {
-		return "", err
-	}
-
-	return base64.StdEncoding.EncodeToString(bytes), nil
-}
-
-func checkAuthenticator(hash string, text string) bool {
-
-	if hash == "" || text == "" {
-		return false
-	}
-
-	bts, err := base64.StdEncoding.DecodeString(hash)
-	if err != nil {
-		log.Printf("failed to decode base64 authenticator hash: %v", err)
-		return false
-	}
-
-	if len(bts) == 0 {
-		log.Printf("authenticator hash decoded to 0 length?")
-		return false
-	}
-
-	err = bcrypt.CompareHashAndPassword(bts, []byte(text))
-
-	//lint:ignore S1008 clearer flow being verbose
-	if err != nil {
-		return false
-	}
-
-	return true
-}
-
-func bash() error {
+func Shell() error {
 	commands := []shell.Command{
 		{Executable: shell.Ash, Arguments: []string{}},
 	}

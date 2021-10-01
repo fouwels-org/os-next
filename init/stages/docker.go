@@ -7,9 +7,10 @@ package stages
 import (
 	"fmt"
 	"os"
+	"time"
+
 	"os-next/init/config"
 	"os-next/init/shell"
-	"time"
 )
 
 //Docker implementes IStage
@@ -72,7 +73,5 @@ func (d *Docker) Run(c config.Config) error {
 	if !started {
 		return fmt.Errorf("failed to get docker version, docker did not start correctly")
 	}
-
-	d.finals = append(d.finals, fmt.Sprintf("logging to %v", _logpath))
 	return nil
 }

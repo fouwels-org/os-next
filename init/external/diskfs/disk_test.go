@@ -8,9 +8,11 @@ package diskfs_test
 import (
 	"log"
 	"os"
+	"testing"
+
 	"os-next/init/external/diskfs"
 	"os-next/init/external/diskfs/table"
-	"testing"
+	"os-next/init/journal"
 
 	"github.com/google/uuid"
 )
@@ -53,7 +55,7 @@ func TestOpenDisk(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 	defer pm.Close()
-	log.Printf("%+v", pm)
+	journal.Logfln("%+v", pm)
 }
 
 func TestGetInvalidTable(t *testing.T) {
@@ -93,7 +95,7 @@ func TestGetValidTable(t *testing.T) {
 		t.Fatalf("error getting table: %v", err)
 	}
 
-	log.Printf("%+v", table)
+	journal.Logfln("%+v", table)
 }
 
 func TestWritePartitionTable(t *testing.T) {
@@ -197,7 +199,7 @@ func TestWriteReadTableBadSectorAllocation(t *testing.T) {
 
 	// write table
 	err = pm.SetTable(tab)
-	log.Printf("%v", err)
+	journal.Logfln("%v", err)
 	if err == nil {
 		t.Fatalf("bad size not caught")
 	}
@@ -227,7 +229,7 @@ func TestWriteReadTableBadSectorAllocation(t *testing.T) {
 
 	// write table
 	err = pm.SetTable(tab)
-	log.Printf("%v", err)
+	journal.Logfln("%v", err)
 	if err == nil {
 		t.Fatalf("bad start not caught")
 	}

@@ -60,4 +60,6 @@ secondary:
       - 1.uk.pool.ntp.org
 
   authenticators:
-    root: JDJhJDEwJGNZQUdyMWRCb1hLcXFuL0tlMmVXbi5la3V1TlFLTkRvcWJ2SGVyUVVJRDlvMFhqckN0SC5p
+    root: 
+      mode: password
+      value: JDJhJDEwJGNZQUdyMWRCb1hLcXFuL0tlMmVXbi5la3V1TlFLTkRvcWJ2SGVyUVVJRDlvMFhqckN0SC5p

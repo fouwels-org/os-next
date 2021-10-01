@@ -8,9 +8,10 @@ package libinit
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"syscall"
+
+	"os-next/init/journal"
 
 	"golang.org/x/sys/unix"
 )
@@ -138,9 +139,9 @@ func create(namespace []creator, optional bool) {
 	for _, c := range namespace {
 		if err := c.create(); err != nil {
 			if optional {
-				log.Printf("u-root init [optional]: warning creating %s: %v", c, err)
+				journal.Logfln("u-root init [optional]: warning creating %s: %v", c, err)
 			} else {
-				log.Printf("u-root init: error creating %s: %v", c, err)
+				journal.Logfln("u-root init: error creating %s: %v", c, err)
 			}
 		}
 	}

@@ -68,7 +68,7 @@ echo "Formating $DATA Partition"
 echo y | mkfs.ext4 -L DATA $DATA
 
 echo "---------------------"
-echo "Setting up Phoenix OS"
+echo "Setting up os-next"
 echo "---------------------"
 FILE=/mnt
 if [ ! -d "$FILE" ]; then
@@ -85,7 +85,7 @@ if [ $? -eq 0 ]; then
   cp /tmp/BOOTx64.EFI /mnt/EFI/BOOT/BOOTx64.EFI
   umount /mnt
   rm /tmp/BOOTx64.EFI
-  echo "Phoenix RT OS has been successfully installed"
+  echo "os-next rt OS has been successfully installed"
 else
   echo "Error downloading file"
 fi

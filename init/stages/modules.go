@@ -6,6 +6,7 @@ package stages
 
 import (
 	"fmt"
+
 	"os-next/init/config"
 	"os-next/init/shell"
 )
@@ -51,7 +52,7 @@ func (m *Modules) Run(c config.Config) error {
 		}
 	}
 
-	m.finals = append(m.finals, fmt.Sprintf("loaded %v/%v modules ok", lok, len(c.Primary.Modules)))
+	m.finals = append(m.finals, fmt.Sprintf("loaded %v/%v modules ok", lok, len(c.Primary.Modules)+len(c.Secondary.Modules)))
 
 	if len(errs) != 0 {
 		return fmt.Errorf("%v", errs)

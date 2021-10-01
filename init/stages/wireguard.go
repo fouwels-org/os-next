@@ -9,12 +9,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"os-next/init/config"
-	"os-next/init/filesystem"
 	"path/filepath"
 	"time"
 
-	"github.com/mdp/qrterminal"
+	"os-next/init/config"
+	"os-next/init/external/qrterminal"
+	"os-next/init/filesystem"
+
 	"golang.zx2c4.com/wireguard/wgctrl"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )

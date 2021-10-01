@@ -89,7 +89,18 @@ type Time struct {
 	Servers []string
 }
 
-//Authenticator
+//Authenticator ..
 type Authenticators struct {
-	Root string
+	Root Authenticator
 }
+
+//Authenticator ..
+type Authenticator struct {
+	Mode  AuthenticatorsMode
+	Value string
+}
+
+type AuthenticatorsMode string
+
+const AuthenticatorsModeHash AuthenticatorsMode = "password"
+const AuthenticatorsModeTOTP AuthenticatorsMode = "totp"

@@ -6,11 +6,12 @@ package stages
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"os-next/init/config"
-	"os-next/init/shell"
 	"time"
+
+	"os-next/init/config"
+	"os-next/init/journal"
+	"os-next/init/shell"
 )
 
 //Time implements IStage
@@ -76,7 +77,7 @@ func (n *Time) Run(c config.Config) (e error) {
 
 		err := shell.Executor.Execute(commands)
 		if err != nil {
-			log.Printf("Error updating NTP: %v", err)
+			journal.Logfln("Error updating NTP: %v", err)
 		}
 	} else {
 		n.finals = append(n.finals, "notice: NTP Disabled")
@@ -89,7 +90,7 @@ func (n *Time) Run(c config.Config) (e error) {
 
 		err := shell.Executor.Execute(commands)
 		if err != nil {
-			log.Printf("Error setting HW Clock: %v", err)
+			journal.Logfln("Error setting HW Clock: %v", err)
 		}
 	} else {
 		n.finals = append(n.finals, "notice: HW Clock Disabled")
