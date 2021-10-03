@@ -3,30 +3,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package otp
+package common
 
 import (
-	"crypto/sha256"
-	"crypto/sha512"
-	"errors"
-	"fmt"
-	"hash"
 	"net/url"
 	"strconv"
 	"strings"
 )
-
-// Error when attempting to convert the secret from base32 to raw bytes.
-var ErrValidateSecretInvalidBase32 = errors.New("decoding of secret as base32 failed")
-
-// The user provided passcode length was not expected.
-var ErrValidateInputInvalidLength = errors.New("input length unexpected")
-
-// When generating a Key, the Issuer must be set.
-var ErrGenerateMissingIssuer = errors.New("issuer must be set")
-
-// When generating a Key, the Account Name must be set.
-var ErrGenerateMissingAccountName = errors.New("accountName must be set")
 
 // Key represents an TOTP or HTOP key.
 type Key struct {
@@ -117,60 +100,4 @@ func (k *Key) Period() uint64 {
 // URL returns the OTP URL as a string
 func (k *Key) URL() string {
 	return k.url.String()
-}
-
-// Algorithm represents the hashing function to use in the HMAC
-// operation needed for OTPs.
-type Algorithm int
-
-const (
-	AlgorithUnknown Algorithm = iota
-	AlgorithmSHA256
-	AlgorithmSHA512
-)
-
-func (a Algorithm) String() string {
-	switch a {
-	case AlgorithmSHA256:
-		return "SHA256"
-	case AlgorithmSHA512:
-		return "SHA512"
-	}
-
-	return "UNKNOWN"
-}
-
-func (a Algorithm) Hash() hash.Hash {
-	switch a {
-	case AlgorithmSHA256:
-		return sha256.New()
-	case AlgorithmSHA512:
-		return sha512.New()
-	}
-
-	return sha512.New()
-}
-
-// Digits represents the number of digits present in the
-// user's OTP passcode. Six and Eight are the most common values.
-type Digits int
-
-const (
-	DigitsSix   Digits = 6
-	DigitsEight Digits = 8
-)
-
-// Format converts an integer into the zero-filled size for this Digits.
-func (d Digits) Format(in int32) string {
-	f := fmt.Sprintf("%%0%dd", d)
-	return fmt.Sprintf(f, in)
-}
-
-// Length returns the number of characters for this Digits.
-func (d Digits) Length() int {
-	return int(d)
-}
-
-func (d Digits) String() string {
-	return fmt.Sprintf("%d", d)
 }

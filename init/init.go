@@ -37,14 +37,12 @@ func main() {
 		journal.Logfln("failed to sync file system: %v", err)
 	}
 
-	journal.Logfln("rebooting in 5 seconds")
-	time.Sleep(5 * time.Second)
+	journal.Logfln("rebooting in 15 seconds")
+	time.Sleep(15 * time.Second)
 
 	// Reboot
 	err = syscall.Reboot(syscall.LINUX_REBOOT_CMD_RESTART)
-	journal.Logfln("reboot syscall failed, exiting to kernel in 5 seconds, good luck: %v", err)
-	time.Sleep(5 * time.Second)
-
+	journal.Logfln("reboot syscall failed, exiting to kernel: %v", err)
 	os.Exit(1)
 
 }
@@ -107,7 +105,7 @@ func uinit() (config.Config, error) {
 		&stages.Docker{},
 	}
 
-	journal.Logf("primary config: ")
+	journal.Logfln("primary config: ")
 
 	configPrimary := config.PrimaryFile{}
 
@@ -117,14 +115,14 @@ func uinit() (config.Config, error) {
 	}
 	c.Primary = configPrimary.Primary
 
-	journal.Logfln("✔️")
+	journal.Logf("✔️")
 
 	err = executeStages(c, primary)
 	if err != nil {
 		return config.Config{}, fmt.Errorf("primary: %w", err)
 	}
 
-	journal.Logf("secondary config: ")
+	journal.Logfln("secondary config: ")
 
 	configSecondary := config.SecondaryFile{}
 	err = config.LoadConfig(_configSecondaryPath, &configSecondary)
@@ -134,7 +132,7 @@ func uinit() (config.Config, error) {
 
 	c.Secondary = configSecondary.Secondary
 
-	journal.Logfln("✔️")
+	journal.Logf("✔️")
 
 	err = executeStages(c, secondary)
 	if err != nil {
@@ -174,22 +172,22 @@ func executeStages(c config.Config, sts []stages.IStage) error {
 
 	for _, st := range sts {
 
-		journal.Logf("%v: ", st)
+		journal.Logfln("%v: ", st)
 
 		err := st.Run(c)
 		if err != nil {
 
 			switch st.Policy() {
 			case stages.PolicyHard:
-				journal.Logfln("❌ hard fail: %v", err)
+				journal.Logf("❌ hard fail: %v", err)
 				//return fmt.Errorf("%v failed", st)
 				console.Shell()
 			case stages.PolicySoft:
-				journal.Logfln("❗ soft fail: %v", err)
+				journal.Logf("❗ soft fail: %v", err)
 			}
 
 		} else {
-			journal.Logfln("✔️")
+			journal.Logf("✔️")
 		}
 
 		// Sync file system

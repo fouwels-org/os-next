@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package console
 
 import (
@@ -57,9 +61,9 @@ func TestGenerateTotp(t *testing.T) {
 
 func TestCheckTotp(t *testing.T) {
 
-	code := "296835"
+	code := "79047388"
 
-	secret := "Q2GYK34AKCXJKLY47T4ZIZYJZWVIH2QLGIGZVMGX2XXXWTNYU7HQ"
+	secret := "LTGDWKB7WMXJWWFD4MCUFDP73YU36LAEFY2J6SOVK72NQN3OCNTA"
 
 	res, err := checkTotp(secret, code)
 	if err != nil {

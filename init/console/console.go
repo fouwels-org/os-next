@@ -27,7 +27,7 @@ func Login(auth config.Authenticators) error {
 	}
 
 	for !success {
-		fmt.Printf("enter authenticator for shell (mode: %v)\n> ", auth.Root.Mode)
+		fmt.Printf("\nenter authenticator for shell\n> ")
 		text, err := reader.ReadString('\n')
 		if err != nil {
 			return fmt.Errorf("failed to read stdin: %w", err)
@@ -43,10 +43,7 @@ func Login(auth config.Authenticators) error {
 			}
 		case config.AuthenticatorsModeTOTP:
 			result, err := checkTotp(auth.Root.Value, santext)
-			if err != nil {
-				return fmt.Errorf("totp failed: %w", err)
-			}
-			if result {
+			if err == nil && result {
 				success = true
 			}
 		}
@@ -63,6 +60,9 @@ func Login(auth config.Authenticators) error {
 }
 
 func Shell() error {
+
+	fmt.Printf("\n") // Add final newline before dropping to shell
+
 	commands := []shell.Command{
 		{Executable: shell.Ash, Arguments: []string{}},
 	}

@@ -1,8 +1,13 @@
+// SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package journal
 
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 func Logfln(format string, v ...interface{}) {
@@ -18,8 +23,8 @@ func mux(log string, ret bool) {
 }
 
 func stdout(log string, ret bool) {
-	fmt.Fprintf(os.Stdout, "%v", log)
 	if ret {
-		fmt.Printf("\n")
+		fmt.Fprintf(os.Stdout, "\n%v ", time.Now().Format("15:04:05.000000"))
 	}
+	fmt.Fprintf(os.Stdout, "%v", log)
 }

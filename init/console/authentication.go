@@ -1,12 +1,16 @@
+// SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package console
 
 import (
-	"crypto/rand"
+	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
 	"time"
 
-	"os-next/init/external/otp"
+	"os-next/init/external/otp/common"
 	"os-next/init/external/otp/totp"
 	"os-next/init/journal"
 
@@ -58,9 +62,9 @@ func generateTotp() (string, string, error) {
 		AccountName: "root",
 		Period:      30,
 		SecretSize:  32,
-		Digits:      otp.DigitsSix,
-		Algorithm:   otp.AlgorithmSHA512,
-		Rand:        rand.Reader,
+		Digits:      common.DigitsEight,
+		Algorithm:   sha512.New,
+		AlgorithmID: "SHA512",
 	}
 
 	key, err := totp.Generate(opts)
@@ -75,9 +79,8 @@ func checkTotp(secret string, passcode string) (bool, error) {
 
 	opts := totp.ValidateOpts{
 		Period:    30,
-		Skew:      1,
-		Digits:    otp.DigitsSix,
-		Algorithm: otp.AlgorithmSHA512,
+		Digits:    common.DigitsEight,
+		Algorithm: sha512.New,
 	}
 
 	res, err := totp.Validate(passcode, secret, time.Now(), opts)
