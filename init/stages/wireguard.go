@@ -138,7 +138,7 @@ func (n *Wireguard) Run(c config.Config) error {
 
 	return nil
 }
-func (n Wireguard) writeQR(publicKey wgtypes.Key) string {
+func (n *Wireguard) writeQR(publicKey wgtypes.Key) string {
 
 	var buf bytes.Buffer
 
@@ -151,7 +151,10 @@ func (n Wireguard) writeQR(publicKey wgtypes.Key) string {
 		QuietZone:  1,
 	}
 
-	qrterminal.GenerateWithConfig(publicKey.String(), config)
+	err := qrterminal.GenerateWithConfig(publicKey.String(), config)
+	if err != nil {
+		n.finals = append(n.finals, fmt.Sprintf("failed to generate QR: %v", err))
+	}
 
 	return buf.String()
 }

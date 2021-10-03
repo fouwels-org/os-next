@@ -180,8 +180,7 @@ func executeStages(c config.Config, sts []stages.IStage) error {
 			switch st.Policy() {
 			case stages.PolicyHard:
 				journal.Logf("❌ hard fail: %v", err)
-				//return fmt.Errorf("%v failed", st)
-				console.Shell()
+				return fmt.Errorf("%v failed", st)
 			case stages.PolicySoft:
 				journal.Logf("❗ soft fail: %v", err)
 			}
