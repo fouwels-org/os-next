@@ -7,10 +7,11 @@ package shell
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"time"
+
+	"os-next/init/journal"
 )
 
 //Shell static instance of ShellUtil{}
@@ -75,7 +76,7 @@ func (s *ShellExecutor) ExecuteDaemon(c Command, writer io.Writer) error {
 			err := cmd.Run()
 			_, err = writer.Write([]byte(fmt.Sprintf("**daemon exit with err - restarting**: %v\n", err)))
 			if err != nil {
-				log.Printf("failed to write to writer for daemon %v: %v", c, err)
+				journal.Logfln("failed to write to writer for daemon %v: %v", c, err)
 			}
 			time.Sleep(5 * time.Second)
 		}

@@ -6,9 +6,10 @@ package disks
 
 import (
 	"fmt"
-	"log"
-	"os-next/init/shell"
 	"strings"
+
+	"os-next/init/journal"
+	"os-next/init/shell"
 )
 
 type Blkid struct {
@@ -45,7 +46,7 @@ func GetBlkid(target string) ([]Blkid, error) {
 
 		c := strings.Split(l, " ")
 		if len(c) < 1 {
-			log.Printf("length of %v < 1, skipped", c)
+			journal.Logfln("length of %v < 1, skipped", c)
 			continue
 		}
 
@@ -57,7 +58,7 @@ func GetBlkid(target string) ([]Blkid, error) {
 
 			k := strings.Split(r, "=")
 			if len(k) != 2 {
-				log.Printf("length of split %v != 2, skipped", k)
+				journal.Logfln("length of split %v != 2, skipped", k)
 				continue
 			}
 
@@ -74,7 +75,7 @@ func GetBlkid(target string) ([]Blkid, error) {
 			case "PARTUUID":
 				b.PARTUUID = strings.Trim(value, "\"")
 			default:
-				log.Printf("unrecognised BLKID key %v, ignored", key)
+				journal.Logfln("unrecognised BLKID key %v, ignored", key)
 			}
 		}
 		blkidList = append(blkidList, b)

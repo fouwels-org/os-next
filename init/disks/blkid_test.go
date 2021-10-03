@@ -5,14 +5,15 @@
 package disks
 
 import (
-	"log"
 	"testing"
+
+	"os-next/init/journal"
 )
 
 func TestGetBlkid(t *testing.T) {
 	b, err := GetBlkid("")
 
-	log.Printf("%+v", b[0])
+	journal.Logfln("%+v", b[0])
 
 	if err != nil {
 		t.Fatalf("%v", err)

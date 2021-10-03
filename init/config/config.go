@@ -7,9 +7,10 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
+
+	"os-next/init/journal"
 
 	"gopkg.in/yaml.v2"
 )
@@ -41,7 +42,7 @@ func LoadConfig(path string, config interface{}) (e error) {
 	y.SetStrict(true)
 	err = y.Decode(config)
 	if err != nil {
-		log.Printf("Warning: %v", err)
+		journal.Logfln("Warning: %v", err)
 	}
 
 	return nil

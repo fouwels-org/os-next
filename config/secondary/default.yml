@@ -2,9 +2,10 @@
 # SPDX-FileCopyrightText: 2021 Kaelan Thijs Fouwels <kaelan.thijs@fouwels.com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 header:
   site: default
-  comment: default secondary configuration installed during provisioning
+  comment: default secondary configuration copied to the filesystem during auto-provisioning
 secondary:
   modules: 
     - kvm
@@ -28,5 +29,8 @@ secondary:
     servers:
       - 0.uk.pool.ntp.org
       - 1.uk.pool.ntp.org
+      
   authenticators:
-    root: JDJhJDEwJGNZQUdyMWRCb1hLcXFuL0tlMmVXbi5la3V1TlFLTkRvcWJ2SGVyUVVJRDlvMFhqckN0SC5p
+    root: 
+      mode: password
+      value: JDJhJDEwJGNZQUdyMWRCb1hLcXFuL0tlMmVXbi5la3V1TlFLTkRvcWJ2SGVyUVVJRDlvMFhqckN0SC5p

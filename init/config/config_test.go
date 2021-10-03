@@ -6,8 +6,9 @@
 package config_test
 
 import (
-	"os-next/init/config"
 	"testing"
+
+	"os-next/init/config"
 )
 
 func TestLoads(t *testing.T) {

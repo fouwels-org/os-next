@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM alpine:3.14.0
+FROM alpine:3.14.1
 
 RUN apk --no-cache add \
     alpine-sdk argp-standalone asciidoc autoconf automake bc bison build-base ccache clang cmake cryptsetup coreutils \
@@ -24,14 +24,15 @@ RUN mkdir -p ${OUT_DIR} && mkdir -p ${SRC_DIR} && mkdir -p /rootfs
 WORKDIR ${SRC_DIR}
 
 # Package versions
-ENV VERSION_KERNEL=5.10.41
-ENV VERSION_RT=5.10.41-rt42
+ENV VERSION_KERNEL=5.10.65
+ENV VERSION_RT=5.10.65-rt53
 ENV VERSION_MUSL=1.2.2
 ENV VERSION_DOCKER=20.10.7
 ENV VERSION_BUSYBOX=1.33.1
 ENV VERSION_WGTOOLS=v1.0.20210424
 ENV VERSION_MICROCODE_INTEL=20210608
 ENV VERSION_IPTABLES=1.8.7
+ENV VERSION_COMPOSE=2.0.0-rc.3
 
 # Flags
 ENV CONFIG_KERNEL=5.10.1-rt20
@@ -47,8 +48,8 @@ RUN wget -q -O busybox.tar.bz2 https://busybox.net/downloads/busybox-${VERSION_B
 RUN wget -q -O microcode.tar.gz https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/refs/tags/microcode-${VERSION_MICROCODE_INTEL}.tar.gz 
 
 # Verify sources
-RUN echo "f604759de80767c4f8bdc500eec730dc161bc914a48bd366b748c176701a6771 kernel.tar.xz" | sha256sum -c -
-RUN echo "03a1be966680c3fc8853d8b1d08fca3dd1303961e471d5bb41e44d57b07e12fd patch-rt.xz" | sha256sum -c -
+RUN echo "edd3dedbce5bcaa5ba7cde62f8f3fd58b2ab21e2ec427b9d200685da5ec03e66 kernel.tar.xz" | sha256sum -c -
+RUN echo "a355068c2802a52705f00c0a61afc73ced4ecb8d712976fa80ac9584068bbeeb patch-rt.xz" | sha256sum -c -
 RUN echo "9b969322012d796dc23dda27a35866034fa67d8fb67e0e2c45c913c3d43219dd musl.tar.gz" | sha256sum -c -
 RUN echo "34ad50146fce29b28e5115a1e8510dd5232459c9a4a9f28f65909f92cca314d9 docker.tgz" | sha256sum -c -
 RUN echo "98140aa91ea04018ebd874c14ab9b6994f48cdaf9a219ccf7c0cd3e513c7428a wireguard.tar.xz" | sha256sum -c -
@@ -109,12 +110,12 @@ RUN cp wireguard-tools-${VERSION_WGTOOLS}/src/wg /rootfs/usr/sbin/wg
 RUN cp docker/* /rootfs/usr/bin/
 
 # Add alpine packages
-RUN cd /bin && cp -t /rootfs/bin lsblk 
+RUN cd /bin && cp -t /rootfs/bin lsblk
 RUN cd /lib && cp -t /rootfs/lib libblkid.so.* libsmartcols.so.* libmount.so.*
 
 # Strip modules if specified
-ARG CONFIG_MODULES=ALL
-COPY config/modules .
+ARG CONFIG_MODULES=standard.mod
+COPY config/modules/${CONFIG_MODULES} .
 RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/modules.txt
 RUN if [ "${CONFIG_MODULES}" != "ALL" ]; then find /rootfs/lib/modules | grep "\.ko$" | grep -v -f ${CONFIG_MODULES} | xargs rm; fi;
 RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/modules_selected.txt
@@ -136,9 +137,10 @@ COPY init init
 RUN go build -ldflags "-s -w" -o /rootfs/init ./init && strip /rootfs/init
 
 # Copy in primary config, and default secondary config to rootfs
-ARG CONFIG_PRIMARY=CONFIG_PRIMARY_UNSET
+ARG CONFIG_PRIMARY=default.yml
 COPY config/primary/$CONFIG_PRIMARY /rootfs/config/primary.yml
-COPY config/secondary/default.yml /rootfs/config/secondary.yml
+ARG CONFIG_SECONDARY=default.yml
+COPY config/secondary/$CONFIG_SECONDARY /rootfs/config/default_secondary.yml
 RUN find /rootfs > ${OUT_DIR}/rootfs.txt
 
 # Build initramfs
