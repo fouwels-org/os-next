@@ -49,7 +49,10 @@ func GenerateCode(secret string, counter uint64, opts ValidateOpts) (passcode st
 	mac := hmac.New(opts.Algorithm, secretBytes)
 	binary.BigEndian.PutUint64(buf, counter)
 
-	mac.Write(buf)
+	_, err = mac.Write(buf)
+	if err != nil {
+		return "", err
+	}
 	sum := mac.Sum(nil)
 
 	// "Dynamic truncation" in RFC 4226
