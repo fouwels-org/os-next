@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM alpine:3.14.1
+FROM alpine:3.15.0
 
 RUN apk --no-cache add \
     alpine-sdk argp-standalone asciidoc autoconf automake bc bison build-base ccache clang cmake cryptsetup coreutils \
@@ -158,7 +158,7 @@ RUN cd linux-${VERSION_KERNEL} && make CFLAGS="-pipe -Os -s -fno-stack-protector
 RUN HASH=($(md5sum linux-${VERSION_KERNEL}/arch/x86_64/boot/bzImage)) && cp linux-${VERSION_KERNEL}/arch/x86_64/boot/bzImage ${OUT_DIR}/${HASH}.EFI && \
     cd ${OUT_DIR} && ln -s ${HASH}.EFI BOOTx64.EFI && ln -s ${HASH}.EFI BOOTx64-$CONFIG_MODULES-$CONFIG_PRIMARY.ZSTD$COMPRESSION_LEVEL.EFI
 
-FROM alpine:3.14.0
+FROM alpine:3.15.0
 COPY --from=0 /build/out /build/out
 
 USER 100:100
