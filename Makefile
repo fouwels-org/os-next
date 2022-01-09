@@ -5,23 +5,32 @@
 
 IMAGE = ghcr.io/fouwels/os-next
 TAG = local
+COMPOSE=docker compose
+BUILDFILE=compose.yml
 
-build: standard
+default: fast
 
-standard: 	# Standard build configuration
-	docker build -t $(IMAGE):$(TAG) .
-
-fast: 		# fast target for development/qemu
-	docker build --build-arg COMPRESSION_LEVEL=9 -t $(IMAGE):$(TAG) .
-
-fat: 		# fat target with all modules packed and available to be loaded
-	docker build --build-arg CONFIG_MODULES=ALL -t $(IMAGE):$(TAG) .
+# Targets
 
 DRPC-230: 	standard # IMI DRPC-230 target
 k300: 		standard # OnLogic K300 target
 k700: 		standard # OnLogic K700 target
 magellis: 	standard # Schneider Magellis target
-	
+
+# Profiles
+
+build: 
+	$(COMPOSE) -f $(BUILDFILE) build
+
+fast: 		# fast target for development/qemu
+	$(COMPOSE) -f $(BUILDFILE) build --build-arg COMPRESSION_LEVEL=9 
+
+fat: 		# fat target with all modules packed and available to be loaded
+	$(COMPOSE) -f $(BUILDFILE) build --build-arg COMPRESSION_LEVEL=ALL 
+
+# Output image
 run:
-	docker container rm os-builder || true
-	docker run -it --name os-builder -v $(PWD)/out:/out $(IMAGE):$(TAG)
+	$(COMPOSE) -f $(BUILDFILE) up
+
+clean:
+	rm -rf ./out

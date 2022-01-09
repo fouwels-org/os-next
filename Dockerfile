@@ -20,7 +20,7 @@ ENV CC=/usr/bin/gcc CXX=/usr/bin/g++
 # Dirs
 ENV SRC_DIR=/build/src
 ENV OUT_DIR=/build/out
-RUN mkdir -p ${OUT_DIR} && mkdir -p ${SRC_DIR} && mkdir -p /rootfs
+RUN mkdir -p ${OUT_DIR} && mkdir -p ${OUT_DIR}/meta && mkdir -p ${SRC_DIR} && mkdir -p /rootfs
 WORKDIR ${SRC_DIR}
 
 # Package versions
@@ -116,10 +116,10 @@ RUN cd /lib && cp -t /rootfs/lib libblkid.so.* libsmartcols.so.* libmount.so.*
 # Strip modules if specified
 ARG CONFIG_MODULES=standard.mod
 COPY config/modules/${CONFIG_MODULES} .
-RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/modules.txt
+RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/meta/modules.txt
 RUN if [ "${CONFIG_MODULES}" != "ALL" ]; then find /rootfs/lib/modules | grep "\.ko$" | grep -v -f ${CONFIG_MODULES} | xargs rm; fi;
-RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/modules_selected.txt
-RUN find /rootfs/lib/modules | grep "\.ko$" | xargs du -sh | sort -rh > ${OUT_DIR}/modules_selected_size.txt
+RUN find /rootfs/lib/modules | grep "\.ko$" > ${OUT_DIR}/meta/modules_selected.txt
+RUN find /rootfs/lib/modules | grep "\.ko$" | xargs du -sh | sort -rh > ${OUT_DIR}/meta/modules_selected_size.txt
 
 # Optimise rootfs
 RUN find /rootfs -executable -type f | xargs strip || true
@@ -141,7 +141,7 @@ ARG CONFIG_PRIMARY=default.yml
 COPY config/primary/$CONFIG_PRIMARY /rootfs/config/primary.yml
 ARG CONFIG_SECONDARY=default.yml
 COPY config/secondary/$CONFIG_SECONDARY /rootfs/config/default_secondary.yml
-RUN find /rootfs > ${OUT_DIR}/rootfs.txt
+RUN find /rootfs > ${OUT_DIR}/meta/rootfs.txt
 
 # Build initramfs
 RUN if [ -f "/initramfs.cpio" ]; then rm /initramfs.cpio; fi
@@ -161,5 +161,4 @@ RUN HASH=($(md5sum linux-${VERSION_KERNEL}/arch/x86_64/boot/bzImage)) && cp linu
 FROM alpine:3.15.0
 COPY --from=0 /build/out /build/out
 
-USER 100:100
 CMD ["cp", "-r" ,"/build/out", "/"]
