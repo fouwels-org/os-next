@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-IMAGE = containers.fouwels.app/fouwels/os-next
+IMAGE = ghcr.io/fouwels/os-next
 TAG = local
 
 build: standard
