@@ -96,8 +96,10 @@ This will copy the .config to the host machine.
 ## CI
 CI will build, verify, scan, and statically check the build and uinit. The use of docker/buildkit allows build dependencies to be scanned at build and integration time. See `.github/workflows` for specific steps.
 
-## License
-Project is licenced as Apache 2.0, refer to SPDX tags for specific file based licensing and copyright attribution. All contributed code must be Apache 2.0 compatible. (A)GPL-2.0 and (A)GPL-3.0 is not to be included, and will be rejected by CI.
-
 ## History
-Developed within Lagoni Engineering, later acquired by Belcan International. Licensed as open source and continued in development by the original authors.
+Developed within Lagoni Engineering, subsequently acquired by Belcan International. Licensed as open source and continued in development by the original authors.
+
+## License
+Apache-2.0 and/or Apache-2.0 compatible
+
+Licensing tracked via SPDX, see file level tags for specific attribution
