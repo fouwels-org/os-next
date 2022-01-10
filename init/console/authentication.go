@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"time"
 
-	"os-next/init/external/otp/common"
-	"os-next/init/external/otp/totp"
-	"os-next/init/journal"
+	"github.com/fouwels/os-next/init/external/otp/common"
+	"github.com/fouwels/os-next/init/external/otp/totp"
+	"github.com/fouwels/os-next/init/journal"
 
 	"golang.org/x/crypto/bcrypt"
 )

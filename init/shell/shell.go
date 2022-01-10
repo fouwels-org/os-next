@@ -12,7 +12,7 @@ import (
 	"os/exec"
 	"time"
 
-	"os-next/init/journal"
+	"github.com/fouwels/os-next/init/journal"
 )
 
 //Shell static instance of ShellUtil{}

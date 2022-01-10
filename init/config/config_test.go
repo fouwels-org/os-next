@@ -8,7 +8,7 @@ package config_test
 import (
 	"testing"
 
-	"os-next/init/config"
+	"github.com/fouwels/os-next/init/config"
 )
 
 func TestLoads(t *testing.T) {

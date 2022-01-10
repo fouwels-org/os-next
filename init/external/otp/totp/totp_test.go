@@ -11,9 +11,10 @@ import (
 	"crypto/sha512"
 	"encoding/base32"
 	"hash"
-	"os-next/init/external/otp/common"
 	"testing"
 	"time"
+
+	"github.com/fouwels/os-next/init/external/otp/common"
 )
 
 type tc struct {

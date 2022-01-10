@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module os-next
+module github.com/fouwels/os-next
 
 go 1.16
 

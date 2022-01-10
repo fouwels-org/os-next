@@ -5,8 +5,9 @@
 package console
 
 import (
-	"os-next/init/journal"
 	"testing"
+
+	"github.com/fouwels/os-next/init/journal"
 )
 
 func TestGenerateAuthenticator(t *testing.T) {

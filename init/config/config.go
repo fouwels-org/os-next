@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"os-next/init/journal"
+	"github.com/fouwels/os-next/init/journal"
 
 	"gopkg.in/yaml.v2"
 )

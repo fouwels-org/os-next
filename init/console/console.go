@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"os-next/init/config"
-	"os-next/init/journal"
-	"os-next/init/shell"
+	"github.com/fouwels/os-next/init/config"
+	"github.com/fouwels/os-next/init/journal"
+	"github.com/fouwels/os-next/init/shell"
 )
 
 func Login(auth config.Authenticators) error {

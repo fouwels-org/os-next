@@ -13,9 +13,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"os-next/init/config"
-	"os-next/init/external/qrterminal"
-	"os-next/init/filesystem"
+	"github.com/fouwels/os-next/init/config"
+	"github.com/fouwels/os-next/init/external/qrterminal"
+	"github.com/fouwels/os-next/init/filesystem"
 
 	"golang.zx2c4.com/wireguard/wgctrl"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"

@@ -11,9 +11,9 @@ import (
 	"os"
 	"testing"
 
-	"os-next/init/external/diskfs"
-	"os-next/init/external/diskfs/table"
-	"os-next/init/journal"
+	"github.com/fouwels/os-next/init/external/diskfs"
+	"github.com/fouwels/os-next/init/external/diskfs/table"
+	"github.com/fouwels/os-next/init/journal"
 
 	"github.com/google/uuid"
 )

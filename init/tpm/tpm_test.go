@@ -8,7 +8,7 @@ import (
 	"crypto/sha256"
 	"testing"
 
-	"os-next/init/journal"
+	"github.com/fouwels/os-next/init/journal"
 )
 
 func TestReadPCR(t *testing.T) {

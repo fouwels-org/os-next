@@ -7,7 +7,8 @@ package hotp
 
 import (
 	"hash"
-	"os-next/init/external/otp/common"
+
+	"github.com/fouwels/os-next/init/external/otp/common"
 
 	"crypto/hmac"
 	"crypto/subtle"

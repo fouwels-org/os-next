@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"os"
 
-	"os-next/init/config"
-	"os-next/init/shell"
+	"github.com/fouwels/os-next/init/config"
+	"github.com/fouwels/os-next/init/shell"
 )
 
 //Networking implements IStage

@@ -8,8 +8,9 @@ package totp
 import (
 	"fmt"
 	"hash"
-	"os-next/init/external/otp/common"
-	"os-next/init/external/otp/hotp"
+
+	"github.com/fouwels/os-next/init/external/otp/common"
+	"github.com/fouwels/os-next/init/external/otp/hotp"
 
 	"math"
 	"time"

@@ -8,7 +8,7 @@ package disks
 import (
 	"testing"
 
-	"os-next/init/journal"
+	"github.com/fouwels/os-next/init/journal"
 )
 
 func TestGetBlkid(t *testing.T) {

@@ -8,15 +8,16 @@ package main
 import (
 	"fmt"
 	"os"
-	"os-next/init/config"
-	"os-next/init/console"
-	"os-next/init/external/u-root/libinit"
-	"os-next/init/journal"
-	"os-next/init/kernel"
-	"os-next/init/shell"
-	"os-next/init/stages"
 	"syscall"
 	"time"
+
+	"github.com/fouwels/os-next/init/config"
+	"github.com/fouwels/os-next/init/console"
+	"github.com/fouwels/os-next/init/external/u-root/libinit"
+	"github.com/fouwels/os-next/init/journal"
+	"github.com/fouwels/os-next/init/kernel"
+	"github.com/fouwels/os-next/init/shell"
+	"github.com/fouwels/os-next/init/stages"
 )
 
 const _configPrimaryPath = "/config/primary.yml"

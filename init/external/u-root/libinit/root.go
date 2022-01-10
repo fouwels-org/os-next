@@ -11,7 +11,7 @@ import (
 	"os"
 	"syscall"
 
-	"os-next/init/journal"
+	"github.com/fouwels/os-next/init/journal"
 
 	"golang.org/x/sys/unix"
 )

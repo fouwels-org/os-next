@@ -8,8 +8,8 @@ package stages
 import (
 	"fmt"
 
-	"os-next/init/config"
-	"os-next/init/filesystem"
+	"github.com/fouwels/os-next/init/config"
+	"github.com/fouwels/os-next/init/filesystem"
 )
 
 //Microcode implementes IStage

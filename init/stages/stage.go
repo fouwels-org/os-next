@@ -5,7 +5,7 @@
 
 package stages
 
-import "os-next/init/config"
+import "github.com/fouwels/os-next/init/config"
 
 type Policy int
 

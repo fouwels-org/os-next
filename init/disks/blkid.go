@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"os-next/init/journal"
-	"os-next/init/shell"
+	"github.com/fouwels/os-next/init/journal"
+	"github.com/fouwels/os-next/init/shell"
 )
 
 type Blkid struct {

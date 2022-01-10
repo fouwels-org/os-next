@@ -13,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"os-next/init/external/diskfs/table"
+	"github.com/fouwels/os-next/init/external/diskfs/table"
 
 	"golang.org/x/sys/unix"
 )

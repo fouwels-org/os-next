@@ -10,7 +10,8 @@ import (
 	"encoding/base32"
 	"fmt"
 	"hash"
-	"os-next/init/external/otp/common"
+
+	"github.com/fouwels/os-next/init/external/otp/common"
 
 	"net/url"
 	"strconv"
