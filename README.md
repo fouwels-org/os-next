@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
 Minimal, declarative, go based real-time capable linux runtime for deployment of containers at the edge, all in < 45MB.
 
-Built against linux with the PREEMPT_RT patch set, with muslc and GCC.
+Built against linux with the PREEMPT_RT patch set, with muslc and clang.
 
 Built as a single EFI, allowing fully declarative builds with one click "firmware" deployment, audit, and upgrade.
 
@@ -17,7 +17,7 @@ EFI based boot system, booted directly from UEFI, no bootloader required (or wan
 
 Includes QEMU build target for testing/development. see `deploy/qemu`.
 
-KConfig kernel configuration is derived from Alpine Linux, tailored for RT and specific module requirements.
+See `./config` for the current KConfig kernel configuration.
 
 Generic build target has been developed and deployed for:
 - [OnLogic Karbon 700](https://www.onlogic.com/k300/)
@@ -26,9 +26,13 @@ Generic build target has been developed and deployed for:
 - [IEI DRPC-230](https://www.ieiworld.com/en/product/model.php?II=714)
 - [Hyper-V](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/about/)
 
+See `makefile` for other specific build targets.
+
 Additional platforms may require additional kernel modules specified to be built and loaded via the primary config (see BUILDING), for full IO functionality. Specific device targets were consolidated to prevent excessive divergence, at the expense of a minor increase in binary size.
 
 ![init](./docs/img/init.png "Init")
+
+_QEMU will not support a microcode load_
 
 ## Building
 
@@ -95,9 +99,6 @@ This will copy the .config to the host machine.
 
 ## CI
 CI will build, verify, scan, and statically check the build and uinit. The use of docker/buildkit allows build dependencies to be scanned at build and integration time. See `.github/workflows` for specific steps.
-
-## History
-Developed within Lagoni Engineering, subsequently acquired by Belcan International. Licensed as open source and continued in development by the original authors.
 
 ## License
 Apache-2.0 and/or Apache-2.0 compatible
