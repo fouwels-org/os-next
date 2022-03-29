@@ -26,7 +26,7 @@ Generic build target has been developed and deployed for:
 - [IEI DRPC-230](https://www.ieiworld.com/en/product/model.php?II=714)
 - [Hyper-V](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/about/)
 
-See `makefile` for other specific build targets.
+See `makefile`. An expedited build target for development, is available as `make fast`
 
 Additional platforms may require additional kernel modules specified to be built and loaded via the primary config (see BUILDING), for full IO functionality. Specific device targets were consolidated to prevent excessive divergence, at the expense of a minor increase in binary size.
 
@@ -61,7 +61,7 @@ The following build arguments are available.
 _Included for documentation, see Makefile for existing targets, target should be added to makefile instead of direct calling_
 
     --build-arg CONFIG_PRIMARY=standard.yml # Override l1 config, one of config/primary - baked into the EFI
-    --build-arg CONFIG_PRIMARY=secondary.yml # Override l2 config, of config/secondary - modifyable, and copied to the filesystem at runtime, if not existing.
+    --build-arg CONFIG_SECONDARY=secondary.yml # Override l2 config, of config/secondary - modifyable, and copied to the filesystem at runtime, if not existing.
     --build-arg CONFIG_MODULES=ALL # Override module set, ALL, or one of config/modules - defines modules compiled and shipped with EFI, to allow loading via primary/secondary config. Define as ALL to ship all modules, at the expensive of a huge build
     --build-arg COMPRESSION_LEVEL=9 # Override the default kernel ZSTD compression level (9 for fast, 22 for maximum)
 
